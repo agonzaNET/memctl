@@ -64,7 +64,7 @@ A `parse.Note` value:
 | `Type` | Frontmatter `type`, trimmed; empty if absent |
 | `Tags`, `Aliases` | Frontmatter lists, each item trimmed, empty items dropped, order kept, duplicates removed |
 | `Created`, `Updated` | Frontmatter timestamps as `time.Time`; zero if absent or invalid |
-| `Frontmatter` | Every top-level key in file order, each with its value as raw YAML text, so a later write can keep unknown keys and their order; no yaml.v3 type leaks out of the package |
+| `Frontmatter` | Every top-level key in file order, each with its 1-based line and its raw YAML source lines (the key line up to the line before the next key), so a later write can keep unknown keys and their order; no yaml.v3 type leaks out of the package. `HasFrontmatter` and `FrontmatterEnd` (the closing delimiter's line) locate the block |
 | `Body` | Everything after the frontmatter block, unchanged |
 | `BodyLine` | The 1-based file line where `Body` starts |
 | `Headings` | Each ATX heading outside fences: level 1–6, text, line |
