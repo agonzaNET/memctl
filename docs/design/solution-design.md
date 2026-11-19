@@ -162,7 +162,7 @@ Files always win: the index follows the disk, and a tool write never overwrites 
 4. Update the index entry for that file directly.
 5. Queue a git commit.
 
-**Git.** If the root is a git repo, a background goroutine commits queued paths after 2 s of quiet, one commit per batch, message `memory: <tool> <title>`, by shelling out to the `git` CLI. The author comes from `--git-author` (D13, default `memctl <memctl@localhost>`). It never pulls, pushes or touches other branches, and only stages paths a tool touched. If the root is not a git repo, commits are skipped and `memctl check` warns.
+**Git.** If the root is in a git work tree, a background goroutine commits queued paths after 2 s of quiet, or at the latest 30 s after the first queued write, one commit per batch, by shelling out to the `git` CLI. The message is `memory: <tool> <title>` for one change, and `memory: <n> changes` with one line per change for a batch. Author and committer come from `--git-author` (D13, default `memctl <memctl@localhost>`). It stages and commits only the paths a tool touched (`git commit --only`), so changes a person has staged stay as they are; git hooks run as configured; commits are not signed, so a key that needs a passphrase or a touch can never block a background commit. It never pulls, pushes or touches other branches. If the root is not a git repo, commits are skipped and `memctl check` warns.
 
 **Shutdown (D21).** On stdin EOF (the client closed), SIGINT or SIGTERM, `memctl mcp` stops taking tool calls, commits every queued path at once without waiting for the quiet window, and exits. One shutdown context reaches the MCP server and the commit goroutine.
 

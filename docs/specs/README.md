@@ -92,3 +92,4 @@ writes, M3 release) are delivered as one or more specs each.
 | SPEC-0005 | `memctl check` | Accepted | ADR-0002, ADR-0005, ADR-0017 |
 | SPEC-0006 | Instance lock | Accepted | ADR-0002, ADR-0005, ADR-0012, ADR-0014 |
 | SPEC-0007 | Write tools and atomic writes | Accepted | ADR-0002, ADR-0005, ADR-0011, ADR-0013, ADR-0015, ADR-0016, ADR-0017 |
+| SPEC-0008 | Git committer | Accepted | ADR-0002, ADR-0005, ADR-0014, ADR-0016 |
