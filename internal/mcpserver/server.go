@@ -39,6 +39,7 @@ func New(o Options) *Server {
 		})
 	s.registerRead()
 	s.registerSearch()
+	s.registerGraph()
 	return s
 }
 

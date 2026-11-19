@@ -20,8 +20,10 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
 ### Added
 
 - `memctl mcp --root DIR` serves a folder of Markdown notes to an MCP client
-  over stdio, with the read-only tools `note_read` and `search` (BM25F
-  full-text ranking with type, tag and folder filters) (spec: SPEC-0004).
+  over stdio, with four read-only tools: `note_read` (a note with its resolved
+  links, or one section), `search` (BM25F full-text ranking with type, tag and
+  folder filters), `context` (relations, links and backlinks up to three hops)
+  and `list` (notes by folder, type or tag) (spec: SPEC-0004).
 - `memctl version` prints the version of the binary (spec: SPEC-0004).
 
 [Unreleased]: https://github.com/agonzaNET/memctl/commits/main

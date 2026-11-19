@@ -118,7 +118,7 @@ in the commit.
   walk with depth, `relTypes`, unresolved edges of the start, self-links,
   200-note cap, `ErrNotFound`; `List`; `Links()`.
   *SPEC-0002 R15–R21.*
-- [ ] **T12 — `context` and `list` tools; links in `note_read`.** Rendering,
+- [x] **T12 — `context` and `list` tools; links in `note_read`.** Rendering,
   truncation lines, 500-entry cap, log counts; `note_read`'s `Links` list with
   resolved, ambiguous, dangling and stale targets. CHANGELOG: `context`, `list`.
   *SPEC-0004 R15 (links list), R22–R25.*
