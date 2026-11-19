@@ -47,6 +47,7 @@ func TestTools_SPEC0007_R26_writeText(t *testing.T) {
 	descs := map[string][]Code{
 		descNoteWrite: {CodeExists, CodeInvalidArgument, CodeConflict, CodeInternalError},
 		descNoteEdit:  {CodeNotFound, CodeAmbiguous, CodeConflict, CodeNoMatch, CodeNotUnique, CodeInvalidArgument, CodeInternalError},
+		descNoteMove:  {CodeNotFound, CodeAmbiguous, CodeExists, CodeConflict, CodeInvalidArgument, CodeInternalError},
 	}
 	for d, codes := range descs {
 		name := strings.SplitN(d, ".", 2)[0]

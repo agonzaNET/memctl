@@ -114,8 +114,9 @@ tool name and the note title to the committer (SPEC-0008).
   needs it.
 - **R9** — A note without frontmatter, or with frontmatter that has the problem
   `bad_frontmatter` (SPEC-0001 R5), MUST NOT get frontmatter changes from
-  `note_edit`; `note_move` with `new_title` on such a note MUST give
-  `invalid_argument` that asks to fix the frontmatter first.
+  `note_edit`; `note_move` on such a note, with `new_title` or `new_path`,
+  MUST give `invalid_argument` that asks to fix the frontmatter first (a move
+  must write `aliases`, R22, and keeps the title only by writing it, R20).
 
 ### `note_write`
 
