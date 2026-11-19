@@ -107,12 +107,13 @@ type Committer struct {
 // line and the committer drops every batch.
 func New(ctx context.Context, cfg Config) *Committer {
 	c := &Committer{
-		root:   cfg.Root,
-		author: cfg.Author,
-		log:    cfg.Log,
-		clock:  cfg.Clock,
-		notify: make(chan struct{}, 1),
-		sleep:  time.Sleep,
+		root:    cfg.Root,
+		author:  cfg.Author,
+		log:     cfg.Log,
+		clock:   cfg.Clock,
+		notify:  make(chan struct{}, 1),
+		sleep:   time.Sleep,
+		timeout: GitTimeout,
 	}
 	if c.clock == nil {
 		c.clock = realClock{}
@@ -230,7 +231,7 @@ func (c *Committer) commit(batch []Entry) {
 	}
 
 	add := append([]string{"-A", "--"}, paths...)
-	if _, err := c.retry(func() ([]byte, error) { return runGit(ctx, c.root, GitTimeout, nil, nil, "add", add...) }); err != nil {
+	if _, err := c.retry(func() ([]byte, error) { return runGit(ctx, c.root, c.timeout, nil, nil, "add", add...) }); err != nil {
 		fail(err)
 		return
 	}
@@ -241,7 +242,7 @@ func (c *Committer) commit(batch []Entry) {
 	msg := message(batch)
 	commit := append([]string{"--only", "--cleanup=whitespace", "-F", "-", "--"}, paths...)
 	_, err := c.retry(func() ([]byte, error) {
-		return runGit(ctx, c.root, GitTimeout, env, strings.NewReader(msg), "commit", commit...)
+		return runGit(ctx, c.root, c.timeout, env, strings.NewReader(msg), "commit", commit...)
 	})
 	if err != nil {
 		var ge *gitError
@@ -251,7 +252,7 @@ func (c *Committer) commit(batch []Entry) {
 		fail(err)
 		return
 	}
-	short, _ := runGit(ctx, c.root, GitTimeout, nil, nil, "rev-parse", "--short", "HEAD")
+	short, _ := runGit(ctx, c.root, c.timeout, nil, nil, "rev-parse", "--short", "HEAD")
 	c.log.Info("committed", slog.Int("paths", len(paths)), slog.String("commit", strings.TrimSpace(string(short))))
 }
 
@@ -270,7 +271,7 @@ func (c *Committer) commitPaths(ctx context.Context, batch []Entry) []string {
 		}
 	}
 	stdin := strings.NewReader(strings.Join(paths, "\x00") + "\x00")
-	out, err := runGit(ctx, c.root, GitTimeout, nil, stdin, "check-ignore", "-z", "--stdin")
+	out, err := runGit(ctx, c.root, c.timeout, nil, stdin, "check-ignore", "-z", "--stdin")
 	ignored := map[string]bool{}
 	var ge *gitError
 	if err == nil || (errors.As(err, &ge) && ge.status == 1) {
@@ -286,7 +287,7 @@ func (c *Committer) commitPaths(ctx context.Context, batch []Entry) []string {
 			continue
 		}
 		if _, err := os.Lstat(filepath.Join(c.root, filepath.FromSlash(p))); errors.Is(err, fs.ErrNotExist) {
-			if _, err := runGit(ctx, c.root, GitTimeout, nil, nil, "rev-parse", "-q", "--verify", ":./"+p); err != nil {
+			if _, err := runGit(ctx, c.root, c.timeout, nil, nil, "rev-parse", "-q", "--verify", ":./"+p); err != nil {
 				continue
 			}
 		}

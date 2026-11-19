@@ -154,7 +154,7 @@ in the commit.
 
 ### Slice D — Completeness
 
-- [ ] **T10 — Git failures.** `index.lock` retry (3 × 1 s); classes
+- [x] **T10 — Git failures.** `index.lock` retry (3 × 1 s); classes
   `index_locked`, `hook_failed`, `timeout`, `git_error`; one `ERROR`
   `commit failed`, batch dropped, tool calls unaffected; hooks run as
   configured. Tests: a person's staged change in another file stays staged and
