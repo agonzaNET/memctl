@@ -40,3 +40,24 @@ func TestTools_SPEC0004_R13_textRules(t *testing.T) {
 		t.Error("instructions lack the reference-data sentence")
 	}
 }
+
+// TestTools_SPEC0007_R26_writeText checks that each write tool's description
+// states the side effect, the git commit, and every code the tool can return.
+func TestTools_SPEC0007_R26_writeText(t *testing.T) {
+	descs := map[string][]Code{
+		descNoteWrite: {CodeExists, CodeInvalidArgument, CodeConflict, CodeInternalError},
+	}
+	for d, codes := range descs {
+		name := strings.SplitN(d, ".", 2)[0]
+		for _, c := range codes {
+			if !strings.Contains(d, string(c)) {
+				t.Errorf("description %q does not name %s", name, c)
+			}
+		}
+		for _, s := range []string{"committed to git", "never pushed", "sha256"} {
+			if !strings.Contains(d, s) {
+				t.Errorf("description %q does not say %q", name, s)
+			}
+		}
+	}
+}

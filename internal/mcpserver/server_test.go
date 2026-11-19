@@ -35,11 +35,8 @@ func TestTools_SPEC0004_R8_R9_annotationsAndSchemas(t *testing.T) {
 		t.Fatal(err)
 	}
 	var found bool
+	readTools := map[string]bool{"note_read": true, "search": true, "context": true, "list": true}
 	for _, tool := range res.Tools {
-		a := tool.Annotations
-		if a == nil || !a.ReadOnlyHint || !a.IdempotentHint || a.DestructiveHint == nil || *a.DestructiveHint || a.OpenWorldHint == nil || *a.OpenWorldHint {
-			t.Fatalf("%s annotations %+v", tool.Name, a)
-		}
 		raw, _ := json.Marshal(tool.InputSchema)
 		var schema map[string]any
 		json.Unmarshal(raw, &schema)
@@ -48,6 +45,13 @@ func TestTools_SPEC0004_R8_R9_annotationsAndSchemas(t *testing.T) {
 		}
 		if tool.OutputSchema != nil {
 			t.Fatalf("%s has an output schema", tool.Name)
+		}
+		if !readTools[tool.Name] {
+			continue // write tools: SPEC-0007 R25
+		}
+		a := tool.Annotations
+		if a == nil || !a.ReadOnlyHint || !a.IdempotentHint || a.DestructiveHint == nil || *a.DestructiveHint || a.OpenWorldHint == nil || *a.OpenWorldHint {
+			t.Fatalf("%s annotations %+v", tool.Name, a)
 		}
 		if tool.Name == "note_read" {
 			found = true
@@ -103,7 +107,8 @@ func TestResult_SPEC0004_R10_R11_shape(t *testing.T) {
 }
 
 func TestResult_SPEC0004_R11_fixedCodeList(t *testing.T) {
-	want := []string{"invalid_argument", "not_found", "ambiguous", "internal_error"}
+	// SPEC-0004's codes, then those SPEC-0007 adds.
+	want := []string{"invalid_argument", "not_found", "ambiguous", "internal_error", "exists", "conflict", "no_match", "not_unique"}
 	if len(mcpserver.Codes) != len(want) {
 		t.Fatalf("codes %v", mcpserver.Codes)
 	}

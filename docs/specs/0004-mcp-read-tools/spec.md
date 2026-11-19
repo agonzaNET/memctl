@@ -156,7 +156,7 @@ then one line per note: path, title, type, updated date.
 
 - **R7** — Every tool call MUST run the freshness check (SPEC-0003 R10) and the
   operation under the note service mutex, in that order.
-- **R8** — Every tool MUST be annotated `readOnlyHint` true, `destructiveHint`
+- **R8** — Every read tool of this spec MUST be annotated `readOnlyHint` true, `destructiveHint`
   false, `idempotentHint` true, `openWorldHint` false.
 - **R9** — Input schemas MUST be written out as JSON in `tools.go` with the
   types, limits, defaults and `additionalProperties: false` of the Inputs
@@ -167,7 +167,8 @@ then one line per note: path, title, type, updated date.
   body (ADR-0015). No `structuredContent` MAY be set.
 - **R11** — Every error MUST be a result with `isError` true and one text block
   `<code>: <sentence>`, where `<code>` is one of the codes of the table under
-  "Error handling" and the sentence says what to do next. A test MUST fail when
+  "Error handling" (or one that SPEC-0007 adds for the write tools) and the
+  sentence says what to do next. A test MUST fail when
   a tool emits any other code.
 - **R12** — After each call, `internal/mcpserver` MUST log one `INFO` `tool call`
   line with `tool`, `duration_ms`, `error` (the code, only on an error) and the
