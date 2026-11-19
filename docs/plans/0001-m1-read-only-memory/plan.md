@@ -73,7 +73,8 @@ in the commit.
   (`.md` files, dot-entries skipped, no symlinks, no `.gitignore` yet), size
   limit, unreadable files, parallel load with SHA-256, the `notes loaded` line.
   *SPEC-0003 R1–R4, R6–R9.*
-- [ ] **T3 — Index storage and resolution.** `Put`, `Remove`, `Get`, `Titled`,
+- [x] **T3 — Index storage and resolution.** (Done before T2: the startup
+  load of T2 fills the index.) `Put`, `Remove`, `Get`, `Titled`,
   `Resolve` with the four steps, ambiguity, `Stale`.
   *SPEC-0002 R1, R3–R6.*
 - [ ] **T4 — Command line.** `memctl`, `memctl version`, `memctl mcp` flags and

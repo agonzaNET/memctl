@@ -18,30 +18,32 @@ func put(x *index.Index, rel, src string) {
 func TestIndex_SPEC0002_R1_putGetRemove(t *testing.T) {
 	x := index.New()
 	m := index.Meta{ModTime: time.Unix(10, 0), Size: 3, SHA256: "abc"}
-	n := note("a/b.md", "---\ntitle: B\n---\nx\n")
-	x.Put("a/b.md", n, m)
-	gn, gm, ok := x.Get("a/b.md")
+	// The file stem (note) differs from both titles, so only the title step
+	// can match "B" or "C".
+	n := note("a/note.md", "---\ntitle: B\n---\nx\n")
+	x.Put("a/note.md", n, m)
+	gn, gm, ok := x.Get("a/note.md")
 	if !ok || gn.Title != "B" || gm != m || x.Len() != 1 {
 		t.Fatalf("get: %v %q %+v len=%d", ok, gn.Title, gm, x.Len())
 	}
-	if r := x.Resolve("B"); r.Status != index.Resolved || r.Path != "a/b.md" {
+	if r := x.Resolve("B"); r.Status != index.Resolved || r.Path != "a/note.md" {
 		t.Fatalf("resolve after put: %+v", r)
 	}
 
-	x.Put("a/b.md", note("a/b.md", "---\ntitle: C\n---\n"), m)
+	x.Put("a/note.md", note("a/note.md", "---\ntitle: C\n---\n"), m)
 	if r := x.Resolve("B"); r.Status != index.Dangling {
 		t.Fatalf("old title still resolves after replace: %+v", r)
 	}
-	if r := x.Resolve("C"); r.Path != "a/b.md" || x.Len() != 1 {
+	if r := x.Resolve("C"); r.Path != "a/note.md" || x.Len() != 1 {
 		t.Fatalf("replace: %+v len=%d", r, x.Len())
 	}
 
-	x.Remove("a/b.md")
+	x.Remove("a/note.md")
 	x.Remove("unknown.md")
-	if _, _, ok := x.Get("a/b.md"); ok || x.Len() != 0 || len(x.Paths()) != 0 {
+	if _, _, ok := x.Get("a/note.md"); ok || x.Len() != 0 || len(x.Paths()) != 0 {
 		t.Fatalf("remove: ok=%v len=%d", ok, x.Len())
 	}
-	if r := x.Resolve("a/b"); r.Status != index.Dangling {
+	if r := x.Resolve("a/note"); r.Status != index.Dangling {
 		t.Fatalf("resolve after remove: %+v", r)
 	}
 }
