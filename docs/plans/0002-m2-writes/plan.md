@@ -58,7 +58,7 @@ it, and `cmd/memctl` wires the two. `note` does not import `gitlog`. Tests of
 T1 → T2 → T3 → T4 → T5        (slice A)
 T5 → T6 → T7                  (slice B)
 T7 → T8 → T9                  (slice C)
-T9 → T10, T11 → T12 → T13     (slice D)
+T9 → T10, T11 → T12 → T12a → T13     (slice D)
 ```
 
 T10 and T11 are independent of each other. T6 only needs T2 and could start
@@ -175,6 +175,13 @@ in the commit.
   calls and a running committer; end-to-end test of a burst of writes giving
   one commit.
   *SPEC-0007 R1–R5; SPEC-0008 R3, R4.*
+- [ ] **T12a — Racily clean notes.** *(Added on 2026-11-19 after the T12
+  finding, by the maintainer's decision.)* Record when each index entry was
+  read; the freshness check rehashes a note whose modification time is not at
+  least 2 s older than that, even when size and time match. The random
+  sequence of T12 goes back to editor saves of the same size. Benchmarks give
+  the synthetic notes an old modification time, as a settled notes root has.
+  *SPEC-0003 R17.*
 - [ ] **T13 — Live check and close.** Build with `make build`; in a Claude
   Code session on a scratch git root: create, edit, rename and delete notes;
   edit one in an editor between a read and an edit and see `conflict`; check
@@ -197,6 +204,7 @@ in the commit.
 | | R20–R23 | T8 |
 | | R24 | T9 |
 | | R25–R27 | T3, T7, T8, T9 per tool; T11 final |
+| SPEC-0003 | R17 (added) | T12a |
 | SPEC-0008 | R1–R5, R7, R9 | T4 (R3, R4 again in T12) |
 | | R6 | T4 (stage and commit), T10 (staged-content and ignore tests) |
 | | R8, R10 | T10 |

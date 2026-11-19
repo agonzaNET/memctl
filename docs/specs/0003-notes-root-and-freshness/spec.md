@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented
+Accepted
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -100,6 +100,13 @@ Also turn a note path given by a tool into a safe file path inside the root.
   again (`Changed`); when the hash is the same, only its meta MUST be updated
   (`Unchanged`). A note not in the index MUST be added (`Added`); an entry whose
   file is gone or no longer a note MUST be removed (`Removed`).
+- **R17** — A note whose modification time is not at least 2 s older than the
+  moment its entry was last read (by a load, a check or a tool write) MUST be
+  read and hashed at the next check even when its size and modification time
+  match the entry, as R10 says for a changed note. This catches a second save
+  of the same size within one timestamp tick of the file system ("racily
+  clean", as git calls it); once the entry is read 2 s or more after the
+  file's modification time, R10 alone applies again.
 - **R11** — A change to a `.gitignore` file MUST take effect on the next check:
   notes it now ignores are removed and notes it no longer ignores are added.
 - **R12** — The check MUST run inside the service mutex, so no tool call sees a
@@ -150,6 +157,10 @@ Also turn a note path given by a tool into a safe file path inside the root.
   fixture (`-race` clean); the `notes loaded` line has the counts.
 - [x] **R10** — Edit, touch without change, add, delete and rename a note
   between two checks; the stats and the index match each case.
+- [ ] **R17** — A note saved twice with the same size and the same
+  modification time (set with `os.Chtimes`) right after a check is reread at
+  the next check; a note whose modification time is well before its last read
+  is not read again (an unreadable such note stays in the index).
 - [x] **R11** — Adding `drafts/` to `.gitignore` removes `drafts/*.md` on the
   next check; removing the line adds them back.
 - [x] **R12** — Concurrent tool calls under `-race` never observe a partial
