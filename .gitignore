@@ -49,3 +49,6 @@ bin/
 
 # Claude (Cowork) session outputs: scratch files, never committed
 Claude outputs/
+
+# Release archives (make dist)
+dist/

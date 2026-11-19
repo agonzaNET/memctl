@@ -1,11 +1,12 @@
 # memctl — build and verify targets.
 #
 #   make build    # bin/memctl for this machine (ADR-0012)
-#   make verify   # test + vet + fmt-check + check-docs (workflow Phase 4)
+#   make verify   # test + vet + fmt-check + check-docs + script tests (workflow Phase 4)
+#   make dist VERSION=X.Y.Z   # the release archives in dist/, as the release workflow builds them
 #
-# Release binaries for linux/amd64, linux/arm64 and darwin/arm64 are built by
-# the GitHub Actions release workflow, started by hand for an existing vX.Y.Z
-# tag, not here (ADR-0012).
+# Releases for linux/amd64, linux/arm64 and darwin/arm64 are published by the
+# GitHub Actions release workflow, started by hand for an existing vX.Y.Z
+# tag (ADR-0012, stage plan 0003).
 
 BINARY  := memctl
 MAIN    := ./cmd/memctl
@@ -53,12 +54,21 @@ fmt-check: ## Fail if any Go file is not gofmt-clean
 check-docs: ## Check the spec and ADR indexes and the agent-facing tool text
 	bash scripts/check-docs.sh
 
+.PHONY: script-tests
+script-tests: ## Run the regression tests of the scripts
+	bash scripts/check-docs.test.sh >/dev/null
+	bash scripts/release-notes.test.sh >/dev/null
+
 .PHONY: verify
-verify: test vet fmt-check check-docs ## Full verification gate (workflow Phase 4)
+verify: test vet fmt-check check-docs script-tests ## Full verification gate (workflow Phase 4)
+
+.PHONY: dist
+dist: ## Build the release archives into dist/ (VERSION=X.Y.Z; stage plan 0003)
+	bash scripts/release-build.sh $(VERSION) dist
 
 .PHONY: clean
 clean: ## Remove build artifacts
-	rm -rf $(BIN_DIR)
+	rm -rf $(BIN_DIR) dist
 
 .PHONY: help
 help: ## Show this help
