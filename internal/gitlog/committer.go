@@ -145,7 +145,9 @@ func (c *Committer) Add(e Entry) {
 	}
 }
 
-// Run commits batches until ctx is cancelled (SPEC-0008 R4).
+// Run commits batches until ctx is cancelled; then it commits the pending
+// batch at once, without waiting for the quiet window, and returns when that
+// commit returns (SPEC-0008 R4, R12).
 func (c *Committer) Run(ctx context.Context) {
 	for {
 		c.mu.Lock()
@@ -170,6 +172,7 @@ func (c *Committer) Run(ctx context.Context) {
 		}
 		select {
 		case <-ctx.Done():
+			c.commitPending()
 			return
 		case <-c.notify:
 		case <-timer:

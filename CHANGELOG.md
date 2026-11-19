@@ -32,5 +32,16 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   `memctl mcp` on the same root stops at once with
   `root <path> is in use by memctl (pid <N>)`. memctl keeps its own files in
   `<root>/.memory/`, which git ignores (spec: SPEC-0006).
+- `note_write` creates a note from a title, a body, and optional type and
+  tags, in a file named after the title; it refuses to overwrite an existing
+  note (spec: SPEC-0007).
+- Every tool write is committed to git in the notes root, in the background:
+  one commit per burst of writes (after 2 s of quiet, or 30 s at most), only
+  the files the tools changed, never pushed. Pending writes are committed
+  before `memctl mcp` exits. A root outside git works without commits
+  (spec: SPEC-0008).
+- `memctl mcp --git-author "Name <email>"` (or `MEMCTL_GIT_AUTHOR`) sets the
+  author of those commits; the default is `memctl <memctl@localhost>`
+  (spec: SPEC-0008).
 
 [Unreleased]: https://github.com/agonzaNET/memctl/commits/main

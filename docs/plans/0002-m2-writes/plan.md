@@ -110,7 +110,8 @@ in the commit.
   success. `committed` log line with counts only. Fake `git` on `PATH`
   records the calls.
   *SPEC-0008 R1–R7, R9, R11 (for the lines added here).*
-- [ ] **T5 — Shutdown flush and first end-to-end write.** Shutdown context
+- [x] **T5 — Shutdown flush and first end-to-end write.** *(The manual
+  Claude Code check moves to the T13 live check, which the maintainer runs.)* Shutdown context
   passed to the committer; the call in progress finishes, the pending batch is
   committed at once, `memctl mcp` exits after the commit returns; a second
   signal logs one `WARN` and exits 1 at once. End-to-end test: `note_write`
