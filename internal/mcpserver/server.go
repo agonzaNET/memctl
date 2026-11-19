@@ -38,6 +38,7 @@ func New(o Options) *Server {
 			Logger:       slog.New(slog.DiscardHandler),
 		})
 	s.registerRead()
+	s.registerSearch()
 	return s
 }
 

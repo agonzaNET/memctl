@@ -108,7 +108,7 @@ in the commit.
 - [x] **T9 — Search.** Tokenizer, five fields, BM25F, OR semantics, filters,
   limit, `ErrEmptyQuery`, snippets.
   *SPEC-0002 R7–R14.*
-- [ ] **T10 — `search` tool.** Rendering, folder normalisation, errors, log
+- [x] **T10 — `search` tool.** Rendering, folder normalisation, errors, log
   counts. CHANGELOG: `search`.
   *SPEC-0004 R19–R21.*
 

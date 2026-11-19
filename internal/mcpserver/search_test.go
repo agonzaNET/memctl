@@ -26,7 +26,7 @@ func TestSearch_SPEC0004_R19_render(t *testing.T) {
 	for _, s := range []string{
 		"   > L9: - [risk] Upgrade the passive firewall first\n",
 		"2. **PA-850** — hosts/PA-850.md (host) · score ",
-		"   > L5: The main firewall.",
+		"   > L6: The main firewall.",
 	} {
 		if !strings.Contains(got, s) {
 			t.Fatalf("missing %q in:\n%s", s, got)
