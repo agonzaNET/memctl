@@ -99,6 +99,11 @@ tool name and the note title to the committer (SPEC-0008).
 - **R7** — `created` and `updated` values MUST be written as local time with its
   offset, to the second (`2006-01-02T15:04:05-07:00`), from an injectable clock.
 
+- **R28** — A target path that the walk would not treat as a note (SPEC-0003
+  R3–R5: a dot-segment, or matched by a `.gitignore`) MUST give
+  `invalid_argument` that names the reason; such a note would be invisible to
+  every later call.
+
 ### Frontmatter changes
 
 - **R8** — The service MUST change frontmatter by editing the frontmatter text,
@@ -218,6 +223,8 @@ is unchanged.
   committer stub received the expected paths; a failed write sends none.
 - [ ] **R6, R7** — Writing into a new nested folder; the timestamps from a fixed
   clock.
+- [ ] **R28** — `note_write` and `note_move` into a folder that `.gitignore`
+  matches give `invalid_argument`.
 - [ ] **R8, R9** — Golden tests: frontmatter with comments, unknown keys, block
   and flow lists, and quoted values, after `updated`, `title` and `aliases`
   changes; no frontmatter and bad frontmatter.
