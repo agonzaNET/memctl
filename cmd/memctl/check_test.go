@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 var update = flag.Bool("update", false, "rewrite golden files")
@@ -108,17 +107,21 @@ func gitInit(t *testing.T, dir string) {
 func TestCheck_SPEC0005_R1_R8_readOnlyAndCleanStdout(t *testing.T) {
 	root := checkFixture(t)
 	gitInit(t, root)
-	before := stateOf(t, root)
-	statusBefore, _ := exec.Command("git", "-C", root, "status", "--porcelain").Output()
 
-	// A memctl mcp serving the same root does not stop the check.
+	// A memctl mcp serving the same root does not stop the check. The
+	// snapshot is taken once it runs: it creates .memory/ (SPEC-0006 R2),
+	// and only the check must leave the root unchanged.
 	mcp := exec.Command(binVersioned, "mcp", "--root", root)
 	mcpIn, _ := mcp.StdinPipe()
+	mcpErr := new(syncBuffer)
+	mcp.Stderr = mcpErr
 	if err := mcp.Start(); err != nil {
 		t.Fatal(err)
 	}
 	defer func() { mcpIn.Close(); mcp.Wait() }()
-	time.Sleep(200 * time.Millisecond)
+	waitFor(t, mcpErr, `"msg":"started"`)
+	before := stateOf(t, root)
+	statusBefore, _ := exec.Command("git", "-C", root, "status", "--porcelain").Output()
 
 	r := runBin(t, binVersioned, nil, "check", "--root", root)
 	if r.code != 1 {

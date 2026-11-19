@@ -74,7 +74,7 @@ in the commit.
 
 ### Slice A — First committed write
 
-- [ ] **T1 — Instance lock.** `.memory/` (0700) and `.memory/.gitignore`
+- [x] **T1 — Instance lock.** `.memory/` (0700) and `.memory/.gitignore`
   (`*`, 0600, never changed when present); non-blocking `flock`, `O_CREATE`,
   0600, close-on-exec; PID written after the lock; refusal message with or
   without PID, status 1; create/open failures name path and operation; lock

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -82,16 +82,16 @@ process on the same root stops at once and says which process holds it.
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1** — An end-to-end test: the lock is held before the `started` line,
+- [x] **R1** — An end-to-end test: the lock is held before the `started` line,
   and a second process started during the load of the first is refused.
-- [ ] **R2** — A root without `.memory/` gets the folder, its mode, and
+- [x] **R2** — A root without `.memory/` gets the folder, its mode, and
   `.memory/.gitignore`; an existing `.memory/.gitignore` with other content is
   unchanged; `git status` in the root shows nothing from `.memory/`.
-- [ ] **R3, R4, R5** — Two processes on one root: the second exits with status 1
+- [x] **R3, R4, R5** — Two processes on one root: the second exits with status 1
   and the first one's PID in its message; with an empty lock file, the message
   without a PID.
-- [ ] **R6** — A read-only root gives status 1 and the `ERROR` line.
-- [ ] **R7, R8** — After the holder is killed with `SIGKILL`, a new process takes
+- [x] **R6** — A read-only root gives status 1 and the `ERROR` line.
+- [x] **R7, R8** — After the holder is killed with `SIGKILL`, a new process takes
   the lock at once; the lock file still exists after every kind of exit.
 
 ## References
