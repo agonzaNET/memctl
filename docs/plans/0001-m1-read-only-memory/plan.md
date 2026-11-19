@@ -102,7 +102,7 @@ in the commit.
 - [x] **T7 — Fences, headings, sections.** Fence rules, ATX headings, the
   Observations and Relations sections; `note_read` with `section`.
   *SPEC-0001 R9–R12; SPEC-0004 R16.*
-- [ ] **T8 — Links, observations, relations.** Link scanner with code spans,
+- [x] **T8 — Links, observations, relations.** Link scanner with code spans,
   `bad_link`, observation and relation forms, links inside observations.
   *SPEC-0001 R13–R18.*
 - [ ] **T9 — Search.** Tokenizer, five fields, BM25F, OR semantics, filters,

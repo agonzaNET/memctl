@@ -16,7 +16,8 @@ func scanBody(n *Note, ls []line, first int) {
 		if fence.step(ls[i].text) {
 			continue
 		}
-		if h, ok := atxHeading(ls[i].text); ok {
+		text := ls[i].text
+		if h, ok := atxHeading(text); ok {
 			h.Line = lineNo
 			n.Headings = append(n.Headings, h)
 			if h.Level <= 2 {
@@ -26,8 +27,39 @@ func scanBody(n *Note, ls []line, first int) {
 					cur = len(n.Sections) - 1
 				}
 			}
+			n.addLinks(scanLinks(text), lineNo)
 			continue
 		}
+		section := SectionKind("")
+		if cur >= 0 {
+			section = n.Sections[cur].Kind
+		}
+		switch section {
+		case SectionObservations:
+			if cat, rest, ok := observationForm(text); ok {
+				n.Observations = append(n.Observations, Observation{Category: cat, Text: rest, Line: lineNo})
+				n.addLinks(scanLinks(rest), lineNo)
+				continue
+			}
+		case SectionRelations:
+			if typ, l, ok := relationForm(text); ok {
+				n.Relations = append(n.Relations, Relation{Type: typ, Target: l.target, Label: l.label, Line: lineNo})
+				continue
+			}
+		}
+		n.addLinks(scanLinks(text), lineNo)
 	}
 	closeSection(len(ls))
+}
+
+// addLinks records the links of one line; an empty target is a bad_link
+// problem and is not recorded (SPEC-0001 R17).
+func (n *Note) addLinks(links []foundLink, lineNo int) {
+	for _, l := range links {
+		if l.bad {
+			n.addProblem(CodeBadLink, lineNo, "A link on this line has an empty target; write [[target]] or remove the brackets.")
+			continue
+		}
+		n.Links = append(n.Links, Link{Target: l.target, Label: l.label, Line: lineNo})
+	}
 }
