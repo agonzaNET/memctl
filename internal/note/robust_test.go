@@ -157,11 +157,9 @@ func TestRobust_SPEC0007_R4_R5_randomSequence(t *testing.T) {
 					editor = true
 					p := fmt.Sprintf("%se%d.md", map[bool]string{true: "x/", false: ""}[rng.Intn(2) == 0], rng.Intn(4))
 					os.MkdirAll(filepath.Join(root, filepath.Dir(p)), 0o755)
-					// The size changes with every step: the freshness check
-					// compares size and modification time, and two editor
-					// saves of the same size within one timestamp tick are not
-					// seen (finding recorded in the stage plan).
-					os.WriteFile(filepath.Join(root, p), []byte(fmt.Sprintf("---\ntitle: E%d\n---\n%s\n", step, strings.Repeat("s", step))), 0o644)
+					// Saves of the same size, often within one timestamp
+					// tick: SPEC-0003 R17 makes the next check see them.
+					os.WriteFile(filepath.Join(root, p), []byte(fmt.Sprintf("---\ntitle: E%03d\n---\nstep %03d\n", step, step)), 0o644)
 				case 6: // an editor deletes a note
 					editor = true
 					if p, ok := pick(); ok {

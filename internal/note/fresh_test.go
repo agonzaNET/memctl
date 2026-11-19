@@ -210,3 +210,41 @@ func TestFresh_SPEC0003_R10_debugLine(t *testing.T) {
 		t.Fatalf("debug line %v", l)
 	}
 }
+
+func TestFresh_SPEC0003_R17_racilyClean(t *testing.T) {
+	root := tree(t, map[string]string{"a.md": "---\ntitle: One\n---\n"})
+	p := filepath.Join(root, "a.md")
+	tick := time.Now().Truncate(time.Second)
+	os.Chtimes(p, tick, tick)
+	s, _, err := note.Open(root, logger(new(bytes.Buffer)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A second save of the same size within the same timestamp tick.
+	os.WriteFile(p, []byte("---\ntitle: Two\n---\n"), 0o644)
+	os.Chtimes(p, tick, tick)
+	var st note.Stats
+	s.Call(func(idx *index.Index, got note.Stats) error { st = got; return nil })
+	if n, _, _ := s.Index().Get("a.md"); n.Title != "Two" || st.Changed != 1 {
+		t.Fatalf("title %q, stats %+v: the second save was missed", n.Title, st)
+	}
+}
+
+func TestFresh_SPEC0003_R17_settledNoteNotReread(t *testing.T) {
+	skipIfRoot(t)
+	root := tree(t, map[string]string{"b.md": "---\ntitle: B\n---\n"})
+	p := filepath.Join(root, "b.md")
+	old := time.Now().Add(-time.Hour)
+	os.Chtimes(p, old, old)
+	s, _, err := note.Open(root, logger(new(bytes.Buffer)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Chmod(p, 0)
+	t.Cleanup(func() { os.Chmod(p, 0o644) })
+	var st note.Stats
+	s.Call(func(idx *index.Index, got note.Stats) error { st = got; return nil })
+	if _, _, ok := s.Index().Get("b.md"); !ok || st.Skipped != 0 {
+		t.Fatalf("a settled, unchanged note was read again: in index %v, stats %+v", ok, st)
+	}
+}
