@@ -91,7 +91,8 @@ in the commit.
   and instructions, result shape and fixed error codes, `ref` resolution
   errors, tool-call log line, schema and annotations, agent-facing markers in
   `tools.go`, `note_read` with metadata, fenced content, `section` and
-  `sha256` (links list without resolution details until T12). End-to-end test
+  `sha256` (`section` moves to T7, which parses headings; the links list
+  fills in as T8 parses links). End-to-end test
   over pipes. Manual check: `claude mcp add` reads a note.
   CHANGELOG: `memctl mcp` with `note_read`.
   *SPEC-0004 R5, R7–R17, R18; SPEC-0003 R12 (tool calls under the mutex).*
@@ -99,8 +100,8 @@ in the commit.
 ### Slice B — Structure and search
 
 - [ ] **T7 — Fences, headings, sections.** Fence rules, ATX headings, the
-  Observations and Relations sections.
-  *SPEC-0001 R9–R12.*
+  Observations and Relations sections; `note_read` with `section`.
+  *SPEC-0001 R9–R12; SPEC-0004 R16.*
 - [ ] **T8 — Links, observations, relations.** Link scanner with code spans,
   `bad_link`, observation and relation forms, links inside observations.
   *SPEC-0001 R13–R18.*
@@ -171,7 +172,8 @@ in the commit.
 | | R14, R15 | T14 |
 | | R16 | T17 |
 | SPEC-0004 | R1–R4, R6, R26 | T4 |
-| | R5, R7–R18 | T6 (R15 completed in T12) |
+| | R5, R7–R15, R17, R18 | T6 (R15 completed in T12) |
+| | R16 | T7 |
 | | R19–R21 | T10 |
 | | R22–R25 | T12 |
 | SPEC-0005 | R1–R8 | T16 |
