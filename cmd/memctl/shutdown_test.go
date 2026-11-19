@@ -159,3 +159,22 @@ func TestE2E_SPEC0008_R13_secondSignalExitsAtOnce(t *testing.T) {
 		t.Fatalf("WARN lines %v", warns)
 	}
 }
+
+func TestE2E_SPEC0008_R4_burstIsOneCommit(t *testing.T) {
+	root := gitRepo(t)
+	s := connect(t, root)
+	for i := 0; i < 10; i++ {
+		s.write(t, "Burst "+string(rune('A'+i)))
+	}
+	time.Sleep(3 * time.Second) // past the quiet window, before shutdown
+	if got := gitLog(t, root); got != "memory: 10 changes\n" {
+		t.Fatalf("git log %q; stderr %s", got, s.stderr.String())
+	}
+	s.cs.Close()
+	if code := s.exit(t, 20*time.Second); code != 0 {
+		t.Fatalf("status %d", code)
+	}
+	if got := gitLog(t, root); got != "memory: 10 changes\n" {
+		t.Fatalf("shutdown added a commit: %q", got)
+	}
+}

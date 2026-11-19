@@ -69,12 +69,20 @@ func dotFiles(t *testing.T, dir string) []string {
 // (SPEC-0007 R4) and that the next freshness check changes nothing.
 func assertIndexFresh(t *testing.T, s *note.Service) {
 	t.Helper()
-	fresh := openWith(t, s.Root())
 	var st note.Stats
 	s.Call(func(idx *index.Index, got note.Stats) error { st = got; return nil })
 	if st.Added+st.Changed+st.Removed != 0 {
 		t.Fatalf("freshness check after the write changed the index: %+v", st)
 	}
+	assertIndexMatchesDisk(t, s)
+}
+
+// assertIndexMatchesDisk runs a freshness check, which picks up changes
+// made outside the service, and compares the index with a fresh load.
+func assertIndexMatchesDisk(t *testing.T, s *note.Service) {
+	t.Helper()
+	s.Call(func(*index.Index, note.Stats) error { return nil })
+	fresh := openWith(t, s.Root())
 	if got, want := s.Index().Paths(), fresh.Index().Paths(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("paths %v, fresh load %v", got, want)
 	}

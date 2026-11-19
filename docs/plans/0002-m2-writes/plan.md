@@ -168,7 +168,7 @@ in the commit.
   check 5 passes; captured log lines carry `bytes`, `paths`, `linkers` and no
   argument value.
   *SPEC-0007 R25–R27.*
-- [ ] **T12 — Robustness.** Fault injection before `rename` and before the
+- [x] **T12 — Robustness.** Fault injection before `rename` and before the
   re-hash (R1–R3); property test: random sequences of the four writes and
   editor-style file changes, after each step the index equals a fresh load and
   the stub received the expected paths (R4, R5); `-race` with concurrent tool
@@ -217,6 +217,21 @@ in the commit.
 - The live check is recorded under `docs/design/` and listed in its README.
 - `CHANGELOG.md` `[Unreleased]` lists the instance lock, the four write tools,
   git auto-commit and `--git-author`.
+
+## Verification notes
+
+Finding of T12 (2026-11-19): the freshness check (SPEC-0003 R10) rereads a
+note only when its size or modification time changed. Two saves of the same
+size within one timestamp tick of the file system (seen in the development
+VM, whose timestamps advance in steps of a few milliseconds) leave the index
+with the first version until the file changes again. Tool writes stay safe:
+`note_edit`, `note_move` and `note_delete` hash the file they read, and every
+write re-hashes the target before the rename (SPEC-0007 R3, R15). What can be
+stale is search, `context`, `list` and the parsed fields a move starts from.
+The random-sequence test changes the size on every editor save to stay clear
+of this. Git's answer to the same problem ("racily clean" entries) is to
+rehash a file whose modification time is not clearly older than the last
+check; adopting it would change SPEC-0003 R10.
 
 ## Notes
 
