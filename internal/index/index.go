@@ -58,6 +58,11 @@ type Index struct {
 	aliases     nameMap // plain aliases
 	pathAliases nameMap // path-like aliases, normalised as paths
 	stems       nameMap // file name without folder and .md
+
+	// The inverted index for search (SPEC-0002 R7–R9).
+	terms    map[string]*docTerms
+	postings map[string]map[string]struct{}
+	totalLen [numFields]int
 }
 
 // New returns an empty index.
@@ -69,6 +74,8 @@ func New() *Index {
 		aliases:     nameMap{},
 		pathAliases: nameMap{},
 		stems:       nameMap{},
+		terms:       map[string]*docTerms{},
+		postings:    map[string]map[string]struct{}{},
 	}
 }
 
@@ -77,6 +84,9 @@ func (x *Index) Put(p string, n parse.Note, m Meta) {
 	x.Remove(p)
 	x.notes[p] = &entry{note: n, meta: m}
 	x.eachName(p, n, func(mp nameMap, name string) { mp.add(name, p) })
+	d := newDocTerms(n)
+	x.terms[p] = d
+	x.addTerms(p, d)
 }
 
 // Remove removes the note at path; an unknown path is a no-op (SPEC-0002 R1).
@@ -86,6 +96,8 @@ func (x *Index) Remove(p string) {
 		return
 	}
 	x.eachName(p, e.note, func(mp nameMap, name string) { mp.remove(name, p) })
+	x.removeTerms(p, x.terms[p])
+	delete(x.terms, p)
 	delete(x.notes, p)
 }
 

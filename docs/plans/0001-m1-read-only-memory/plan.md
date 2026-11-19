@@ -105,7 +105,7 @@ in the commit.
 - [x] **T8 — Links, observations, relations.** Link scanner with code spans,
   `bad_link`, observation and relation forms, links inside observations.
   *SPEC-0001 R13–R18.*
-- [ ] **T9 — Search.** Tokenizer, five fields, BM25F, OR semantics, filters,
+- [x] **T9 — Search.** Tokenizer, five fields, BM25F, OR semantics, filters,
   limit, `ErrEmptyQuery`, snippets.
   *SPEC-0002 R7–R14.*
 - [ ] **T10 — `search` tool.** Rendering, folder normalisation, errors, log
