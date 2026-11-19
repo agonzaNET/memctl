@@ -147,7 +147,7 @@ in the commit.
   about aliases and `memctl check`. Both paths handed to the committer, so git
   records a rename. No other note changes.
   *SPEC-0007 R9 (move part), R20–R23; R25–R27 for `note_move`.*
-- [ ] **T9 — `note_delete`.** Remove file and index entry; dangling-linker
+- [x] **T9 — `note_delete`.** Remove file and index entry; dangling-linker
   count; git-history notice; second delete `not_found`. CHANGELOG:
   `note_move`, `note_delete`.
   *SPEC-0007 R24; R25–R27 for `note_delete`.*

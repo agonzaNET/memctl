@@ -45,7 +45,7 @@ func (s *Server) noteMove(in noteMoveIn, log *callLog) (*mcp.CallToolResult, err
 	log.set("linkers", mv.Linkers)
 	body := "sha256: " + mv.SHA256 + "\n\n" + linkersNotice(mv.Linkers,
 		"No other note links to it.",
-		"%s to it. Those links keep working: the old path and the old title are kept in the note's aliases. memctl check lists them as stale, so they can be updated to the new path.")
+		"%s to it. Those links keep working, because the note's old names are kept in its aliases; memctl check lists them as stale, so they can be updated to the new path.")
 	return success(fmt.Sprintf("Moved %q from %s to %s.", mv.Title, mv.OldPath, mv.Path), body), nil
 }
 

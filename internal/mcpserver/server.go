@@ -43,6 +43,7 @@ func New(o Options) *Server {
 	s.registerWrite()
 	s.registerEdit()
 	s.registerMove()
+	s.registerDelete()
 	return s
 }
 

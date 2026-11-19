@@ -57,10 +57,15 @@ func TestTools_SPEC0007_R26_writeText(t *testing.T) {
 				t.Errorf("description %q does not name %s", name, c)
 			}
 		}
-		for _, s := range []string{"committed to git", "never pushed", "sha256"} {
+		for _, s := range []string{"committed to git", "never pushed"} {
 			if !strings.Contains(d, s) {
 				t.Errorf("description %q does not say %q", name, s)
 			}
+		}
+		// The tools that leave a note behind say how to get its sha256 for
+		// note_edit; note_delete leaves none.
+		if d != descNoteDelete && !strings.Contains(d, "sha256") {
+			t.Errorf("description %q does not mention sha256", name)
 		}
 	}
 }

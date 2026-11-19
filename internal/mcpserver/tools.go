@@ -159,4 +159,19 @@ var schemaNoteMove = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
+const descNoteDelete = `Delete a note: its file is removed. Returns its title and path, and how many notes link to it.
+Use it only when the person wants the note gone; to rename or reorganise a note, use note_move, which keeps links working. Read the note first if you are not sure it is the right one.
+Links in other notes are not changed: after a delete they point to no note, and memctl check lists them as dangling.
+Side effect: removes the file. The change is committed to git in the notes folder within a few seconds, and is never pushed; git history keeps the file, so a person can restore it.
+Errors: not_found means no note matches the ref, also when it was already deleted; use search. ambiguous means several notes share that title or alias; call again with one of the listed paths. conflict means the note changed while memctl was deleting it, and nothing was changed; read it again and decide. internal_error means the delete failed and the note is unchanged; try once more, and if it fails again, tell the person.`
+
+var schemaNoteDelete = json.RawMessage(`{
+  "type": "object",
+  "properties": {
+    "ref": {"type": "string", "minLength": 1, "maxLength": 1024, "description": "The note to delete: a relative path (recommended), a title or an alias."}
+  },
+  "required": ["ref"],
+  "additionalProperties": false
+}`)
+
 // agent-facing text: end

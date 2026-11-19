@@ -40,6 +40,11 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   `sha256` from `note_read` and returns `conflict` with the current content
   when the note changed since that read, so an edit made in an editor is
   never overwritten (spec: SPEC-0007).
+- `note_move` moves or renames a note. It never edits other notes: the old
+  path and the old title go into the note's `aliases`, so links to them keep
+  working, and `memctl check` lists them as stale (spec: SPEC-0007).
+- `note_delete` removes a note; the result counts the links that now point
+  nowhere, and git history keeps the file (spec: SPEC-0007).
 - Every tool write is committed to git in the notes root, in the background:
   one commit per burst of writes (after 2 s of quiet, or 30 s at most), only
   the files the tools changed, never pushed. Pending writes are committed
