@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"log/slog"
 	"os"
 	"runtime"
 	"sync"
@@ -85,52 +84,4 @@ func readAll(cands []candidate) []loaded {
 	close(jobs)
 	wg.Wait()
 	return out
-}
-
-// load fills the empty index from the root (SPEC-0003 R8).
-func (s *Service) load() Stats {
-	var st Stats
-	skipped := map[string]int{}
-	w := walk(s.root)
-	for _, rel := range w.unreadable {
-		skipped[reasonUnreadable]++
-		s.log.Debug("note skipped", slog.String("path", rel), slog.String("reason", reasonUnreadable))
-	}
-	var toRead []candidate
-	for _, c := range w.notes {
-		if c.size > MaxNoteSize {
-			skipped[reasonTooLarge]++
-			s.log.Debug("note skipped", slog.String("path", c.rel), slog.String("reason", reasonTooLarge))
-			continue
-		}
-		toRead = append(toRead, c)
-	}
-	for _, l := range readAll(toRead) {
-		if l.err != nil {
-			reason := reasonUnreadable
-			if errors.Is(l.err, errTooLarge) {
-				reason = reasonTooLarge
-			}
-			skipped[reason]++
-			s.log.Debug("note skipped", slog.String("path", l.rel), slog.String("reason", reason))
-			continue
-		}
-		s.idx.Put(l.rel, l.note, l.meta)
-		st.Added++
-	}
-	st.Skipped = s.reportSkipped(skipped)
-	return st
-}
-
-// reportSkipped logs one WARN line per reason and returns the total
-// (SPEC-0003 R7).
-func (s *Service) reportSkipped(skipped map[string]int) int {
-	total := 0
-	for _, reason := range []string{reasonTooLarge, reasonUnreadable} {
-		if n := skipped[reason]; n > 0 {
-			s.log.Warn("notes skipped", slog.String("reason", reason), slog.Int("count", n))
-			total += n
-		}
-	}
-	return total
 }

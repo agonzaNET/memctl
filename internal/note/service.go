@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/agonzaNET/memctl/internal/index"
@@ -23,9 +24,11 @@ type Stats struct {
 
 // Service is the note service of one notes root.
 type Service struct {
-	root string
-	idx  *index.Index
-	log  *slog.Logger
+	mu      sync.Mutex
+	root    string
+	idx     *index.Index
+	log     *slog.Logger
+	skipped map[string]string // rel → reason, from the last load or check
 }
 
 // Open resolves the notes root and loads every note into a new index
@@ -37,7 +40,7 @@ func Open(root string, log *slog.Logger) (*Service, Stats, error) {
 	}
 	s := &Service{root: resolved, idx: index.New(), log: log}
 	start := time.Now()
-	st := s.load()
+	st := s.refresh(true)
 	log.Info("notes loaded",
 		slog.Int("notes", s.idx.Len()),
 		slog.Int("skipped", st.Skipped),

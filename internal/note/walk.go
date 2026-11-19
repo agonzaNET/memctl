@@ -4,13 +4,15 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // candidate is a file the walk found that may be a note.
 type candidate struct {
-	rel  string // slash-separated, relative to the root
-	abs  string
-	size int64
+	rel     string // slash-separated, relative to the root
+	abs     string
+	size    int64
+	modTime time.Time
 }
 
 // walkResult is what one walk of the root found.
@@ -50,7 +52,7 @@ func walk(root string) walkResult {
 			res.unreadable = append(res.unreadable, rel)
 			return nil
 		}
-		res.notes = append(res.notes, candidate{rel: rel, abs: p, size: info.Size()})
+		res.notes = append(res.notes, candidate{rel: rel, abs: p, size: info.Size(), modTime: info.ModTime()})
 		return nil
 	})
 	return res

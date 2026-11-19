@@ -60,11 +60,12 @@ func TestFresh_SPEC0003_R10_cases(t *testing.T) {
 	}
 
 	write(t, root, "a.md", "---\ntitle: A2\n---\n") // edit
-	bump(t, filepath.Join(root, "b.md"))             // touch, same content
-	write(t, root, "d.md", "d")                       // add
-	os.Remove(filepath.Join(root, "c.md"))            // delete
+	bump(t, filepath.Join(root, "b.md"))            // touch, same content
+	write(t, root, "d.md", "d")                     // add
+	os.Remove(filepath.Join(root, "c.md"))          // delete
 	st := check(t, s)
-	if st != (note.Stats{Added: 1, Changed: 1, Removed: 1, Unchanged: 2}) {
+	// a edited, b touched with the same content, c deleted, d added.
+	if st != (note.Stats{Added: 1, Changed: 1, Removed: 1, Unchanged: 1}) {
 		t.Fatalf("stats %+v", st)
 	}
 	n, m, _ := s.Index().Get("a.md")

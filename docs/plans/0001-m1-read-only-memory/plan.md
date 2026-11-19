@@ -82,7 +82,7 @@ in the commit.
   stderr, `started`/`stopped`, shutdown context on stdin EOF and signals.
   CHANGELOG: `memctl version`.
   *SPEC-0004 R1–R4, R6, R26.*
-- [ ] **T5 — Freshness check.** Stat walk, rehash on size or time change,
+- [x] **T5 — Freshness check.** Stat walk, rehash on size or time change,
   meta-only update when the hash is equal, add/remove, the service mutex and
   `Call` wrapper used by every tool.
   *SPEC-0003 R10, R12, R13.*
