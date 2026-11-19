@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -120,25 +120,25 @@ anything a tool did not change, and never push.
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1, R2** — A root outside git, a subfolder of a repository, and a `PATH`
+- [x] **R1, R2** — A root outside git, a subfolder of a repository, and a `PATH`
   without `git`; a fake `git` on `PATH` records only the allowed subcommands and
   options.
-- [ ] **R3, R4** — With a fake clock: one write commits after 2 s; writes every
+- [x] **R3, R4** — With a fake clock: one write commits after 2 s; writes every
   second commit at 30 s; tool calls return before the commit.
-- [ ] **R5** — Messages for one and three entries; a title with a line break.
-- [ ] **R6** — With a person's staged change in another file, a tool commit
+- [x] **R5** — Messages for one and three entries; a title with a line break.
+- [x] **R6** — With a person's staged change in another file, a tool commit
   contains only the tool's paths, and the person's change stays staged; a move
   and a delete are committed as such; an ignored path is dropped.
-- [ ] **R7** — In a repository with no `user.name`, the commit succeeds with
+- [x] **R7** — In a repository with no `user.name`, the commit succeeds with
   the default author and committer; `--git-author "Ann <ann@example.org>"` is
   used when given.
-- [ ] **R8** — A failing `pre-commit` hook gives one `ERROR` with `hook_failed`.
-- [ ] **R9** — An edit reverted before the batch commits gives no commit.
-- [ ] **R10, R11** — A held `index.lock` released after 2 s: commit after a retry;
+- [x] **R8** — A failing `pre-commit` hook gives one `ERROR` with `hook_failed`.
+- [x] **R9** — An edit reverted before the batch commits gives no commit.
+- [x] **R10, R11** — A held `index.lock` released after 2 s: commit after a retry;
   held for 10 s: `ERROR` `index_locked`; log lines hold no title or path.
-- [ ] **R12** — An end-to-end test writes a note and closes stdin at once; the
+- [x] **R12** — An end-to-end test writes a note and closes stdin at once; the
   commit exists when the process has exited.
-- [ ] **R13** — A second SIGTERM during a slow fake commit exits at once with
+- [x] **R13** — A second SIGTERM during a slow fake commit exits at once with
   status 1.
 
 ## References

@@ -216,31 +216,31 @@ is unchanged.
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1, R2** — A write interrupted after the temporary file (fault injected
+- [x] **R1, R2** — A write interrupted after the temporary file (fault injected
   before `rename`) leaves the target unchanged and no temporary file.
-- [ ] **R3** — A file changed between the check and the rename (injected hook)
+- [x] **R3** — A file changed between the check and the rename (injected hook)
   gives `conflict` and keeps the human edit.
-- [ ] **R4, R5** — After each tool, the index equals a fresh load and the
+- [x] **R4, R5** — After each tool, the index equals a fresh load and the
   committer stub received the expected paths; a failed write sends none.
-- [ ] **R6, R7** — Writing into a new nested folder; the timestamps from a fixed
+- [x] **R6, R7** — Writing into a new nested folder; the timestamps from a fixed
   clock.
-- [ ] **R28** — `note_write` and `note_move` into a folder that `.gitignore`
+- [x] **R28** — `note_write` and `note_move` into a folder that `.gitignore`
   matches give `invalid_argument`.
-- [ ] **R8, R9** — Golden tests: frontmatter with comments, unknown keys, block
+- [x] **R8, R9** — Golden tests: frontmatter with comments, unknown keys, block
   and flow lists, and quoted values, after `updated`, `title` and `aliases`
   changes; no frontmatter and bad frontmatter.
-- [ ] **R10, R11** — File names for titles with `/`, `:`, leading dot, long
+- [x] **R10, R11** — File names for titles with `/`, `:`, leading dot, long
   titles, multi-byte characters; an existing path and a case-only clash.
-- [ ] **R12, R13, R14** — `note_write` golden file; body with frontmatter; shared
+- [x] **R12, R13, R14** — `note_write` golden file; body with frontmatter; shared
   title notice.
-- [ ] **R15** — Stale `expected_sha` returns the current content and sha.
-- [ ] **R16, R17, R18, R19** — Each `op`, including a missing section, zero and
+- [x] **R15** — Stale `expected_sha` returns the current content and sha.
+- [x] **R16, R17, R18, R19** — Each `op`, including a missing section, zero and
   two matches, an edit inside the frontmatter, and a no-op edit.
-- [ ] **R20, R21, R22, R23** — Move by path, by title, by both, onto itself, onto
+- [x] **R20, R21, R22, R23** — Move by path, by title, by both, onto itself, onto
   an existing note; aliases after two moves; links to the old path still resolve
   (SPEC-0002 R5 `Stale`).
-- [ ] **R24** — Delete reports the linkers; a second delete gives `not_found`.
-- [ ] **R25, R26, R27** — Tool list annotations; `check-docs.sh` check 5 passes;
+- [x] **R24** — Delete reports the linkers; a second delete gives `not_found`.
+- [x] **R25, R26, R27** — Tool list annotations; `check-docs.sh` check 5 passes;
   captured log lines carry the counts and no argument value.
 - [ ] **Live check** — In a Claude Code session on a scratch root, create, edit,
   rename and delete notes; edit one in an editor between a read and an edit and
