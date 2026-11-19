@@ -156,8 +156,12 @@ func TestServer_SPEC0004_R6_inFlightCallFinishes(t *testing.T) {
 	}
 	close(release)
 	select {
-	case <-e.done:
+	case err := <-e.done:
+		e.done <- err // let the cleanup see that the server stopped
 	case <-time.After(5 * time.Second):
 		t.Fatal("Serve did not return after the call finished")
+	}
+	if r := <-result; r != nil && r.IsError {
+		t.Fatalf("in-flight call failed: %+v", r)
 	}
 }

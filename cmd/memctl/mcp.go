@@ -1,11 +1,11 @@
 package main
 
 import (
-	"context"
 	"io"
 	"log/slog"
 	"os"
 
+	"github.com/agonzaNET/memctl/internal/mcpserver"
 	"github.com/agonzaNET/memctl/internal/note"
 )
 
@@ -31,18 +31,16 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		slog.String("log_level", cfg.logLevel),
 		slog.Int("notes", svc.Index().Len()))
 
-	serve(ctx, cancel, stdin, stdout)
+	srv := mcpserver.New(mcpserver.Options{Version: version, Notes: svc, Log: log})
+	if err := srv.Serve(ctx, io.NopCloser(stdin), nopWriteCloser{stdout}); err != nil {
+		log.Warn("session ended with an error", slog.String("class", "transport"))
+	}
 
 	log.Info("stopped")
 	return exitOK
 }
 
-// serve runs until the shutdown context ends. Until the MCP server lands, it
-// only watches stdin for EOF.
-func serve(ctx context.Context, cancel context.CancelFunc, stdin io.Reader, _ io.Writer) {
-	go func() {
-		_, _ = io.Copy(io.Discard, stdin)
-		cancel()
-	}()
-	<-ctx.Done()
-}
+// nopWriteCloser keeps the server from closing stdout.
+type nopWriteCloser struct{ io.Writer }
+
+func (nopWriteCloser) Close() error { return nil }

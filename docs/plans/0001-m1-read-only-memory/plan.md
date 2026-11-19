@@ -86,7 +86,7 @@ in the commit.
   meta-only update when the hash is equal, add/remove, the service mutex and
   `Call` wrapper used by every tool.
   *SPEC-0003 R10, R12, R13.*
-- [ ] **T6 — MCP server and `note_read`.** Require the MCP SDK and map it to
+- [x] **T6 — MCP server and `note_read`.** Require the MCP SDK and map it to
   `internal/mcpserver` in the import test. SDK server over stdio, server info
   and instructions, result shape and fixed error codes, `ref` resolution
   errors, tool-call log line, schema and annotations, agent-facing markers in

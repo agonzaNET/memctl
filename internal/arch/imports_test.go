@@ -16,10 +16,10 @@ const modulePath = "github.com/agonzaNET/memctl"
 
 // thirdParty is every third-party module memctl may use, and the one package
 // that may import it (ADR-0010, ADR-0011). A module enters this map in the
-// change that first imports it, with its line in go.mod; the MCP SDK joins
-// with internal/mcpserver. A module outside ADR-0011 needs an ADR first.
+// change that first imports it, with its line in go.mod. A module outside ADR-0011 needs an ADR first.
 var thirdParty = map[string]string{
-	"go.yaml.in/yaml/v3": "internal/parse",
+	"github.com/modelcontextprotocol/go-sdk": "internal/mcpserver",
+	"go.yaml.in/yaml/v3":                     "internal/parse",
 }
 
 // moduleRoot is the repository root, two levels up from this package.

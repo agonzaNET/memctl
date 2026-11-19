@@ -19,6 +19,8 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
 
 ### Added
 
+- `memctl mcp --root DIR` serves a folder of Markdown notes to an MCP client
+  over stdio, with the read-only tool `note_read` (spec: SPEC-0004).
 - `memctl version` prints the version of the binary (spec: SPEC-0004).
 
 [Unreleased]: https://github.com/agonzaNET/memctl/commits/main
