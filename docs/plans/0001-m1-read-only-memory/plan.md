@@ -77,7 +77,7 @@ in the commit.
   load of T2 fills the index.) `Put`, `Remove`, `Get`, `Titled`,
   `Resolve` with the four steps, ambiguity, `Stale`.
   *SPEC-0002 R1, R3–R6.*
-- [ ] **T4 — Command line.** `memctl`, `memctl version`, `memctl mcp` flags and
+- [x] **T4 — Command line.** `memctl`, `memctl version`, `memctl mcp` flags and
   environment, usage errors (status 2), root errors (status 1), JSON logger on
   stderr, `started`/`stopped`, shutdown context on stdin EOF and signals.
   CHANGELOG: `memctl version`.

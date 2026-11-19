@@ -17,4 +17,8 @@ On the first release, rename this section to `## [X.Y.Z] - YYYY-MM-DD` and open 
 fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
 -->
 
+### Added
+
+- `memctl version` prints the version of the binary (spec: SPEC-0004).
+
 [Unreleased]: https://github.com/agonzaNET/memctl/commits/main
