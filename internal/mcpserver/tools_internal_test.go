@@ -45,9 +45,10 @@ func TestTools_SPEC0004_R13_textRules(t *testing.T) {
 // states the side effect, the git commit, and every code the tool can return.
 func TestTools_SPEC0007_R26_writeText(t *testing.T) {
 	descs := map[string][]Code{
-		descNoteWrite: {CodeExists, CodeInvalidArgument, CodeConflict, CodeInternalError},
-		descNoteEdit:  {CodeNotFound, CodeAmbiguous, CodeConflict, CodeNoMatch, CodeNotUnique, CodeInvalidArgument, CodeInternalError},
-		descNoteMove:  {CodeNotFound, CodeAmbiguous, CodeExists, CodeConflict, CodeInvalidArgument, CodeInternalError},
+		descNoteWrite:  {CodeExists, CodeInvalidArgument, CodeConflict, CodeInternalError},
+		descNoteEdit:   {CodeNotFound, CodeAmbiguous, CodeConflict, CodeNoMatch, CodeNotUnique, CodeInvalidArgument, CodeInternalError},
+		descNoteMove:   {CodeNotFound, CodeAmbiguous, CodeExists, CodeConflict, CodeInvalidArgument, CodeInternalError},
+		descNoteDelete: {CodeNotFound, CodeAmbiguous, CodeConflict, CodeInternalError},
 	}
 	for d, codes := range descs {
 		name := strings.SplitN(d, ".", 2)[0]

@@ -1,0 +1,3 @@
+package mcpserver
+
+const descNoteDelete = ""
