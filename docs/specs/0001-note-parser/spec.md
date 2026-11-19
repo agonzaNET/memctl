@@ -68,6 +68,7 @@ A `parse.Note` value:
 | `Body` | Everything after the frontmatter block, unchanged |
 | `BodyLine` | The 1-based file line where `Body` starts |
 | `Headings` | Each ATX heading outside fences: level 1–6, text, line |
+| `Sections` | Each Observations or Relations section: kind, first line (its heading) and last line |
 | `Observations` | Each observation: category, text, line |
 | `Relations` | Each relation: type, target, label, line |
 | `Links` | Each `[[link]]` outside fences and outside relation lines (the `links_to` edges): target, label, line |

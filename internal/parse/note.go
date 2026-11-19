@@ -29,7 +29,9 @@ type Note struct {
 	Body     string
 	BodyLine int
 
-	Headings     []Heading
+	Headings []Heading
+	// Sections are the Observations and Relations sections, in file order.
+	Sections     []Section
 	Observations []Observation
 	Relations    []Relation
 	Links        []Link
@@ -50,6 +52,23 @@ type Heading struct {
 	Level int
 	Text  string
 	Line  int
+}
+
+// SectionKind names one of the two structured sections.
+type SectionKind string
+
+const (
+	SectionObservations SectionKind = "observations"
+	SectionRelations    SectionKind = "relations"
+)
+
+// Section is an Observations or Relations section: from its heading line
+// (Start) to its last line before the next level-1 or level-2 heading or the
+// end of the file (End), both 1-based (SPEC-0001 R12).
+type Section struct {
+	Kind  SectionKind
+	Start int
+	End   int
 }
 
 // Observation is a "- [category] text" line of the Observations section.

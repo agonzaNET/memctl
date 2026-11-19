@@ -119,3 +119,30 @@ func TestRead_SPEC0004_R18_counts(t *testing.T) {
 		t.Fatalf("counts %v", l)
 	}
 }
+
+func TestRead_SPEC0004_R16_section(t *testing.T) {
+	const rel = "runbooks/PAN-OS upgrade procedure.md"
+	e := start(t, map[string]string{rel: exampleNote})
+	got := text(t, e.call(t, "note_read", map[string]any{"ref": rel, "section": " observations "}))
+	wantSection := "## Observations\n- [prereq] Download content updates before the base image\n- [risk] HA pair must be upgraded passive first\n\n"
+	if !strings.HasPrefix(got, `Read section "Observations" of "PAN-OS upgrade procedure" at runbooks/PAN-OS upgrade procedure.md.`) {
+		t.Fatalf("first line: %s", got)
+	}
+	if !strings.Contains(got, "````markdown\n"+wantSection+"````") {
+		t.Fatalf("section content: %s", got)
+	}
+	if !strings.Contains(got, "- sha256: "+sum(exampleNote)) {
+		t.Fatalf("sha256 must be the whole file's: %s", got)
+	}
+
+	// A level-1 section runs over its sub-headings to the next level-1 heading.
+	got = text(t, e.call(t, "note_read", map[string]any{"ref": rel, "section": "PAN-OS upgrade procedure"}))
+	if !strings.Contains(got, "## Relations\n- implements [[ODR-017]]\n- applies_to [[PA-850]]\n````") {
+		t.Fatalf("level-1 section: %s", got)
+	}
+
+	r := e.call(t, "note_read", map[string]any{"ref": rel, "section": "Missing"})
+	if !r.IsError || !strings.HasPrefix(text(t, r), "not_found: ") || !strings.Contains(text(t, r), "Observations") {
+		t.Fatalf("missing section: %s", text(t, r))
+	}
+}
