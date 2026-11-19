@@ -95,9 +95,9 @@ Draft the spec in **plan mode** — do not create code or edit implementation fi
 in this phase. When the spec is written, **stop and wait for human review**.
 
 **Specs first (ADR-0018).** Write and get acceptance for every spec of the
-planned work before any implementation starts — for `memctl`, every spec of a
-milestone before its first line of code. Specs are reviewed one at a time,
-planned once the stage's specs are all accepted. The one exception is a spec
+planned release before any implementation starts — for `memctl` v1, every spec
+of M1 and M2 before the first line of code. Specs are reviewed one at a time;
+each stage is planned once all of the release's specs are accepted. The one exception is a spec
 that cannot be written without code that does not exist yet (it depends on
 measured behaviour, or on an interface the earlier code settles): note it in
 the stage plan as deferred, and write it once that code is implemented.
@@ -242,7 +242,7 @@ Phase 4 and [`changelog.md`](changelog.md)).
 
 ## Anti-patterns
 
-- Writing code for a stage before all of its specs are accepted, outside the
+- Writing code before all specs of the release are accepted, outside the
   deferred-spec exception (ADR-0018).
 - Starting to code before a spec exists for a non-trivial change.
 - Modifying a test to make it pass instead of fixing the code.

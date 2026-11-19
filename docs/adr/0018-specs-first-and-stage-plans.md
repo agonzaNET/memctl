@@ -32,8 +32,10 @@ Two problems showed up before the first line of `memctl` code:
 - **Stage.** A set of specs that only deliver value together; for `memctl`, a
   design milestone (M1, M2, M3). A spec that stands alone is its own stage and
   keeps its own plan in its folder, as ADR-0004 says.
-- **Specs first.** All specs known for the planned work are written and
-  accepted before implementation starts. The exception is a spec that cannot
+- **Specs first.** All specs of the planned release are written and accepted
+  before implementation of any of its stages starts; for `memctl` v1, the
+  specs of M1 and M2. M3 is build and release work governed by ADRs and needs
+  no spec. The exception is a spec that cannot
   be written without code that does not exist yet (for example one that
   depends on measured behaviour or on an interface that the earlier code
   settles); it is written once that code is implemented, and its plan comes
