@@ -69,7 +69,7 @@ in the commit.
   key/value pairs, `bad_field`, `bad_frontmatter`, unclosed block), body,
   file-stem title, problem sorting.
   *SPEC-0001 R1–R8, R21, R22, R23, R24.*
-- [ ] **T2 — Notes root and load.** `note.Open` with root resolution, the walk
+- [x] **T2 — Notes root and load.** `note.Open` with root resolution, the walk
   (`.md` files, dot-entries skipped, no symlinks, no `.gitignore` yet), size
   limit, unreadable files, parallel load with SHA-256, the `notes loaded` line.
   *SPEC-0003 R1–R4, R6–R9.*

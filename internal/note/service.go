@@ -4,7 +4,11 @@
 package note
 
 import (
+	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/agonzaNET/memctl/internal/index"
 )
@@ -27,7 +31,42 @@ type Service struct {
 // Open resolves the notes root and loads every note into a new index
 // (SPEC-0003 R1–R9).
 func Open(root string, log *slog.Logger) (*Service, Stats, error) {
-	return nil, Stats{}, nil
+	resolved, err := resolveRoot(root)
+	if err != nil {
+		return nil, Stats{}, err
+	}
+	s := &Service{root: resolved, idx: index.New(), log: log}
+	start := time.Now()
+	st := s.load()
+	log.Info("notes loaded",
+		slog.Int("notes", s.idx.Len()),
+		slog.Int("skipped", st.Skipped),
+		slog.Int64("duration_ms", time.Since(start).Milliseconds()))
+	return s, st, nil
+}
+
+// resolveRoot makes the root absolute with symlinks evaluated, and checks that
+// it is a readable directory (SPEC-0003 R1).
+func resolveRoot(root string) (string, error) {
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return "", fmt.Errorf("notes root %s: %w", root, err)
+	}
+	resolved, err := filepath.EvalSymlinks(abs)
+	if err != nil {
+		return "", fmt.Errorf("notes root %s: %w", root, err)
+	}
+	fi, err := os.Stat(resolved)
+	if err != nil {
+		return "", fmt.Errorf("notes root %s: %w", root, err)
+	}
+	if !fi.IsDir() {
+		return "", fmt.Errorf("notes root %s: not a directory", root)
+	}
+	if _, err := os.ReadDir(resolved); err != nil {
+		return "", fmt.Errorf("notes root %s: %w", root, err)
+	}
+	return resolved, nil
 }
 
 // Root returns the resolved, absolute notes root.
