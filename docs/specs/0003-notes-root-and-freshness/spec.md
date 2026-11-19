@@ -78,9 +78,10 @@ Also turn a note path given by a tool into a safe file path inside the root.
   over a shallower one. `.git/info/exclude` and global excludes MUST NOT be read.
 - **R6** — A note larger than 4 MiB MUST be skipped and counted in `Skipped`.
 - **R7** — A note that cannot be read MUST be skipped and counted in `Skipped`.
-  A skipped note's entry in the index MUST be removed. A load or check that
-  skipped notes MUST log one `WARN` line with the count, per reason
-  (`too_large`, `unreadable`).
+  A skipped note's entry in the index MUST be removed. The startup load, and a
+  check that skips a note it did not skip in the previous check, MUST log one
+  `WARN` line with the count, per reason (`too_large`, `unreadable`); a note
+  that stays skipped MUST NOT be reported again on every tool call.
 
 ### Startup load
 
@@ -143,7 +144,8 @@ Also turn a note path given by a tool into a safe file path inside the root.
   (`git check-ignore`, run in the test when `git` is present): comments,
   negation, directory-only, anchored, `**`, character classes, nested override.
 - [ ] **R6, R7** — A 5 MiB note and an unreadable note are skipped and counted;
-  a note that becomes unreadable is removed on the next check.
+  a note that becomes unreadable is removed on the next check with one `WARN`,
+  and the check after it gives none.
 - [ ] **R8, R9** — The parallel load equals a sequential load on a 500-note
   fixture (`-race` clean); the `notes loaded` line has the counts.
 - [ ] **R10** — Edit, touch without change, add, delete and rename a note
