@@ -97,4 +97,25 @@ var schemaList = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
+const descNoteWrite = `Create a new note from a title and a body, with an optional type and tags. Returns the new note's path and sha256.
+Use it only for a note that does not exist yet: search first to check, and use note_edit to change an existing note.
+The file is named after the title, in folder (the notes root when absent): folder runbooks and title PAN-OS upgrade give runbooks/PAN-OS upgrade.md. Characters that cannot be in a file name, such as / and :, become -. Link to the note by that path without .md.
+Pass only the note text in body, without a frontmatter block; memctl writes title, type, tags, created and updated. Limits: title up to 200 characters, type and each tag up to 64, at most 20 tags, body up to 1 MiB, no line breaks in title, type or tags.
+Side effect: writes one new file. The change is committed to git in the notes folder within a few seconds, and is never pushed.
+If other notes already have the same title, the note is still created and the result names them; link to the new note by its path. Pass the returned sha256 to note_edit when you change the note later in this session, or read it again first.
+Errors: exists means a note is already at that path, or at the same path in other letter case; use note_edit to change it, or choose another title or folder. invalid_argument means an argument breaks a rule above, or the folder is hidden (a name that starts with .) or excluded by a .gitignore file; fix it and call again. conflict means a file appeared at that path while memctl was writing, and nothing was changed; read it with note_read before deciding what to do. internal_error means the write failed and nothing changed; try once more, and if it fails again, tell the person.`
+
+var schemaNoteWrite = json.RawMessage(`{
+  "type": "object",
+  "properties": {
+    "title": {"type": "string", "minLength": 1, "maxLength": 200, "description": "The note's title, on one line. It also names the file."},
+    "folder": {"type": "string", "minLength": 1, "maxLength": 512, "description": "Relative folder for the new note, for example runbooks. The notes root when absent. Missing folders are created."},
+    "body": {"type": "string", "maxLength": 1048576, "description": "The note text in Markdown, without a frontmatter block. May be empty."},
+    "type": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Optional kind of note, for example runbook or host."},
+    "tags": {"type": "array", "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 64}, "description": "Optional tags, for example palo-alto."}
+  },
+  "required": ["title", "body"],
+  "additionalProperties": false
+}`)
+
 // agent-facing text: end

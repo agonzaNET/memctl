@@ -91,7 +91,7 @@ in the commit.
   failure. Target rejected when the walk would skip it (dot-segment,
   `.gitignore`). Local-time timestamps from the clock.
   *SPEC-0007 R1–R7, R28.*
-- [ ] **T3 — `note_write`.** File name rule; `exists` for the path and for a
+- [x] **T3 — `note_write`.** File name rule; `exists` for the path and for a
   case-only clash; body starting with a frontmatter delimiter rejected;
   frontmatter `title`, `type`, `tags`, `created`, `updated` in order, blank
   line, body, one final newline; shared-title notice. Tool with schema,

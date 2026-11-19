@@ -27,7 +27,7 @@ type Server struct {
 	beforeCall func()
 }
 
-// New returns a server with every tool registered (SPEC-0004 R5).
+// New returns a server with every tool registered (SPEC-0004 R5, SPEC-0007).
 func New(o Options) *Server {
 	s := &Server{opts: o}
 	s.sdk = mcp.NewServer(
@@ -40,6 +40,7 @@ func New(o Options) *Server {
 	s.registerRead()
 	s.registerSearch()
 	s.registerGraph()
+	s.registerWrite()
 	return s
 }
 
@@ -81,7 +82,11 @@ func handle[In any](s *Server, tool string, fn func(in In, log *callLog) (*mcp.C
 			var te *toolError
 			if !errors.As(err, &te) {
 				s.opts.Log.Error("tool failed", slog.String("tool", tool), slog.String("class", errorClass(err)))
-				te = &toolError{code: CodeInternalError, msg: internalMessage}
+				msg := internalMessage
+				if errors.As(err, new(unchangedError)) {
+					msg = unchangedMessage
+				}
+				te = &toolError{code: CodeInternalError, msg: msg}
 			}
 			code = te.code
 			res = failure(te)

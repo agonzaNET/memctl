@@ -16,10 +16,17 @@ const (
 	CodeNotFound        Code = "not_found"
 	CodeAmbiguous       Code = "ambiguous"
 	CodeInternalError   Code = "internal_error"
+
+	// Added by the write tools (SPEC-0007, "Error handling").
+	CodeExists    Code = "exists"
+	CodeConflict  Code = "conflict"
+	CodeNoMatch   Code = "no_match"
+	CodeNotUnique Code = "not_unique"
 )
 
 // Codes lists every code a tool may emit.
-var Codes = []Code{CodeInvalidArgument, CodeNotFound, CodeAmbiguous, CodeInternalError}
+var Codes = []Code{CodeInvalidArgument, CodeNotFound, CodeAmbiguous, CodeInternalError,
+	CodeExists, CodeConflict, CodeNoMatch, CodeNotUnique}
 
 // toolError is an error a tool returns to the agent as "<code>: <message>".
 type toolError struct {
