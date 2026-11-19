@@ -173,6 +173,7 @@ One binary, `memctl`, with subcommands; config comes from flags and env vars onl
 | Command | Purpose |
 | --- | --- |
 | `memctl mcp --root ~/notes` | MCP server over stdio (D1) |
+| `memctl version` | Print the version (SPEC-0004) |
 | `memctl check` | Report parse errors, unsupported Markdown forms, dangling links, ambiguous links (a name several notes share), stale links (resolved only through an old path in `aliases`), observation or relation lines outside their sections, and a missing git repo |
 
 Client setup is one line, e.g. `claude mcp add memory -- memctl mcp --root ~/notes`. Logs go to stderr as JSON (`log/slog`), never stdout, which carries the MCP protocol. Each tool call logs one `INFO` line after it ends: the tool, the duration, the error code if any, and counts (results, notes touched), never note content, queries or paths. Builds (D18): `make build` builds for the host; release builds with `CGO_ENABLED=0` for linux/amd64, linux/arm64 and darwin/arm64 via a GitHub Actions workflow that is started by hand (`workflow_dispatch`) for a given tag.
