@@ -152,7 +152,7 @@ Files always win: the index follows the disk, and a tool write never overwrites 
 
 **Instance lock (D12).** On start, `memctl mcp` takes a non-blocking `flock` on `<root>/.memory/memctl.lock` and holds it for the process lifetime, writing its PID into the file. If the lock is held, the process exits with `root <path> is in use by memctl (pid N)`. The kernel releases the lock on exit or crash, so there is no stale-lock cleanup. `memctl check` is read-only and runs without the lock.
 
-**Freshness check (D15).** Before each tool call, walk the root (skipping `.git`, `.memory` and `.gitignore` matches) and stat every Markdown file. Files whose mtime or size changed are reparsed; new files are added; missing files are dropped. For a few thousand notes this costs a few milliseconds and needs no background goroutine.
+**Freshness check (D15).** Before each tool call, walk the root and stat every Markdown file. The walk skips every file and folder whose name starts with a dot (`.git`, `.memory`, `.obsidian`, `.trash`), does not follow symlinks, and skips what the root's `.gitignore` files match, using memctl's own matcher with git's pattern rules (no git process per call). Files whose mtime or size changed are reparsed; new files are added; missing files are dropped. For a few thousand notes this costs a few milliseconds and needs no background goroutine.
 
 **Tool writes.**
 

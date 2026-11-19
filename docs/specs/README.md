@@ -87,3 +87,4 @@ writes, M3 release) are delivered as one or more specs each.
 |---|---|---|---|
 | SPEC-0001 | Note parser | Accepted | ADR-0002, ADR-0005, ADR-0010, ADR-0011 |
 | SPEC-0002 | In-memory index: link resolution, search, graph walk and listing | Accepted | ADR-0002, ADR-0005, ADR-0017 |
+| SPEC-0003 | Notes root, startup load and freshness check | Accepted | ADR-0002, ADR-0005, ADR-0016, ADR-0017 |
