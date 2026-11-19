@@ -134,7 +134,7 @@ in the commit.
 - [x] **T15 — Parser problems.** Lines outside their section; setext headings,
   HTML blocks, indented code, once per block, none in fences.
   *SPEC-0001 R19, R20.*
-- [ ] **T16 — `memctl check`.** Findings from parser problems, link report,
+- [x] **T16 — `memctl check`.** Findings from parser problems, link report,
   skipped files and the git test (`internal/gitlog/repo.go`); severities;
   format, sorting, summary; exit statuses; read-only proof. CHANGELOG:
   `memctl check`.

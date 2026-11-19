@@ -59,3 +59,26 @@ func parseMCP(args []string, getenv func(string) string) (mcpConfig, error) {
 	}
 	return cfg, nil
 }
+
+// parseCheck reads the flags of memctl check (SPEC-0005, "Inputs").
+func parseCheck(args []string, getenv func(string) string) (string, error) {
+	fs := flag.NewFlagSet("check", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	root := fs.String("root", "", "")
+	if err := fs.Parse(args); err != nil {
+		return "", err
+	}
+	if fs.NArg() > 0 {
+		return "", errors.New("memctl check takes no positional arguments")
+	}
+	set := false
+	fs.Visit(func(f *flag.Flag) { set = set || f.Name == "root" })
+	r := *root
+	if !set {
+		r = getenv("MEMCTL_ROOT")
+	}
+	if strings.TrimSpace(r) == "" {
+		return "", errors.New("--root (or MEMCTL_ROOT) is required")
+	}
+	return r, nil
+}

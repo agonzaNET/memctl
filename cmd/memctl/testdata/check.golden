@@ -1,0 +1,15 @@
+bf.md:1: bad_frontmatter: The frontmatter is not a valid YAML mapping of keys to values; fix its syntax.
+bfield.md:2: bad_field: The created field must be a date (2026-11-19) or an RFC 3339 timestamp; fix its value.
+big.md: skipped_file: The note is larger than 4 MiB and is not loaded; split it into smaller notes.
+bl.md:1: bad_link: A link on this line has an empty target; write [[target]] or remove the brackets.
+forms.md:2: setext_heading: This underline makes the line above a heading that memctl does not read; write the heading with # marks instead.
+forms.md:4: html_block: An HTML block starts here; memctl reads no structure in it, so write the content as Markdown.
+forms.md:7: indented_code: Text indented by four spaces or a tab after a blank line is code, which memctl does not read as structure; use a fenced code block (```) instead.
+links.md:1: ambiguous_link: [[dup]] matches several notes (x/dup.md, y/dup.md); link to one of them by path.
+links.md:1: dangling_link: [[nowhere]] matches no note; create it or link to an existing note by path.
+links.md:1: stale_link: [[old/place]] resolves only through an old path in the aliases of target.md; link to target instead.
+misplaced.md:1: observation_outside_section: This line has the form of an observation but is not under ## Observations, so it is not read as one; move it there or change its form.
+misplaced.md:2: relation_outside_section: This line has the form of a relation but is not under ## Relations, so it is read as a plain link; move it there or change its form.
+utf.md:1: invalid_utf8: The line is not valid UTF-8; save the note as UTF-8.
+.: no_git_repo: The notes root is not in a git repository; memctl will not commit tool writes. Run git init in it.
+11 notes checked, 4 errors, 10 warnings.

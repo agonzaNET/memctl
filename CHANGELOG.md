@@ -24,6 +24,9 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   links, or one section), `search` (BM25F full-text ranking with type, tag and
   folder filters), `context` (relations, links and backlinks up to three hops)
   and `list` (notes by folder, type or tag) (spec: SPEC-0004).
+- `memctl check --root DIR` reports parse problems, unsupported Markdown,
+  dangling, ambiguous and stale links, skipped files and a missing git
+  repository; it exits 1 when there are errors (spec: SPEC-0005).
 - `memctl version` prints the version of the binary (spec: SPEC-0004).
 
 [Unreleased]: https://github.com/agonzaNET/memctl/commits/main

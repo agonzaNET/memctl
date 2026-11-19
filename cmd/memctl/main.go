@@ -16,6 +16,8 @@ const usageText = `usage:
         Serve the notes under DIR to an MCP client over stdio.
         --root       notes root (or MEMCTL_ROOT); required
         --log-level  debug, info, warn or error (or MEMCTL_LOG_LEVEL); default info
+  memctl check [--root DIR]
+        Report problems in the notes under DIR; exits 1 when there are errors.
   memctl version
         Print the version.
 `
@@ -45,6 +47,8 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return exitOK
 	case "mcp":
 		return runMCP(args[1:], stdin, stdout, stderr)
+	case "check":
+		return runCheck(args[1:], stdout, stderr)
 	default:
 		return usageError(stderr, "unknown command")
 	}

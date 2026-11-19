@@ -78,3 +78,15 @@ func (s *Service) Root() string { return s.root }
 // Index returns the index. Callers outside the service must hold the service
 // mutex (see Call); tests may use it directly.
 func (s *Service) Index() *index.Index { return s.idx }
+
+// Skipped returns the notes the last load or check skipped, with the reason
+// (too_large or unreadable), keyed by relative path.
+func (s *Service) Skipped() map[string]string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make(map[string]string, len(s.skipped))
+	for k, v := range s.skipped {
+		out[k] = v
+	}
+	return out
+}
