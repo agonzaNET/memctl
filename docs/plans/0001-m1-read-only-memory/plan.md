@@ -99,7 +99,7 @@ in the commit.
 
 ### Slice B — Structure and search
 
-- [ ] **T7 — Fences, headings, sections.** Fence rules, ATX headings, the
+- [x] **T7 — Fences, headings, sections.** Fence rules, ATX headings, the
   Observations and Relations sections; `note_read` with `section`.
   *SPEC-0001 R9–R12; SPEC-0004 R16.*
 - [ ] **T8 — Links, observations, relations.** Link scanner with code spans,

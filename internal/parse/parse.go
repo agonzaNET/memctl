@@ -48,6 +48,7 @@ func Parse(rel string, data []byte) (n Note) {
 	n.BodyLine = 1
 
 	parseFrontmatter(&n, data, ls)
+	scanBody(&n, ls, n.BodyLine-1)
 
 	for i, l := range ls {
 		if !utf8.ValidString(l.text) {

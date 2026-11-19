@@ -15,7 +15,8 @@ import (
 )
 
 type noteReadIn struct {
-	Ref string `json:"ref"`
+	Ref     string `json:"ref"`
+	Section string `json:"section,omitempty"`
 }
 
 func (s *Server) registerRead() {
@@ -41,6 +42,15 @@ func (s *Server) noteRead(in noteReadIn, log *callLog) (*mcp.CallToolResult, err
 			return err
 		}
 		content := string(data)
+		first := fmt.Sprintf("Read %q at %s.", n.Title, p)
+		if in.Section != "" {
+			h, part, err := section(n, content, in.Section)
+			if err != nil {
+				return err
+			}
+			content = part
+			first = fmt.Sprintf("Read section %q of %q at %s.", h, n.Title, p)
+		}
 
 		var meta strings.Builder
 		item := func(k, v string) {
@@ -69,9 +79,9 @@ func (s *Server) noteRead(in noteReadIn, log *callLog) (*mcp.CallToolResult, err
 			body.WriteString("Links:\n" + strings.Join(links, "\n"))
 		}
 
-		log.set("bytes", len(data))
+		log.set("bytes", len(content))
 		log.set("links", len(links))
-		res = success(fmt.Sprintf("Read %q at %s.", n.Title, p), body.String())
+		res = success(first, body.String())
 		return nil
 	})
 	return res, err
@@ -109,4 +119,48 @@ func sortItems(items []lineItem) []string {
 		out[i] = it.text
 	}
 	return out
+}
+
+// section returns the text of the first heading that matches name and the
+// lines from it to the next heading of the same or a higher level
+// (SPEC-0004 R16).
+func section(n parse.Note, content, name string) (string, string, error) {
+	want := strings.ToLower(strings.TrimSpace(name))
+	for i, h := range n.Headings {
+		if strings.ToLower(strings.TrimSpace(h.Text)) != want {
+			continue
+		}
+		end := -1
+		for _, next := range n.Headings[i+1:] {
+			if next.Level <= h.Level {
+				end = next.Line
+				break
+			}
+		}
+		lines := strings.SplitAfter(content, "\n")
+		from := h.Line - 1
+		to := len(lines)
+		if end > 0 {
+			to = end - 1
+		}
+		if from >= len(lines) {
+			from = len(lines)
+		}
+		if to < from {
+			to = from
+		}
+		return h.Text, strings.Join(lines[from:to], ""), nil
+	}
+	var names []string
+	for i, h := range n.Headings {
+		if i == 20 {
+			names = append(names, fmt.Sprintf("and %d more", len(n.Headings)-20))
+			break
+		}
+		names = append(names, h.Text)
+	}
+	if len(names) == 0 {
+		return "", "", errorf(CodeNotFound, "The note has no heading %q, and no headings at all; read it without section.", name)
+	}
+	return "", "", errorf(CodeNotFound, "The note has no heading %q; its headings are: %s.", name, strings.Join(names, ", "))
 }
