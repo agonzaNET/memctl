@@ -27,7 +27,7 @@ check and that the model can act on.
 > list.
 
 - **Success:** `isError` is false. First line: one sentence, for example
-  `Created "PAN-OS upgrade procedure" at ops/pan-os-upgrade.md.` Then the
+  `Created "PAN-OS upgrade procedure" at runbooks/PAN-OS upgrade procedure.md.` Then the
   Markdown result (note, search hits, graph, listing).
 - **Error:** `isError` is true. One text block, `<code>: <sentence>`, for
   example `conflict: The note changed since you read it; read it again and

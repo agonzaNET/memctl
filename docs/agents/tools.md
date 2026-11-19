@@ -23,12 +23,12 @@ stderr. There is no HTTP transport and no authentication in v1 (design D1).
 
 - **Success:** `isError` false. One text block of Markdown whose **first line is
   one sentence** that names what was done or found:
-  `Created "PAN-OS upgrade procedure" at ops/pan-os-upgrade.md.` or
+  `Created "PAN-OS upgrade procedure" at runbooks/PAN-OS upgrade procedure.md.` or
   `Found 3 notes for this query.` The result follows after a blank line.
 - **Error:** `isError` true. One text block, `<code>: <sentence>`. The sentence
   says what happened and what to do next: fix an argument and retry, call
   another tool, or stop and tell the person.
-  Example: `exists: A note exists at ops/pa-850.md; use note_edit to change it.`
+  Example: `exists: A note exists at hosts/PA-850.md; use note_edit to change it.`
 - **No** JSON envelope, **no** `structuredContent`, **no** output schema in v1.
 - **Error codes** are snake_case and live in one list in `internal/mcpserver`.
   A test fails when a tool emits a code outside it. Add a code only with the

@@ -83,9 +83,9 @@ with its resolution: the resolved path, `ambiguous` with candidates, or
 `dangling`; `stale` when resolved through an old path).
 
 `````text
-Read "PAN-OS upgrade procedure" at ops/pan-os-upgrade.md.
+Read "PAN-OS upgrade procedure" at runbooks/PAN-OS upgrade procedure.md.
 
-- path: ops/pan-os-upgrade.md
+- path: runbooks/PAN-OS upgrade procedure.md
 - title: PAN-OS upgrade procedure
 - type: runbook
 - tags: palo-alto, firewall

@@ -48,7 +48,7 @@ search, graph walk, check, writes) reads notes only through this parser.
 ## Inputs
 
 - `rel`: the note's path relative to the notes root, slash-separated, ending in
-  `.md` (for example `ops/pan-os-upgrade.md`). Used for the file-stem title
+  `.md` (for example `runbooks/PAN-OS upgrade procedure.md`). Used for the file-stem title
   fallback and in problems.
 - `data`: the raw file bytes. UTF-8; a leading UTF-8 byte-order mark is
   allowed. Line endings `\n` or `\r\n`.
@@ -59,7 +59,7 @@ A `parse.Note` value:
 
 | Field | Content |
 |---|---|
-| `Title` | Frontmatter `title`, trimmed; if absent or empty, the file stem of `rel` (`ops/pan-os-upgrade.md` → `pan-os-upgrade`) |
+| `Title` | Frontmatter `title`, trimmed; if absent or empty, the file stem of `rel` (`runbooks/PAN-OS upgrade procedure.md` → `PAN-OS upgrade procedure`) |
 | `TitleFromFrontmatter` | Whether `Title` came from the frontmatter |
 | `Type` | Frontmatter `type`, trimmed; empty if absent |
 | `Tags`, `Aliases` | Frontmatter lists, each item trimmed, empty items dropped, order kept, duplicates removed |
@@ -166,7 +166,7 @@ Example, for the note in the design ("Note format v1"):
   MUST be a link, in order of appearance, several per line allowed. `target` and
   `label` MUST be trimmed. The target MUST NOT contain `[`, `]`, `|` or a line
   break. It is kept as written: a path target such as `network/intpxy` or
-  `ops/pa-850.md` and a title target are not told apart here; resolution is
+  `hosts/PA-850.md` and a title target are not told apart here; resolution is
   SPEC-0002's (design D23). A link with an empty target MUST be ignored and give the problem
   `bad_link`.
 - **R18** — Links in the frontmatter MUST NOT be recorded. Links inside inline
@@ -233,8 +233,8 @@ message that names the line's issue and how to fix it. `memctl check`
   gives `bad_field` and a zero time.
 - [ ] **R5, R6** — Broken YAML and an unclosed `---` each give
   `bad_frontmatter`, and the body is still parsed as stated.
-- [ ] **R7** — A note without `title` at `ops/pa-850.md` has the title `pa-850`,
-  even with a `# PA-850` heading.
+- [ ] **R7** — A note without `title` at `hosts/PA-850.md` has the title `PA-850`,
+  even with a `# Main firewall` heading.
 - [ ] **R8** — A CRLF file with a byte-order mark gives the same note as its LF
   copy, with the same line numbers.
 - [ ] **R9, R10** — Headings, observations, relations, links and problems inside

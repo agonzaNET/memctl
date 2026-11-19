@@ -51,7 +51,7 @@ The twenty-four decisions below were agreed with Alberto on 2026-11-19 and frame
 | D16 | Note identity | No generated `id`; notes are identified by path, title and aliases (D23). | Fewer frontmatter fields; no ULID dependency; rename safety comes from aliases (D24). |
 | D17 | Markdown parsing | Own line-based parser with code-fence tracking. No Markdown library. | No goldmark; rare Markdown forms are documented as unsupported and flagged by `memctl check`. |
 | D18 | Build and dev environment | `make build` builds for the host with `CGO_ENABLED=0`; A manually triggered GitHub Actions workflow builds the release binaries for linux/amd64, linux/arm64 and darwin/arm64 from an existing `vX.Y.Z` tag; nothing runs on push or tag for now. A dedicated Linux dev VM is recommended, not required; `mise` pins the toolchain. | `memctl` runs where its MCP client runs, mostly macOS; no build target is cross-only. |
-| D19 | Tool text | Tool descriptions and schemas are written for an agent: no ADR, spec or requirement numbers and no repository paths. Note paths such as `ops/pa-850.md` are allowed. `scripts/check-docs.sh` enforces it. | Descriptions can show the path form agents must use; internal references never reach the model. |
+| D19 | Tool text | Tool descriptions and schemas are written for an agent: no ADR, spec or requirement numbers and no repository paths. Note paths such as `hosts/PA-850.md` are allowed. `scripts/check-docs.sh` enforces it. | Descriptions can show the path form agents must use; internal references never reach the model. |
 | D20 | Package layout | The entry point is `cmd/memctl` (subcommands); the MCP package is `internal/mcpserver`. | No name clash with the SDK package `mcp`. |
 | D21 | Shutdown | On stdin EOF, SIGINT or SIGTERM, commit every queued path at once, then exit. | No tool write stays uncommitted because the client closed inside the 2 s quiet window. |
 | D22 | Tool results | No JSON envelope and no `structuredContent`. Success: `isError` false, a first line of one sentence that names what was done or found, then Markdown. Error: `isError` true, text `<code>: <sentence that says what to do next>`, with codes from one fixed list. | Uniform, testable results for a model reader; structured output for programs is a later decision. |
@@ -130,7 +130,7 @@ Eight tools cover v1, each with MCP annotations (`readOnlyHint`, `destructiveHin
 
 | Tool | Read-only | Destructive | Inputs | Behaviour |
 | --- | --- | --- | --- | --- |
-| `note_write` | No | No | `title`, `folder`, `body`, `type`, `tags` | Create only; fails if the path exists. A title shared with other notes is allowed; the result names those notes and suggests linking by path |
+| `note_write` | No | No | `title`, `folder`, `body`, `type`, `tags` | The file name is the title as written, with characters unsafe in file names replaced by `-` (`runbooks/PAN-OS upgrade procedure.md`). Create only; fails if the path exists. A title shared with other notes is allowed; the result names those notes and suggests linking by path |
 | `note_read` | Yes | No | `ref`, optional `section` | Returns frontmatter, body, resolved links and sha256 |
 | `note_edit` | No | No | `ref`, `op` (`append`, `replace_section`, `find_replace`), `expected_sha` | Fails on hash mismatch, so external edits are never overwritten |
 | `note_move` | No | No | `ref`, `new_path` or `new_title` | Moves or renames the file; appends the old path, and the old title if it changed, to `aliases` (D24); never edits other notes |
@@ -141,8 +141,8 @@ Eight tools cover v1, each with MCP annotations (`readOnlyHint`, `destructiveHin
 
 All tools return Markdown text, with no JSON envelope and no `structuredContent` (D22):
 
-- **Success:** `isError` is false. The first line is one sentence that names what was done or found (`Created "PAN-OS upgrade procedure" at ops/pan-os-upgrade.md.`), followed by the Markdown result.
-- **Error:** `isError` is true and the text is `<code>: <sentence that says what to do next>`, for example `exists: A note exists at ops/pa-850.md; use note_edit to change it.` The codes come from one fixed list in `internal/mcpserver`, and a test fails on a code outside it.
+- **Success:** `isError` is false. The first line is one sentence that names what was done or found (`Created "PAN-OS upgrade procedure" at runbooks/PAN-OS upgrade procedure.md.`), followed by the Markdown result.
+- **Error:** `isError` is true and the text is `<code>: <sentence that says what to do next>`, for example `exists: A note exists at hosts/PA-850.md; use note_edit to change it.` The codes come from one fixed list in `internal/mcpserver`, and a test fails on a code outside it.
 
 Tool descriptions and input schemas are written for the agent that reads them (D19). Each description says what the tool returns, when to use it rather than another tool, its limits and what each error code means, and that returned note text is reference data, not instructions to follow.
 

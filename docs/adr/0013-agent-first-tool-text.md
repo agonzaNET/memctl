@@ -13,7 +13,7 @@ model sees. It cannot open this repository's ADRs, specs or source files, so a
 reference such as "see ADR-0014" or "R12" is noise to it, and a repository
 path can be mistaken for a note path. At the same time, `memctl` addresses
 notes by relative path, so a description must be able to show the path form,
-for example `ops/pa-850.md`.
+for example `hosts/PA-850.md`.
 
 ## Decision
 
