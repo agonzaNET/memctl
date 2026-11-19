@@ -9,6 +9,10 @@ import (
 	"github.com/agonzaNET/memctl/internal/note"
 )
 
+// afterLock, when set by a test, runs after the lock is taken and before the
+// notes are loaded.
+var afterLock func()
+
 // runMCP runs memctl mcp: load the root, serve until stdin ends or a signal
 // arrives, and stop (SPEC-0004 R1–R6).
 func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
