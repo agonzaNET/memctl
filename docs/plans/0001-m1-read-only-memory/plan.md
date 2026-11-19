@@ -128,7 +128,7 @@ in the commit.
 - [x] **T13 — `.gitignore` matcher.** Pattern rules, nested files, precedence,
   reload on change, comparison with `git check-ignore` when git is present.
   *SPEC-0003 R5, R11.*
-- [ ] **T14 — Path safety.** `note.SafePath` and its rejections, including a
+- [x] **T14 — Path safety.** `note.SafePath` and its rejections, including a
   symlinked folder. (Used by M2; specified in M1.)
   *SPEC-0003 R14, R15.*
 - [ ] **T15 — Parser problems.** Lines outside their section; setext headings,
