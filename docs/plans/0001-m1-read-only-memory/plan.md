@@ -131,7 +131,7 @@ in the commit.
 - [x] **T14 — Path safety.** `note.SafePath` and its rejections, including a
   symlinked folder. (Used by M2; specified in M1.)
   *SPEC-0003 R14, R15.*
-- [ ] **T15 — Parser problems.** Lines outside their section; setext headings,
+- [x] **T15 — Parser problems.** Lines outside their section; setext headings,
   HTML blocks, indented code, once per block, none in fences.
   *SPEC-0001 R19, R20.*
 - [ ] **T16 — `memctl check`.** Findings from parser problems, link report,
