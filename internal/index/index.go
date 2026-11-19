@@ -63,6 +63,9 @@ type Index struct {
 	terms    map[string]*docTerms
 	postings map[string]map[string]struct{}
 	totalLen [numFields]int
+
+	// edgeCache holds the resolved edges until the next Put or Remove.
+	edgeCache *edgeMaps
 }
 
 // New returns an empty index.
@@ -82,6 +85,7 @@ func New() *Index {
 // Put adds or replaces the note at path (SPEC-0002 R1).
 func (x *Index) Put(p string, n parse.Note, m Meta) {
 	x.Remove(p)
+	x.edgeCache = nil
 	x.notes[p] = &entry{note: n, meta: m}
 	x.eachName(p, n, func(mp nameMap, name string) { mp.add(name, p) })
 	d := newDocTerms(n)
@@ -95,6 +99,7 @@ func (x *Index) Remove(p string) {
 	if !ok {
 		return
 	}
+	x.edgeCache = nil
 	x.eachName(p, e.note, func(mp nameMap, name string) { mp.remove(name, p) })
 	x.removeTerms(p, x.terms[p])
 	delete(x.terms, p)

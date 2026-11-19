@@ -66,17 +66,8 @@ func (x *Index) Walk(start string, depth int, relTypes []string) (Graph, error) 
 		return false
 	}
 
-	// Resolve every edge once, at query time, and index them both ways.
-	out := map[string][]Edge{}
-	in := map[string][]Edge{}
-	for _, p := range x.Paths() {
-		for _, e := range x.outgoing(p) {
-			out[p] = append(out[p], e)
-			if e.Resolution.Status == Resolved && e.Resolution.Path != p {
-				in[e.Resolution.Path] = append(in[e.Resolution.Path], e)
-			}
-		}
-	}
+	em := x.edges()
+	out, in := em.out, em.in
 
 	var g Graph
 	dist := map[string]int{start: 0}
@@ -233,4 +224,34 @@ func isLink(ls []parse.Link, line int, target string) bool {
 		}
 	}
 	return false
+}
+
+// edgeMaps holds every edge resolved against the current notes, by source
+// and by resolved target.
+type edgeMaps struct {
+	out map[string][]Edge
+	in  map[string][]Edge
+}
+
+// edges returns the resolved edges, computed once per change of the index:
+// Put and Remove drop the cache, because one note can change how the links
+// of every other note resolve (SPEC-0002 R15, R22).
+func (x *Index) edges() *edgeMaps {
+	if x.edgeCache != nil {
+		return x.edgeCache
+	}
+	em := &edgeMaps{out: map[string][]Edge{}, in: map[string][]Edge{}}
+	for p := range x.notes {
+		for _, e := range x.outgoing(p) {
+			em.out[p] = append(em.out[p], e)
+			if e.Resolution.Status == Resolved && e.Resolution.Path != p {
+				em.in[e.Resolution.Path] = append(em.in[e.Resolution.Path], e)
+			}
+		}
+	}
+	for _, es := range em.in {
+		sortEdges(es)
+	}
+	x.edgeCache = em
+	return em
 }

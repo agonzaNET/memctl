@@ -139,7 +139,7 @@ in the commit.
   format, sorting, summary; exit statuses; read-only proof. CHANGELOG:
   `memctl check`.
   *SPEC-0005 R1–R8.*
-- [ ] **T17 — Robustness and performance.** `FuzzParse` with seed corpus;
+- [x] **T17 — Robustness and performance.** `FuzzParse` with seed corpus;
   determinism test; index property test (random `Put`/`Remove`); freshness
   property test (random file operations); `-race` on load and concurrent calls;
   the design's example note golden test; benchmarks `BenchmarkBuild`,
@@ -197,13 +197,25 @@ in the commit.
 
 Benchmark results (SPEC-0002 R22, SPEC-0003 R16), filled in by T17:
 
+Measured on 2026-11-19 on the development VM (linux/arm64, 4 CPUs, Go 1.26.8),
+`go test -run '^$' -bench . -benchtime 5x` (10x for the walks), 5,000 synthetic
+notes of about 300 words, each with about 20 links.
+
 | Benchmark | Target | Result |
 |---|---|---|
-| Build index, 5,000 notes | < 2 s | |
-| Search, 5,000 notes | < 20 ms | |
-| Walk depth 3, 5,000 notes | < 20 ms | |
-| Startup load, 5,000 notes | < 2 s | |
-| Freshness check, no change | < 30 ms | |
+| Build index, 5,000 notes (`BenchmarkBuild`) | < 2 s | 0.47 s |
+| Search, 5,000 notes (`BenchmarkSearch`) | < 20 ms | 1.2 ms |
+| Walk depth 3, 5,000 notes, index unchanged (`BenchmarkWalk`) | < 20 ms | 8.1 ms |
+| Walk depth 3, first walk after a change (`BenchmarkWalkCold`) | < 20 ms | 81 ms — missed |
+| Startup load, 5,000 notes (`BenchmarkOpen`) | < 2 s | 0.45 s |
+| Freshness check, no change (`BenchmarkCheck`) | < 30 ms | 9.2 ms |
+
+Finding for the design's scale risk: the first `context` call after any change
+resolves every link of every note again (about 100,000 links here), which
+takes about 80 ms at 5,000 notes; later calls reuse the result. This is
+acceptable for v1. If it becomes a problem, keep a reverse index of link
+targets by normalised name so that a change re-resolves only the links it can
+affect.
 
 ## Notes
 
