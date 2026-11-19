@@ -63,7 +63,7 @@ in the commit.
 
 ### Slice A — First tool call
 
-- [ ] **T1 — Parser core.** Require `gopkg.in/yaml.v3` and map it to
+- [x] **T1 — Parser core.** Require `gopkg.in/yaml.v3` and map it to
   `internal/parse` in the import test. Types, line loop (BOM, CRLF, line numbers,
   `invalid_utf8`), frontmatter (delimiters, yaml.v3, known fields, raw
   key/value pairs, `bad_field`, `bad_frontmatter`, unclosed block), body,
