@@ -85,5 +85,4 @@ writes, M3 release) are delivered as one or more specs each.
 
 | ID | Title | Status | Governing ADRs |
 |---|---|---|---|
-
-None yet.
+| SPEC-0001 | Note parser | Accepted | ADR-0002, ADR-0005, ADR-0010, ADR-0011 |

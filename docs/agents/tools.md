@@ -28,7 +28,7 @@ stderr. There is no HTTP transport and no authentication in v1 (design D1).
 - **Error:** `isError` true. One text block, `<code>: <sentence>`. The sentence
   says what happened and what to do next: fix an argument and retry, call
   another tool, or stop and tell the person.
-  Example: `exists: The title exists at ops/pa-850.md; use note_edit to change it.`
+  Example: `exists: A note exists at ops/pa-850.md; use note_edit to change it.`
 - **No** JSON envelope, **no** `structuredContent`, **no** output schema in v1.
 - **Error codes** are snake_case and live in one list in `internal/mcpserver`.
   A test fails when a tool emits a code outside it. Add a code only with the

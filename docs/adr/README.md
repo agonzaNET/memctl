@@ -43,7 +43,7 @@ Every other ADR is **area-local**: find the ones relevant to your change by its
 Every ADR carries an `**Area:**` line (under its Status) drawn from the controlled
 vocabulary documented in
 [`../agents/adr.md`](../agents/adr.md#area-vocabulary) — currently
-`Methodology`, `Build`, `Tools`, `Lifecycle`.
+`Methodology`, `Build`, `Tools`, `Lifecycle`, `Index`.
 
 Update the table every time a new ADR is added or an ADR's status or area changes.
 `scripts/check-docs.sh` fails if a row's **Status** or **Area** disagrees with the
@@ -73,6 +73,7 @@ ADR file it points to. When an ADR becomes `Superseded by ADR-NNNN` or
 | [ADR-0014](0014-shutdown-flushes-pending-commits.md) | Stop on stdin EOF or a signal with one shutdown context, and commit every queued path before exit | Accepted | Lifecycle |
 | [ADR-0015](0015-tool-result-shape.md) | Return Markdown tool results with a one-sentence first line, and errors as a fixed code plus a next step | Accepted | Tools |
 | [ADR-0016](0016-tool-call-log-without-content.md) | Log one line per tool call, without note content | Accepted | Tools |
+| [ADR-0017](0017-path-identity-and-link-resolution.md) | Identify notes by path, resolve links path first, report ambiguity, and keep old paths as aliases on a move | Accepted | Index |
 
 ### Superseded / Deprecated
 

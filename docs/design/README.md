@@ -3,7 +3,7 @@
 This directory holds the **authoritative product design** of `memctl`:
 [`solution-design.md`](solution-design.md). It says what is built and why — the
 goals, the note format, the architecture, the MCP tools, the decisions D1 to
-D22 and the milestones. The specs, ADRs and code serve it.
+D24 and the milestones. The specs, ADRs and code serve it.
 
 ## Verification records
 
@@ -53,4 +53,5 @@ own ADR, with the reasoning and the alternatives.
 | D19 — Tool text | [ADR-0013](../adr/0013-agent-first-tool-text.md) |
 | D21 — Shutdown | [ADR-0014](../adr/0014-shutdown-flushes-pending-commits.md) |
 | D22 — Tool results | [ADR-0015](../adr/0015-tool-result-shape.md) |
+| D23, D24 — Path identity, link resolution, moves | [ADR-0017](../adr/0017-path-identity-and-link-resolution.md) |
 | Tool-call log ("Deployment and config") | [ADR-0016](../adr/0016-tool-call-log-without-content.md) |

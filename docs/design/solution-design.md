@@ -29,7 +29,7 @@ Anything that needs a server we do not run, or a second copy of the data, is out
 
 ## Decisions taken
 
-The twenty-two decisions below were agreed with Alberto on 2026-11-19 and frame the rest of the design. D18 to D22 were added the same day, when the project's build, packaging and tool conventions were settled.
+The twenty-four decisions below were agreed with Alberto on 2026-11-19 and frame the rest of the design. D18 to D22 were added the same day, when the project's build, packaging and tool conventions were settled, and D23 and D24 when path links were settled.
 
 | # | Topic | Decision | Consequence |
 | --- | --- | --- | --- |
@@ -48,13 +48,15 @@ The twenty-two decisions below were agreed with Alberto on 2026-11-19 and frame 
 | D13 | Commit author source | `--git-author` flag, default `memctl <memctl@localhost>`; the write path carries an author to the committer. | Team mode can later set a per-key author without refactoring. |
 | D14 | Index storage | In memory, rebuilt from the files on every start. No database. | No schema, no index file, no reindex command, no stale-index state. |
 | D15 | Change detection | Lazy: stat all files before each tool call and reparse the changed ones. No watcher. | No fsnotify, debounce, dropped events or self-write suppression; a few ms per call. |
-| D16 | Note identity | No generated `id`; notes are identified by title, aliases and path. | Fewer frontmatter fields; no ULID dependency; rename safety comes from aliases. |
+| D16 | Note identity | No generated `id`; notes are identified by path, title and aliases (D23). | Fewer frontmatter fields; no ULID dependency; rename safety comes from aliases (D24). |
 | D17 | Markdown parsing | Own line-based parser with code-fence tracking. No Markdown library. | No goldmark; rare Markdown forms are documented as unsupported and flagged by `memctl check`. |
 | D18 | Build and dev environment | `make build` builds for the host with `CGO_ENABLED=0`; A manually triggered GitHub Actions workflow builds the release binaries for linux/amd64, linux/arm64 and darwin/arm64 from an existing `vX.Y.Z` tag; nothing runs on push or tag for now. A dedicated Linux dev VM is recommended, not required; `mise` pins the toolchain. | `memctl` runs where its MCP client runs, mostly macOS; no build target is cross-only. |
 | D19 | Tool text | Tool descriptions and schemas are written for an agent: no ADR, spec or requirement numbers and no repository paths. Note paths such as `ops/pa-850.md` are allowed. `scripts/check-docs.sh` enforces it. | Descriptions can show the path form agents must use; internal references never reach the model. |
 | D20 | Package layout | The entry point is `cmd/memctl` (subcommands); the MCP package is `internal/mcpserver`. | No name clash with the SDK package `mcp`. |
 | D21 | Shutdown | On stdin EOF, SIGINT or SIGTERM, commit every queued path at once, then exit. | No tool write stays uncommitted because the client closed inside the 2 s quiet window. |
 | D22 | Tool results | No JSON envelope and no `structuredContent`. Success: `isError` false, a first line of one sentence that names what was done or found, then Markdown. Error: `isError` true, text `<code>: <sentence that says what to do next>`, with codes from one fixed list. | Uniform, testable results for a model reader; structured output for programs is a later decision. |
+| D23 | Path identity and link resolution | The relative path is a note's identity and the only unique key; titles may repeat across notes. A link or `ref` resolves by path (with or without `.md`), then title, then alias, then file stem; at the first step with any match, one match resolves and several give `ambiguous`, never a silent pick. Path links (`[[network/intpxy]]`) are the recommended form. | Existing notes that link by path and share titles across folders work unchanged; title links still work while the title is unique. |
+| D24 | Move keeps old links working | `note_move` appends the old path (without `.md`) to `aliases`, and the old title too when the title changes. It never rewrites other notes. Aliases that look like paths resolve as paths. | No mass rewrite and no risk to a note open in an editor; links to the old path keep resolving, and `memctl check` lists them as stale so they can be updated by hand. |
 
 ## Note format v1
 
@@ -62,13 +64,13 @@ Keep Basic Memory's core idea (frontmatter + observations + relations in plain M
 
 | Area | Basic Memory | v1 | Why |
 | --- | --- | --- | --- |
-| Identity | `permalink` slug in frontmatter, derived from path | No generated identifier; title (unique) + aliases + path (D16) | Nothing to keep in sync with the path; one user needs no global id |
-| Rename safety | Title links rewritten across notes on rename | Old title is appended to `aliases`; links resolve by title, then aliases, then file stem | No mass rewrite of other files; old links keep working |
+| Identity | `permalink` slug in frontmatter, derived from path | No generated identifier; the path is the unique key, titles and aliases are names that may repeat (D16, D23) | Nothing to keep in sync with the path; one user needs no global id |
+| Rename safety | Title links rewritten across notes on rename | Old path and old title are appended to `aliases`; links resolve by path, then title, then aliases, then file stem (D23, D24) | No mass rewrite of other files; old links keep working |
 | Observations | `- [category] text #tag (context)` anywhere in the note | `- [category] text` only under `## Observations`; category matches `[a-z][a-z0-9_-]+` (2+ chars) | Avoids collision with GFM tasks `- [ ]` / `- [x]` and with prose bullets |
 | Tags | Frontmatter plus inline `#tag` | Frontmatter `tags` only | Inline `#` hits `C#`, `#123`, URLs; parentheses were parsed as context |
 | Relations | `- type [[Target]]` bullets; prose links become `links_to` | Same syntax, only under `## Relations`; type matches `[a-z][a-z0-9_]*`; links elsewhere become `links_to` | Deterministic parsing, same mental model |
 
-Frontmatter fields: `title`, `type`, `tags`, `aliases`, `created`, `updated`. Unknown keys are preserved untouched. Links accept `[[Title]]` and `[[Title|label]]`.
+Frontmatter fields: `title`, `type`, `tags`, `aliases`, `created`, `updated`. Unknown keys are preserved untouched. Links accept `[[folder/File name]]` (a path, `.md` optional; the recommended form), `[[Title]]`, and either with a `|label`.
 
 ```markdown
 ---
@@ -112,25 +114,26 @@ The index is built from the files on every start and lives only in process memor
 | Structure | Holds | Used by |
 | --- | --- | --- |
 | `notes` map, keyed by path | title, type, tags, aliases, created, updated, mtime, size, sha256, body, observations, links | every tool |
-| `names` map, lower-cased name → paths | titles, aliases and file stems | link resolution, `ref` lookup, duplicate detection |
+| `paths` map, lower-cased path without `.md` → path | every note path | link resolution and `ref` lookup, step 1 |
+| `names` map, lower-cased name → paths | titles, aliases (path-like aliases also normalised as paths) and file stems, one map per kind | link resolution and `ref` lookup, steps 2–4; ambiguity detection |
 | `backlinks` map, path → source paths | reverse of resolved links | `context` |
 | Inverted index, term → postings | per field: title, aliases, observations, body | `search` |
 | Field lengths | per note and field, plus averages | BM25F scoring |
 
 Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, observations 1.5, body 1, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German.
 
-Links are resolved at query time through `names`, so creating a missing target or renaming a note needs no link rewrite. Unresolved targets are reported as dangling, not errors.
+Links are resolved at query time (D23): path, then title, then alias, then file stem. At the first step that finds any note, one match resolves the link and several make it ambiguous; later steps are not tried. Creating a missing target or moving a note therefore needs no link rewrite. Unresolved targets are reported as dangling and ambiguous ones as ambiguous, never as errors of the tool call that reads them.
 
 ## MCP tools
 
-Eight tools cover v1, each with MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`) so clients can auto-approve reads and ask before writes. Notes are addressed by title, alias or relative path.
+Eight tools cover v1, each with MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`) so clients can auto-approve reads and ask before writes. Notes are addressed by a `ref`: a relative path (recommended), title or alias, resolved like a link (D23). A `ref` that matches several notes fails with `ambiguous` and lists their paths.
 
 | Tool | Read-only | Destructive | Inputs | Behaviour |
 | --- | --- | --- | --- | --- |
-| `note_write` | No | No | `title`, `folder`, `body`, `type`, `tags` | Create only; fails if the title or path exists |
+| `note_write` | No | No | `title`, `folder`, `body`, `type`, `tags` | Create only; fails if the path exists. A title shared with other notes is allowed; the result names those notes and suggests linking by path |
 | `note_read` | Yes | No | `ref`, optional `section` | Returns frontmatter, body, resolved links and sha256 |
 | `note_edit` | No | No | `ref`, `op` (`append`, `replace_section`, `find_replace`), `expected_sha` | Fails on hash mismatch, so external edits are never overwritten |
-| `note_move` | No | No | `ref`, `new_path` or `new_title` | Rename adds old title to `aliases` |
+| `note_move` | No | No | `ref`, `new_path` or `new_title` | Moves or renames the file; appends the old path, and the old title if it changed, to `aliases` (D24); never edits other notes |
 | `note_delete` | No | Yes | `ref` | Removes file; git keeps history |
 | `search` | Yes | No | `query`, `type`, `tags`, `folder`, `limit` | BM25F ranking, returns snippets |
 | `context` | Yes | No | `ref`, `depth` (default 1, max 3), `rel_types` | Graph walk over relations and backlinks |
@@ -139,7 +142,7 @@ Eight tools cover v1, each with MCP annotations (`readOnlyHint`, `destructiveHin
 All tools return Markdown text, with no JSON envelope and no `structuredContent` (D22):
 
 - **Success:** `isError` is false. The first line is one sentence that names what was done or found (`Created "PAN-OS upgrade procedure" at ops/pan-os-upgrade.md.`), followed by the Markdown result.
-- **Error:** `isError` is true and the text is `<code>: <sentence that says what to do next>`, for example `exists: The title exists at ops/pa-850.md; use note_edit to change it.` The codes come from one fixed list in `internal/mcpserver`, and a test fails on a code outside it.
+- **Error:** `isError` is true and the text is `<code>: <sentence that says what to do next>`, for example `exists: A note exists at ops/pa-850.md; use note_edit to change it.` The codes come from one fixed list in `internal/mcpserver`, and a test fails on a code outside it.
 
 Tool descriptions and input schemas are written for the agent that reads them (D19). Each description says what the tool returns, when to use it rather than another tool, its limits and what each error code means, and that returned note text is reference data, not instructions to follow.
 
@@ -170,7 +173,7 @@ One binary, `memctl`, with subcommands; config comes from flags and env vars onl
 | Command | Purpose |
 | --- | --- |
 | `memctl mcp --root ~/notes` | MCP server over stdio (D1) |
-| `memctl check` | Report parse errors, unsupported Markdown forms, dangling links, duplicate titles, observation or relation lines outside their sections, and a missing git repo |
+| `memctl check` | Report parse errors, unsupported Markdown forms, dangling links, ambiguous links (a name several notes share), stale links (resolved only through an old path in `aliases`), observation or relation lines outside their sections, and a missing git repo |
 
 Client setup is one line, e.g. `claude mcp add memory -- memctl mcp --root ~/notes`. Logs go to stderr as JSON (`log/slog`), never stdout, which carries the MCP protocol. Each tool call logs one `INFO` line after it ends: the tool, the duration, the error code if any, and counts (results, notes touched), never note content, queries or paths. Builds (D18): `make build` builds for the host; release builds with `CGO_ENABLED=0` for linux/amd64, linux/arm64 and darwin/arm64 via a GitHub Actions workflow that is started by hand (`workflow_dispatch`) for a given tag.
 
@@ -204,7 +207,7 @@ The main risk is scale: the full in-memory index and the per-call freshness walk
 | Notes root grows far beyond \~10k files | Slower start and tool calls | Measure in M1; if needed, add fsnotify or a persisted index as a later change |
 | Editor and tool edit the same note | Lost human edit | `expected_sha` check; atomic rename; git history |
 | BM25 ranking feels weak on short notes | Agents miss relevant notes | Tune field weights; title and alias boost; v2 vectors |
-| Duplicate titles or aliases | Ambiguous links | `note_write` rejects duplicates; `memctl check` reports them |
+| Duplicate titles or aliases | Ambiguous title links | Paths are the unique key and the recommended link form (D23); an ambiguous link or `ref` is reported, never resolved by guess; `memctl check` lists ambiguous links |
 | Unsupported Markdown forms (setext headings, HTML blocks) | Sections or links missed | `memctl check` flags them; notes use ATX headings |
 | Two MCP clients configured on the same root (e.g. Claude Code and Claude Desktop) | Second client's server fails to start | Clear error with holder PID; one client per root (accepted for v1); HTTP sharing is a backlog item |
 

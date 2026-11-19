@@ -26,7 +26,7 @@ git commit after each tool write. `memctl check` reports problems in a notes
 root. There is no HTTP transport, no authentication, no database and no config
 file in v1.
 
-The tools, the note format, the decisions D1–D22 and the milestones are in the
+The tools, the note format, the decisions D1–D24 and the milestones are in the
 design. For the **current list of specs and their status**, see
 `docs/specs/README.md` — that index is the single source of truth; do not
 maintain a second copy of it here.

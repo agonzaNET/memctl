@@ -103,7 +103,7 @@ Every ADR carries an **Area** (declared as an `**Area:**` line in the ADR, under
 its Status) drawn from a small controlled vocabulary, used for discovery
 (ADR-0009). Current areas:
 
-`Methodology`, `Build`, `Tools`, `Lifecycle`.
+`Methodology`, `Build`, `Tools`, `Lifecycle`, `Index`.
 
 - `Methodology` — how the project is worked on: specs, ADRs, tests, commits,
   the changelog, versioning, dependency rules.
@@ -111,8 +111,9 @@ its Status) drawn from a small controlled vocabulary, used for discovery
   development machine.
 - `Tools` — the MCP tool surface: tool text, result shape, the tool-call log.
 - `Lifecycle` — process start, the instance lock, shutdown.
+- `Index` — note identity, link resolution, the in-memory index and search.
 
-Adding a new area (for example `Index`, `Format` or `Git` when those decisions
+Adding a new area (for example `Format` or `Git` when those decisions
 arrive) is a one-line edit to this list and to the list in
 [`../adr/README.md`](../adr/README.md#maintaining-this-index) — it does not need
 its own ADR. `scripts/check-docs.sh` fails if a row's Area in the
