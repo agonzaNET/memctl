@@ -24,21 +24,59 @@ type Stats struct {
 
 // Service is the note service of one notes root.
 type Service struct {
-	mu      sync.Mutex
-	root    string
-	idx     *index.Index
-	log     *slog.Logger
-	skipped map[string]string // rel → reason, from the last load or check
+	mu        sync.Mutex
+	root      string
+	idx       *index.Index
+	log       *slog.Logger
+	skipped   map[string]string // rel → reason, from the last load or check
+	now       func() time.Time
+	committer Committer
+	hooks     hooks
+}
+
+// Change is one successful tool write, handed to the committer (SPEC-0007
+// R5): the tool, the note title and the changed paths relative to the root
+// (old and new for a move).
+type Change struct {
+	Tool, Title string
+	Paths       []string
+}
+
+// Committer receives every successful tool write. Enqueue must not block.
+type Committer interface {
+	Enqueue(Change)
+}
+
+type nopCommitter struct{}
+
+func (nopCommitter) Enqueue(Change) {}
+
+// Option configures a Service.
+type Option func(*Service)
+
+// WithClock sets the clock of created and updated stamps (SPEC-0007 R7).
+func WithClock(now func() time.Time) Option { return func(s *Service) { s.now = now } }
+
+// WithCommitter sets the receiver of tool writes (SPEC-0007 R5).
+func WithCommitter(c Committer) Option { return func(s *Service) { s.committer = c } }
+
+// hooks inject faults into a write in tests (SPEC-0007 R2, R3).
+type hooks struct {
+	beforeRehash func(abs string)
+	beforeRename func(abs string) error
 }
 
 // Open resolves the notes root and loads every note into a new index
 // (SPEC-0003 R1–R9).
-func Open(root string, log *slog.Logger) (*Service, Stats, error) {
+func Open(root string, log *slog.Logger, opts ...Option) (*Service, Stats, error) {
 	resolved, err := resolveRoot(root)
 	if err != nil {
 		return nil, Stats{}, err
 	}
-	s := &Service{root: resolved, idx: index.New(), log: log}
+	s := &Service{root: resolved, idx: index.New(), log: log, now: time.Now, committer: nopCommitter{}}
+	for _, o := range opts {
+		o(s)
+	}
 	start := time.Now()
 	st := s.refresh(true)
 	log.Info("notes loaded",
