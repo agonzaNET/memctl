@@ -41,7 +41,7 @@ The twenty-four decisions below were agreed with Alberto on 2026-11-19 and frame
 | D6 | Cloud | Removed entirely. | No sync, accounts, routing or promo code paths. |
 | D7 | Name | `memctl` for binary, repo and module. | No rename churn later. |
 | D8 | Repo | github.com/agonzaNET/memctl (personal GitHub, not aai-infra); Go module path is the same. | Own CI; stays open-sourceable. |
-| D9 | `context` scope | Graph neighbours only (relations and backlinks); no tag matches. | Predictable, small output; tag queries go through `search`. |
+| D9 | `context` scope | Graph neighbours only: relations, body links (`links_to`) and backlinks; no tag matches. Edge types can be filtered. | Predictable, small output; tag queries go through `search`. |
 | D10 | Commit author | Default identity `memctl <memctl@localhost>`. | AI edits are separable from human edits in history and blame. |
 | D11 | Licence | MIT. | Permissive and simple; the clean-room build carries no AGPL obligation. |
 | D12 | Instance lock | Exactly one `memctl` process per notes root; a second exits with an error naming the holder's PID. | One writer and one git committer; two MCP clients cannot share a root at the same time. |
@@ -117,10 +117,10 @@ The index is built from the files on every start and lives only in process memor
 | `paths` map, lower-cased path without `.md` → path | every note path | link resolution and `ref` lookup, step 1 |
 | `names` map, lower-cased name → paths | titles, aliases (path-like aliases also normalised as paths) and file stems, one map per kind | link resolution and `ref` lookup, steps 2–4; ambiguity detection |
 | `backlinks` map, path → source paths | reverse of resolved links | `context` |
-| Inverted index, term → postings | per field: title, aliases, observations, body | `search` |
+| Inverted index, term → postings | per field: title, aliases, tags, observations, body | `search` |
 | Field lengths | per note and field, plus averages | BM25F scoring |
 
-Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, observations 1.5, body 1, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German.
+Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, tags 2, observations 1.5, body 1, a note matching any query term, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German.
 
 Links are resolved at query time (D23): path, then title, then alias, then file stem. At the first step that finds any note, one match resolves the link and several make it ambiguous; later steps are not tried. Creating a missing target or moving a note therefore needs no link rewrite. Unresolved targets are reported as dangling and ambiguous ones as ambiguous, never as errors of the tool call that reads them.
 

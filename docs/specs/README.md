@@ -86,3 +86,4 @@ writes, M3 release) are delivered as one or more specs each.
 | ID | Title | Status | Governing ADRs |
 |---|---|---|---|
 | SPEC-0001 | Note parser | Accepted | ADR-0002, ADR-0005, ADR-0010, ADR-0011 |
+| SPEC-0002 | In-memory index: link resolution, search, graph walk and listing | Accepted | ADR-0002, ADR-0005, ADR-0017 |
