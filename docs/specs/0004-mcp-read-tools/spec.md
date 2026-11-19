@@ -241,36 +241,36 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1, R2** — Table test of command lines and exit statuses, run against
+- [x] **R1, R2** — Table test of command lines and exit statuses, run against
   the built binary.
-- [ ] **R26** — `memctl version` of a binary built with `-ldflags` prints that
+- [x] **R26** — `memctl version` of a binary built with `-ldflags` prints that
   version; without, `memctl dev`.
-- [ ] **R3, R4, R5** — An end-to-end test spawns `memctl mcp` over pipes with an
+- [x] **R3, R4, R5** — An end-to-end test spawns `memctl mcp` over pipes with an
   SDK client: it initialises, sees the server name, version, instructions and
   four tools; every stdout byte parses as protocol; stderr lines are JSON and
   include `started`.
-- [ ] **R6** — Closing stdin and sending SIGTERM each end the process with status
+- [x] **R6** — Closing stdin and sending SIGTERM each end the process with status
   0 and a `stopped` line; a slow tool call in progress completes first.
-- [ ] **R7** — A note edited on disk between two `note_read` calls is returned
+- [x] **R7** — A note edited on disk between two `note_read` calls is returned
   with its new content and `sha256` on the second.
-- [ ] **R8, R9** — The tool list shows the annotations and schemas; a call with an
+- [x] **R8, R9** — The tool list shows the annotations and schemas; a call with an
   unknown property, `limit` 0 and `depth` 4 is refused by the SDK.
-- [ ] **R10, R11** — Every tool's success and error results match the shape; a
+- [x] **R10, R11** — Every tool's success and error results match the shape; a
   test scans the codes emitted by all tests against the table.
-- [ ] **R12** — A captured log of one call per tool has the fields and counts,
+- [x] **R12** — A captured log of one call per tool has the fields and counts,
   and no argument value.
-- [ ] **R13** — `check-docs.sh` passes with the markers present; a description
+- [x] **R13** — `check-docs.sh` passes with the markers present; a description
   naming a spec number fails it.
-- [ ] **R14** — A ref by path, by title, by alias, ambiguous and unknown.
-- [ ] **R15, R16, R17, R18** — `note_read` of the design's example note equals a
+- [x] **R14** — A ref by path, by title, by alias, ambiguous and unknown.
+- [x] **R15, R16, R17, R18** — `note_read` of the design's example note equals a
   golden file; a note containing a run of four backticks gets a five-backtick
   fence;
   `section` hit, nested heading, miss.
-- [ ] **R19, R20, R21** — `search` golden output, no hits, empty query, folder
+- [x] **R19, R20, R21** — `search` golden output, no hits, empty query, folder
   normalisation and rejection.
-- [ ] **R22, R23** — `context` golden output at depth 1 and 2, `rel_types`,
+- [x] **R22, R23** — `context` golden output at depth 1 and 2, `rel_types`,
   truncation line.
-- [ ] **R24, R25** — `list` golden output, 501 notes give 500 lines and the
+- [x] **R24, R25** — `list` golden output, 501 notes give 500 lines and the
   total.
 - [ ] **Live check** — `claude mcp add` with the built binary on a copy of a real
   notes root: the four tools answer, and an edit in an editor shows up on the

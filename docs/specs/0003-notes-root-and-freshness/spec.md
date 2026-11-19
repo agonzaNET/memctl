@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -135,30 +135,30 @@ Also turn a note path given by a tool into a safe file path inside the root.
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1, R2** — Open succeeds on a relative root and on a root reached through
+- [x] **R1, R2** — Open succeeds on a relative root and on a root reached through
   a symlink; fails on a missing path, a file and an unreadable directory.
-- [ ] **R3, R4** — A fixture with `a.md`, `A.MD`, `.hidden.md`, `x.txt`,
+- [x] **R3, R4** — A fixture with `a.md`, `A.MD`, `.hidden.md`, `x.txt`,
   `.git/x.md`, `.obsidian/y.md`, `.trash/z.md`, a symlinked file and a
   symlinked folder loads only `a.md`.
-- [ ] **R5** — Table test of `.gitignore` patterns against git's own answers
+- [x] **R5** — Table test of `.gitignore` patterns against git's own answers
   (`git check-ignore`, run in the test when `git` is present): comments,
   negation, directory-only, anchored, `**`, character classes, nested override.
-- [ ] **R6, R7** — A 5 MiB note and an unreadable note are skipped and counted;
+- [x] **R6, R7** — A 5 MiB note and an unreadable note are skipped and counted;
   a note that becomes unreadable is removed on the next check with one `WARN`,
   and the check after it gives none.
-- [ ] **R8, R9** — The parallel load equals a sequential load on a 500-note
+- [x] **R8, R9** — The parallel load equals a sequential load on a 500-note
   fixture (`-race` clean); the `notes loaded` line has the counts.
-- [ ] **R10** — Edit, touch without change, add, delete and rename a note
+- [x] **R10** — Edit, touch without change, add, delete and rename a note
   between two checks; the stats and the index match each case.
-- [ ] **R11** — Adding `drafts/` to `.gitignore` removes `drafts/*.md` on the
+- [x] **R11** — Adding `drafts/` to `.gitignore` removes `drafts/*.md` on the
   next check; removing the line adds them back.
-- [ ] **R12** — Concurrent tool calls under `-race` never observe a partial
+- [x] **R12** — Concurrent tool calls under `-race` never observe a partial
   check.
-- [ ] **R13** — A property test of random file operations: after each check,
+- [x] **R13** — A property test of random file operations: after each check,
   the index equals a fresh `Open`.
-- [ ] **R14, R15** — Table test of accepted and rejected paths, including a
+- [x] **R14, R15** — Table test of accepted and rejected paths, including a
   symlinked folder inside the root; the root is unchanged afterwards.
-- [ ] **R16** — `BenchmarkOpen` and `BenchmarkCheck` exist; results recorded in
+- [x] **R16** — `BenchmarkOpen` and `BenchmarkCheck` exist; results recorded in
   the stage plan.
 
 ## References

@@ -14,11 +14,15 @@ import (
 )
 
 // benchRoot writes 5,000 notes of about 300 words (SPEC-0003 R16).
-func benchRoot(b *testing.B) string {
+func benchRoot(b testing.TB) string {
+	return benchRootN(b, 5000)
+}
+
+func benchRootN(b testing.TB, n int) string {
 	b.Helper()
 	root := b.TempDir()
 	r := rand.New(rand.NewSource(1))
-	for i := 0; i < 5000; i++ {
+	for i := 0; i < n; i++ {
 		var s strings.Builder
 		fmt.Fprintf(&s, "---\ntitle: Note %d\n---\n", i)
 		for w := 0; w < 300; w++ {
@@ -56,5 +60,19 @@ func BenchmarkCheck(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
 		s.Call(func(*index.Index, note.Stats) error { return nil })
+	}
+}
+
+// TestPerf_SPEC0003_R16_benchmarksRun loads and checks a small root the way
+// the benchmarks do; the 5,000-note results are recorded in the stage plan.
+func TestPerf_SPEC0003_R16_benchmarksRun(t *testing.T) {
+	root := benchRootN(t, 100)
+	var buf bytes.Buffer
+	s, _, err := note.Open(root, logger(&buf))
+	if err != nil || s.Index().Len() != 100 {
+		t.Fatalf("open: %v", err)
+	}
+	if err := s.Call(func(*index.Index, note.Stats) error { return nil }); err != nil {
+		t.Fatal(err)
 	}
 }

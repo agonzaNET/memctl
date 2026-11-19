@@ -95,3 +95,16 @@ func BenchmarkWalkCold(b *testing.B) {
 		}
 	}
 }
+
+// TestPerf_SPEC0002_R22_benchmarksRun runs the benchmarks once on a small
+// index, so they keep compiling and working; the 5,000-note results are
+// recorded in the stage plan.
+func TestPerf_SPEC0002_R22_benchmarksRun(t *testing.T) {
+	x := build(syntheticNotes(200))
+	if _, err := x.Search(index.Query{Text: "w1 w2"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := x.Walk(x.Paths()[0], 3, nil); err != nil {
+		t.Fatal(err)
+	}
+}

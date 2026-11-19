@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -226,44 +226,44 @@ message that names the line's issue and how to fix it. `memctl check`
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1, R2** — The design's example note parses to the values listed under
+- [x] **R1, R2** — The design's example note parses to the values listed under
   "Outputs", and an extra key `source: manual` is kept in `Frontmatter` with no
   problem.
-- [ ] **R3** — `tags: firewall` gives one tag; `tags: {a: 1}` gives `bad_field`.
-- [ ] **R4** — `created: 2026-11-19` and an RFC 3339 value parse; `created: soon`
+- [x] **R3** — `tags: firewall` gives one tag; `tags: {a: 1}` gives `bad_field`.
+- [x] **R4** — `created: 2026-11-19` and an RFC 3339 value parse; `created: soon`
   gives `bad_field` and a zero time.
-- [ ] **R5, R6** — Broken YAML and an unclosed `---` each give
+- [x] **R5, R6** — Broken YAML and an unclosed `---` each give
   `bad_frontmatter`, and the body is still parsed as stated.
-- [ ] **R7** — A note without `title` at `hosts/PA-850.md` has the title `PA-850`,
+- [x] **R7** — A note without `title` at `hosts/PA-850.md` has the title `PA-850`,
   even with a `# Main firewall` heading.
-- [ ] **R8** — A CRLF file with a byte-order mark gives the same note as its LF
+- [x] **R8** — A CRLF file with a byte-order mark gives the same note as its LF
   copy, with the same line numbers.
-- [ ] **R9, R10** — Headings, observations, relations, links and problems inside
+- [x] **R9, R10** — Headings, observations, relations, links and problems inside
   backtick and tilde fences (including a longer closing fence and an unclosed
   fence) are ignored.
-- [ ] **R11** — `## Title ##`, `#` alone and `###### six` are headings; `#tag`,
+- [x] **R11** — `## Title ##`, `#` alone and `###### six` are headings; `#tag`,
   `#123` and `####### seven` are not.
-- [ ] **R12** — `## observations` opens the section; `### Detail` inside it does
+- [x] **R12** — `## observations` opens the section; `### Detail` inside it does
   not end it; `## Next` and `# Top` do.
-- [ ] **R13, R14, R15** — Table test of observation lines: valid, task items,
+- [x] **R13, R14, R15** — Table test of observation lines: valid, task items,
   one-letter category, upper-case category, indented, `*` bullet, missing text,
   and a link inside the text.
-- [ ] **R16** — Table test of relation lines: with label, with trailing text,
+- [x] **R16** — Table test of relation lines: with label, with trailing text,
   bad type, missing link; the relation's link is not in `Links`.
-- [ ] **R17, R18** — Several links per line, labels, an empty target, a link in
+- [x] **R17, R18** — Several links per line, labels, an empty target, a link in
   frontmatter, a link in `` `[[x]]` `` and in a double-backtick span (ignored),
   and a link after an unclosed backtick (recorded).
-- [ ] **R19** — An observation line in the body and a relation line under
+- [x] **R19** — An observation line in the body and a relation line under
   `## Observations` each give their problem, and their links are recorded.
-- [ ] **R20** — Each unsupported form gives its problem once, at its first line;
+- [x] **R20** — Each unsupported form gives its problem once, at its first line;
   `---` after a blank line (a thematic break) gives none.
-- [ ] **R21, R22** — Invalid UTF-8, empty input and random bytes return a note
+- [x] **R21, R22** — Invalid UTF-8, empty input and random bytes return a note
   without a panic; a fuzz test (`FuzzParse`) runs in `go test` with its seed
   corpus.
-- [ ] **R23** — `internal/arch/imports_test.go` lists `go.yaml.in/yaml/v3` →
+- [x] **R23** — `internal/arch/imports_test.go` lists `go.yaml.in/yaml/v3` →
   `internal/parse` and passes; `internal/parse` imports nothing else outside the
   standard library.
-- [ ] **R24** — Parsing the same input twice gives equal notes (`reflect.DeepEqual`).
+- [x] **R24** — Parsing the same input twice gives equal notes (`reflect.DeepEqual`).
 
 ## References
 

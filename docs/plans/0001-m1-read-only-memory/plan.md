@@ -146,7 +146,9 @@ in the commit.
   `BenchmarkSearch`, `BenchmarkWalk`, `BenchmarkOpen`, `BenchmarkCheck` with
   5,000 synthetic notes, results recorded below.
   *SPEC-0001 R1, R2, R22, R24; SPEC-0002 R2, R22; SPEC-0003 R8, R12, R13, R16.*
-- [ ] **T18 — Live check and close.** Build with `make build`; run against a
+- [ ] **T18 — Live check and close.** *(Done on 2026-11-19 except the Claude
+  Code live check on real notes, which the maintainer runs; SPEC-0004 stays
+  Accepted until then. VM check: `docs/design/2026-11-19-m1-vm-check.md`.)* Build with `make build`; run against a
   copy of an existing notes root of a few hundred notes from Claude Code: all
   four tools, an editor edit seen on the next call, `memctl check` on the same
   copy. Write the verification record under `docs/design/`. Tick every

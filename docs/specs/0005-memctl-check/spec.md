@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -107,15 +107,15 @@ runbooks/upgrade.md:4: bad_field: created is not a date or an RFC 3339 timestamp
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1** — The root's files, their modification times and `git status` are
+- [x] **R1** — The root's files, their modification times and `git status` are
   unchanged after a check, also on a root that `memctl mcp` holds open.
-- [ ] **R2, R3, R4, R5** — A fixture root with one example of every code gives a
+- [x] **R2, R3, R4, R5** — A fixture root with one example of every code gives a
   golden report, byte for byte.
-- [ ] **R6** — Exit statuses: clean root 0; only warnings 0; one error 1; bad flag
+- [x] **R6** — Exit statuses: clean root 0; only warnings 0; one error 1; bad flag
   2; missing root 1.
-- [ ] **R7** — In a git repository, in a subfolder of one, outside one, and with
+- [x] **R7** — In a git repository, in a subfolder of one, outside one, and with
   `PATH` that has no `git`.
-- [ ] **R8** — stdout of a check holds only finding lines and the summary.
+- [x] **R8** — stdout of a check holds only finding lines and the summary.
 
 ## References
 

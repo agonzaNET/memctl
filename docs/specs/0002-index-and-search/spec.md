@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -183,34 +183,34 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1, R2** — A property test applies random sequences of `Put` and `Remove`
+- [x] **R1, R2** — A property test applies random sequences of `Put` and `Remove`
   and compares every operation's result with a fresh index built from the final
   set.
-- [ ] **R3, R4** — Table test: `[[network/intpxy]]`, `network/intpxy.md`,
+- [x] **R3, R4** — Table test: `[[network/intpxy]]`, `network/intpxy.md`,
   `./network/intpxy`, a unique title, a title shared by two notes (ambiguous,
   even though one note's stem also matches), a unique alias, a stem shared by
   `hosts/intpxy.md` and `services/intpxy.md` (ambiguous), and an unknown target.
-- [ ] **R5** — A note with alias `old/place` resolves `[[old/place]]` with
+- [x] **R5** — A note with alias `old/place` resolves `[[old/place]]` with
   `Stale` true; a plain alias gives `Stale` false.
-- [ ] **R6** — A note whose two aliases normalise the same resolves, not
+- [x] **R6** — A note whose two aliases normalise the same resolves, not
   ambiguous.
-- [ ] **R7** — Tokenizer table: `PA-850`, `C#`, `10.11.0.51`, `Größe`, mixed
+- [x] **R7** — Tokenizer table: `PA-850`, `C#`, `10.11.0.51`, `Größe`, mixed
   English and German, empty string.
-- [ ] **R8, R9** — On a three-note fixture, scores match hand-computed BM25F
+- [x] **R8, R9** — On a three-note fixture, scores match hand-computed BM25F
   values to 1e-9; a title match outranks the same term only in the body; a term
   found only in a tag gives a hit; a note with two of three query terms ranks
   above one with a single term.
-- [ ] **R10, R11, R12** — Filters (type, two tags, folder boundary), ordering
+- [x] **R10, R11, R12** — Filters (type, two tags, folder boundary), ordering
   ties by path, default and capped limit.
-- [ ] **R13** — `"--- !!"` returns `ErrEmptyQuery`.
-- [ ] **R14** — Snippet from an observation, from the body, title-only match,
+- [x] **R13** — `"--- !!"` returns `ErrEmptyQuery`.
+- [x] **R14** — Snippet from an observation, from the body, title-only match,
   a line over 200 runes.
-- [ ] **R15, R16, R17, R18, R19** — Graph fixture: relations, body links and
+- [x] **R15, R16, R17, R18, R19** — Graph fixture: relations, body links and
   backlinks at depth 1 to 3, `relTypes` filter, dangling and ambiguous edges of
   the start listed but not followed, self-link hidden, 250 connected notes
   truncated at 200, unknown start.
-- [ ] **R20, R21** — Listing with each filter; link report ordering and kinds.
-- [ ] **R22** — `BenchmarkBuild`, `BenchmarkSearch`, `BenchmarkWalk` exist and
+- [x] **R20, R21** — Listing with each filter; link report ordering and kinds.
+- [x] **R22** — `BenchmarkBuild`, `BenchmarkSearch`, `BenchmarkWalk` exist and
   their results on the development machine are recorded in the stage plan.
 
 ## References
