@@ -125,7 +125,7 @@ in the commit.
 
 ### Slice D — Completeness
 
-- [ ] **T13 — `.gitignore` matcher.** Pattern rules, nested files, precedence,
+- [x] **T13 — `.gitignore` matcher.** Pattern rules, nested files, precedence,
   reload on change, comparison with `git check-ignore` when git is present.
   *SPEC-0003 R5, R11.*
 - [ ] **T14 — Path safety.** `note.SafePath` and its rejections, including a
