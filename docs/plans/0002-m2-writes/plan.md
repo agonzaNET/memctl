@@ -122,7 +122,7 @@ in the commit.
 
 ### Slice B — Edits
 
-- [ ] **T6 — Frontmatter editor.** `parse.EditFrontmatter`: replace a key's
+- [x] **T6 — Frontmatter editor.** `parse.EditFrontmatter`: replace a key's
   line or block list in place, insert a new key before the closing delimiter,
   keep every other byte; flow-style lists, quoting only when yaml.v3 would
   misread the plain value. Golden tests with comments, unknown keys, block and
