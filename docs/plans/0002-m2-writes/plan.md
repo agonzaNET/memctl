@@ -162,7 +162,7 @@ in the commit.
   dropped; lock released after 2 s vs held 10 s; failing `pre-commit`; no title
   or path in any log line.
   *SPEC-0008 R6, R8, R10, R11.*
-- [ ] **T11 — Tool text and log lines.** Final descriptions of the four tools
+- [x] **T11 — Tool text and log lines.** Final descriptions of the four tools
   under ADR-0013 (side effect, commit within seconds, never pushed, sha from
   `note_read`, every error code); annotation table test; `check-docs.sh`
   check 5 passes; captured log lines carry `bytes`, `paths`, `linkers` and no
