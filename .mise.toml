@@ -1,0 +1,12 @@
+# Toolchain pin for this repository (ADR-0012).
+#
+# Run `mise install` in the repo root to get the exact version below.
+# The Go version is at least the `go` directive in go.mod (the minimum); the
+# pin may be a newer patch. When the directive rises, raise the pin to at least
+# it in the same commit.
+#
+# `mise` manages Go only. Supporting OS packages (make, git, curl, jq) come
+# from the system package manager — see docs/agents/environment.md.
+
+[tools]
+go = "1.26.8"

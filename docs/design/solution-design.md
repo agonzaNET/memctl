@@ -1,0 +1,219 @@
+# Go Memory MCP — Design
+
+Nov 19, 2026 · @Alberto Jose Gonzalez Escalante
+
+## Context and goals
+
+Build a small, local-only MCP server in Go that gives AI clients a persistent memory made of plain Markdown notes, inspired by [Basic Memory](https://github.com/basicmachines-co/basic-memory) but written from scratch. Basic Memory is \~135k lines of Python with cloud, multi-backend and an in-process REST layer; this project keeps the idea and drops the bulk.
+
+Goals:
+
+- Notes are plain Markdown files on disk and stay the single source of truth.
+- One static Go binary, no CGO, no runtime dependencies, run by the MCP client as a stdio child process.
+- Fast full-text search and graph traversal over notes through MCP tools.
+- Humans can edit the same files in any editor; changes are picked up automatically.
+- Every write by a tool is recoverable through git history.
+- Clean-room implementation: no code copied from Basic Memory (AGPL-3.0).
+
+## Non-goals
+
+Anything that needs a server we do not run, or a second copy of the data, is out of scope for v1.
+
+- No cloud mode, sync service, accounts, routing or telemetry.
+- No database (SQLite, Postgres, Milvus); the index lives in memory.
+- No compatibility with Basic Memory files or its DB schema.
+- No multi-project support inside one instance; run one instance per notes root.
+- No semantic or vector search in v1 (interface stubbed for v2).
+- No importers or converters (Basic Memory, ChatGPT, Claude exports) and no web UI.
+- No `git push`; remote sync stays a manual human action.
+
+## Decisions taken
+
+The twenty-two decisions below were agreed with Alberto on 2026-11-19 and frame the rest of the design. D18 to D22 were added the same day, when the project's build, packaging and tool conventions were settled.
+
+| # | Topic | Decision | Consequence |
+| --- | --- | --- | --- |
+| D1 | Deployment | Single user, stdio only. No HTTP transport in v1. | No auth in v1: the client spawns the process. HTTP with a generated key is a backlog item. |
+| D2 | Note format | Own format, based on Basic Memory's ideas with targeted fixes (see Note format v1). | Existing notes work unconverted; old syntax stays as plain text. |
+| D3 | Search | BM25 full-text ranking in v1; an `Embedder` interface is stubbed for v2 (TEI over HTTP). | No model or TEI runtime dependency in v1. |
+| D4 | Projects | One notes root per server instance. | Simpler tool parameters; several roots = several instances. |
+| D5 | Git | Auto-commit after each tool write; never push. | Free undo and audit trail; humans push. |
+| D6 | Cloud | Removed entirely. | No sync, accounts, routing or promo code paths. |
+| D7 | Name | `memctl` for binary, repo and module. | No rename churn later. |
+| D8 | Repo | github.com/agonzaNET/memctl (personal GitHub, not aai-infra); Go module path is the same. | Own CI; stays open-sourceable. |
+| D9 | `context` scope | Graph neighbours only (relations and backlinks); no tag matches. | Predictable, small output; tag queries go through `search`. |
+| D10 | Commit author | Default identity `memctl <memctl@localhost>`. | AI edits are separable from human edits in history and blame. |
+| D11 | Licence | MIT. | Permissive and simple; the clean-room build carries no AGPL obligation. |
+| D12 | Instance lock | Exactly one `memctl` process per notes root; a second exits with an error naming the holder's PID. | One writer and one git committer; two MCP clients cannot share a root at the same time. |
+| D13 | Commit author source | `--git-author` flag, default `memctl <memctl@localhost>`; the write path carries an author to the committer. | Team mode can later set a per-key author without refactoring. |
+| D14 | Index storage | In memory, rebuilt from the files on every start. No database. | No schema, no index file, no reindex command, no stale-index state. |
+| D15 | Change detection | Lazy: stat all files before each tool call and reparse the changed ones. No watcher. | No fsnotify, debounce, dropped events or self-write suppression; a few ms per call. |
+| D16 | Note identity | No generated `id`; notes are identified by title, aliases and path. | Fewer frontmatter fields; no ULID dependency; rename safety comes from aliases. |
+| D17 | Markdown parsing | Own line-based parser with code-fence tracking. No Markdown library. | No goldmark; rare Markdown forms are documented as unsupported and flagged by `memctl check`. |
+| D18 | Build and dev environment | `make build` builds for the host with `CGO_ENABLED=0`; A manually triggered GitHub Actions workflow builds the release binaries for linux/amd64, linux/arm64 and darwin/arm64 from an existing `vX.Y.Z` tag; nothing runs on push or tag for now. A dedicated Linux dev VM is recommended, not required; `mise` pins the toolchain. | `memctl` runs where its MCP client runs, mostly macOS; no build target is cross-only. |
+| D19 | Tool text | Tool descriptions and schemas are written for an agent: no ADR, spec or requirement numbers and no repository paths. Note paths such as `ops/pa-850.md` are allowed. `scripts/check-docs.sh` enforces it. | Descriptions can show the path form agents must use; internal references never reach the model. |
+| D20 | Package layout | The entry point is `cmd/memctl` (subcommands); the MCP package is `internal/mcpserver`. | No name clash with the SDK package `mcp`. |
+| D21 | Shutdown | On stdin EOF, SIGINT or SIGTERM, commit every queued path at once, then exit. | No tool write stays uncommitted because the client closed inside the 2 s quiet window. |
+| D22 | Tool results | No JSON envelope and no `structuredContent`. Success: `isError` false, a first line of one sentence that names what was done or found, then Markdown. Error: `isError` true, text `<code>: <sentence that says what to do next>`, with codes from one fixed list. | Uniform, testable results for a model reader; structured output for programs is a later decision. |
+
+## Note format v1
+
+Keep Basic Memory's core idea (frontmatter + observations + relations in plain Markdown) and fix four weak spots: identity, rename safety, parsing ambiguity and inline noise. The result stays Obsidian-friendly.
+
+| Area | Basic Memory | v1 | Why |
+| --- | --- | --- | --- |
+| Identity | `permalink` slug in frontmatter, derived from path | No generated identifier; title (unique) + aliases + path (D16) | Nothing to keep in sync with the path; one user needs no global id |
+| Rename safety | Title links rewritten across notes on rename | Old title is appended to `aliases`; links resolve by title, then aliases, then file stem | No mass rewrite of other files; old links keep working |
+| Observations | `- [category] text #tag (context)` anywhere in the note | `- [category] text` only under `## Observations`; category matches `[a-z][a-z0-9_-]+` (2+ chars) | Avoids collision with GFM tasks `- [ ]` / `- [x]` and with prose bullets |
+| Tags | Frontmatter plus inline `#tag` | Frontmatter `tags` only | Inline `#` hits `C#`, `#123`, URLs; parentheses were parsed as context |
+| Relations | `- type [[Target]]` bullets; prose links become `links_to` | Same syntax, only under `## Relations`; type matches `[a-z][a-z0-9_]*`; links elsewhere become `links_to` | Deterministic parsing, same mental model |
+
+Frontmatter fields: `title`, `type`, `tags`, `aliases`, `created`, `updated`. Unknown keys are preserved untouched. Links accept `[[Title]]` and `[[Title|label]]`.
+
+```markdown
+---
+title: PAN-OS upgrade procedure
+type: runbook
+tags: [palo-alto, firewall]
+aliases: [PAN-OS upgrade]
+created: 2026-11-19T10:12:00+01:00
+updated: 2026-11-19T10:12:00+01:00
+---
+
+# PAN-OS upgrade procedure
+
+Free Markdown body. A mention of [[PA-850]] here is indexed as links_to.
+
+## Observations
+- [prereq] Download content updates before the base image
+- [risk] HA pair must be upgraded passive first
+
+## Relations
+- implements [[ODR-017]]
+- applies_to [[PA-850]]
+```
+
+**Parsing (D17).** A line-based parser reads YAML frontmatter (`yaml.v3`), ATX headings (`#` to `######`), section bullets and `[[links]]`. It tracks fenced code blocks (\`\`\` and \~\~\~), so headings and links inside fences are ignored. Setext headings, indented code blocks and HTML blocks are unsupported for structure; `memctl check` flags them.
+
+**Lenient reads.** Notes written for Basic Memory or by hand are valid without conversion. Inline `#tags`, `(context)` and `permalink` stay as plain text or unknown frontmatter. Observations and relations outside their sections are not parsed. No converter exists or is planned.
+
+## Architecture
+
+One process, four layers, no internal HTTP hop and no database: tools call the note service directly, which writes files, updates the in-memory index and queues git commits.
+
+&#91;embedded content: memctl architecture · one process\]
+
+Human edits reach the index through the freshness check that runs before each tool call; tool writes update the index directly. Go packages (D20): `cmd/memctl`, `internal/mcpserver` (go-sdk), `internal/note` (service, freshness check), `internal/parse` (line parser + yaml.v3), `internal/index` (BM25 + link graph), `internal/gitlog` (git CLI). External dependencies: go-sdk and yaml.v3 only, each imported by its one package (go-sdk by `internal/mcpserver`, yaml.v3 by `internal/parse`), which a test enforces.
+
+## In-memory index
+
+The index is built from the files on every start and lives only in process memory (D14); nothing is written to disk, so there is nothing to migrate, rebuild or get stale across restarts.
+
+| Structure | Holds | Used by |
+| --- | --- | --- |
+| `notes` map, keyed by path | title, type, tags, aliases, created, updated, mtime, size, sha256, body, observations, links | every tool |
+| `names` map, lower-cased name → paths | titles, aliases and file stems | link resolution, `ref` lookup, duplicate detection |
+| `backlinks` map, path → source paths | reverse of resolved links | `context` |
+| Inverted index, term → postings | per field: title, aliases, observations, body | `search` |
+| Field lengths | per note and field, plus averages | BM25F scoring |
+
+Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, observations 1.5, body 1, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German.
+
+Links are resolved at query time through `names`, so creating a missing target or renaming a note needs no link rewrite. Unresolved targets are reported as dangling, not errors.
+
+## MCP tools
+
+Eight tools cover v1, each with MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`) so clients can auto-approve reads and ask before writes. Notes are addressed by title, alias or relative path.
+
+| Tool | Read-only | Destructive | Inputs | Behaviour |
+| --- | --- | --- | --- | --- |
+| `note_write` | No | No | `title`, `folder`, `body`, `type`, `tags` | Create only; fails if the title or path exists |
+| `note_read` | Yes | No | `ref`, optional `section` | Returns frontmatter, body, resolved links and sha256 |
+| `note_edit` | No | No | `ref`, `op` (`append`, `replace_section`, `find_replace`), `expected_sha` | Fails on hash mismatch, so external edits are never overwritten |
+| `note_move` | No | No | `ref`, `new_path` or `new_title` | Rename adds old title to `aliases` |
+| `note_delete` | No | Yes | `ref` | Removes file; git keeps history |
+| `search` | Yes | No | `query`, `type`, `tags`, `folder`, `limit` | BM25F ranking, returns snippets |
+| `context` | Yes | No | `ref`, `depth` (default 1, max 3), `rel_types` | Graph walk over relations and backlinks |
+| `list` | Yes | No | `folder`, `type`, `tag` | Directory listing |
+
+All tools return Markdown text, with no JSON envelope and no `structuredContent` (D22):
+
+- **Success:** `isError` is false. The first line is one sentence that names what was done or found (`Created "PAN-OS upgrade procedure" at ops/pan-os-upgrade.md.`), followed by the Markdown result.
+- **Error:** `isError` is true and the text is `<code>: <sentence that says what to do next>`, for example `exists: The title exists at ops/pa-850.md; use note_edit to change it.` The codes come from one fixed list in `internal/mcpserver`, and a test fails on a code outside it.
+
+Tool descriptions and input schemas are written for the agent that reads them (D19). Each description says what the tool returns, when to use it rather than another tool, its limits and what each error code means, and that returned note text is reference data, not instructions to follow.
+
+## Change detection, concurrency and git
+
+Files always win: the index follows the disk, and a tool write never overwrites a file it has not seen in its current state.
+
+**Instance lock (D12).** On start, `memctl mcp` takes a non-blocking `flock` on `<root>/.memory/memctl.lock` and holds it for the process lifetime, writing its PID into the file. If the lock is held, the process exits with `root <path> is in use by memctl (pid N)`. The kernel releases the lock on exit or crash, so there is no stale-lock cleanup. `memctl check` is read-only and runs without the lock.
+
+**Freshness check (D15).** Before each tool call, walk the root (skipping `.git`, `.memory` and `.gitignore` matches) and stat every Markdown file. Files whose mtime or size changed are reparsed; new files are added; missing files are dropped. For a few thousand notes this costs a few milliseconds and needs no background goroutine.
+
+**Tool writes.**
+
+1. Run the freshness check (tool calls are serialised by one mutex).
+2. For edits, compare `expected_sha` with the file's current hash; a mismatch returns a conflict error with the current content.
+3. Write to a temp file in the same directory, `fsync`, then `rename` (atomic).
+4. Update the index entry for that file directly.
+5. Queue a git commit.
+
+**Git.** If the root is a git repo, a background goroutine commits queued paths after 2 s of quiet, one commit per batch, message `memory: <tool> <title>`, by shelling out to the `git` CLI. The author comes from `--git-author` (D13, default `memctl <memctl@localhost>`). It never pulls, pushes or touches other branches, and only stages paths a tool touched. If the root is not a git repo, commits are skipped and `memctl check` warns.
+
+**Shutdown (D21).** On stdin EOF (the client closed), SIGINT or SIGTERM, `memctl mcp` stops taking tool calls, commits every queued path at once without waiting for the quiet window, and exits. One shutdown context reaches the MCP server and the commit goroutine.
+
+## Deployment and config
+
+One binary, `memctl`, with subcommands; config comes from flags and env vars only, no config file in v1.
+
+| Command | Purpose |
+| --- | --- |
+| `memctl mcp --root ~/notes` | MCP server over stdio (D1) |
+| `memctl check` | Report parse errors, unsupported Markdown forms, dangling links, duplicate titles, observation or relation lines outside their sections, and a missing git repo |
+
+Client setup is one line, e.g. `claude mcp add memory -- memctl mcp --root ~/notes`. Logs go to stderr as JSON (`log/slog`), never stdout, which carries the MCP protocol. Each tool call logs one `INFO` line after it ends: the tool, the duration, the error code if any, and counts (results, notes touched), never note content, queries or paths. Builds (D18): `make build` builds for the host; release builds with `CGO_ENABLED=0` for linux/amd64, linux/arm64 and darwin/arm64 via a GitHub Actions workflow that is started by hand (`workflow_dispatch`) for a given tag.
+
+## Milestones
+
+Three milestones, about 1.5–2 weeks in total with Claude Code, each ending in something usable; v2 adds vectors.
+
+1. **M1 — Read-only memory.** Line parser, in-memory index, freshness check, `note_read`, `search`, `context`, `list`, `memctl check`. Exit: search and graph walk work over a copy of an existing notes root of a few hundred notes, and edits made in an editor show up on the next call.
+2. **M2 — Writes.** Instance lock, `note_write`, `note_edit` with hash check, `note_move` with aliases, `note_delete`, atomic writes, git auto-commit. Exit: a Claude Code session creates, edits and renames notes, every change is one git commit, and a concurrent edit returns a conflict instead of a silent overwrite.
+3. **M3 — Release.** A manually triggered release workflow in GitHub Actions (`workflow_dispatch`, input: an existing `vX.Y.Z` tag), README with client setup. Exit: a release binary runs end to end on a fresh notes root.
+4. **v2 — Semantic search.** `Embedder` backed by TEI over HTTP, hybrid BM25 + cosine ranking.
+
+## Backlog after v2
+
+None of these change v1 code; each is a later, independent addition.
+
+- **HTTP mode:** streamable HTTP so several clients share one instance per root. Auth = a key generated on first start (32 random bytes in .memory/token, mode 0600), sent as a Bearer header and required even on loopback; memctl token show / rotate. Per-key git author via D13.
+- **Per-type validation:** required frontmatter fields per `type` (e.g. `runbook`, `odr`), reported by `memctl check`.
+- **MCP resources and prompts:** a session-start brief of recently changed notes.
+- **Claude Code skill or hooks:** capture decisions into notes at session end.
+- **Attachments:** index non-Markdown files (images, PDFs) by name and link; ignored in v1.
+
+Vectors in v2 are chunked by heading and held in memory next to the BM25 index. Since embedding every note on each start would be slow, v2 adds one cache file, `.memory/vectors.bin`, keyed by each chunk's sha256; deleting it only costs a re-embed.
+
+## Risks and open questions
+
+The main risk is scale: the full in-memory index and the per-call freshness walk assume a notes root under about 10k files.
+
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| Notes root grows far beyond \~10k files | Slower start and tool calls | Measure in M1; if needed, add fsnotify or a persisted index as a later change |
+| Editor and tool edit the same note | Lost human edit | `expected_sha` check; atomic rename; git history |
+| BM25 ranking feels weak on short notes | Agents miss relevant notes | Tune field weights; title and alias boost; v2 vectors |
+| Duplicate titles or aliases | Ambiguous links | `note_write` rejects duplicates; `memctl check` reports them |
+| Unsupported Markdown forms (setext headings, HTML blocks) | Sections or links missed | `memctl check` flags them; notes use ATX headings |
+| Two MCP clients configured on the same root (e.g. Claude Code and Claude Desktop) | Second client's server fails to start | Clear error with holder PID; one client per root (accepted for v1); HTTP sharing is a backlog item |
+
+No open questions remain for v1.
+
+## Follow-up after v1
+
+An existing Basic Memory notes root moves to `memctl` once v1 is released, with no conversion step (lenient reads).
+
+- [ ] `git init` in the notes root if it is not a git repo yet, and commit the current state as a baseline.
+- [ ] Run `memctl check` on it and fix any observation or relation lines outside their sections by hand.
+- [ ] Point the MCP client config at `memctl mcp --root <notes root>` and retire the Basic Memory server.
