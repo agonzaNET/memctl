@@ -175,7 +175,7 @@ in the commit.
   calls and a running committer; end-to-end test of a burst of writes giving
   one commit.
   *SPEC-0007 R1–R5; SPEC-0008 R3, R4.*
-- [ ] **T12a — Racily clean notes.** *(Added on 2026-11-19 after the T12
+- [x] **T12a — Racily clean notes.** *(Added on 2026-11-19 after the T12
   finding, by the maintainer's decision.)* Record when each index entry was
   read; the freshness check rehashes a note whose modification time is not at
   least 2 s older than that, even when size and time match. The random
@@ -240,6 +240,22 @@ The random-sequence test changes the size on every editor save to stay clear
 of this. Git's answer to the same problem ("racily clean" entries) is to
 rehash a file whose modification time is not clearly older than the last
 check; adopting it would change SPEC-0003 R10.
+
+Settled by T12a (SPEC-0003 R17): each index entry records when the file was
+read, and a note whose modification time is less than 2 s before that read is
+hashed again at every check until it settles. The random sequence of T12 uses
+same-size saves again and passes. Measured on the development VM (5,000
+notes, `-benchtime 10x`):
+
+| Benchmark | Result |
+|---|---|
+| Freshness check, settled root, no change (`BenchmarkCheck`) | 8.8 ms |
+| Freshness check within 2 s of every note being saved (`BenchmarkCheckRacy`) | 226 ms |
+| Startup load (`BenchmarkOpen`) | 0.44 s |
+
+The racy case costs a full rehash only in the 2 s after a bulk change, such as
+a `git checkout` of the notes root; a single tool write or editor save adds
+one rehash.
 
 ## Notes
 

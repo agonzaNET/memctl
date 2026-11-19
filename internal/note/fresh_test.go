@@ -192,7 +192,8 @@ func TestFresh_SPEC0003_R13_equalsFreshOpen(t *testing.T) {
 		for _, p := range fresh.Index().Paths() {
 			n1, m1, _ := s.Index().Get(p)
 			n2, m2, _ := fresh.Index().Get(p)
-			if !reflect.DeepEqual(n1, n2) || m1 != m2 {
+			// ReadAt is when each index read the file, so it differs.
+			if !reflect.DeepEqual(n1, n2) || !m1.ModTime.Equal(m2.ModTime) || m1.Size != m2.Size || m1.SHA256 != m2.SHA256 {
 				t.Fatalf("step %d: %s differs", step, p)
 			}
 		}

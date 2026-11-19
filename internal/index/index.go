@@ -17,6 +17,9 @@ type Meta struct {
 	ModTime time.Time
 	Size    int64
 	SHA256  string
+	// ReadAt is when the file was read for this entry; the freshness check
+	// uses it to find racily clean notes (SPEC-0003 R17).
+	ReadAt time.Time
 }
 
 type entry struct {

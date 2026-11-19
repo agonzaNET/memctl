@@ -43,6 +43,9 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
 - `note_move` moves or renames a note. It never edits other notes: the old
   path and the old title go into the note's `aliases`, so links to them keep
   working, and `memctl check` lists them as stale (spec: SPEC-0007).
+- `memctl mcp` picks up edits made in any editor at the next tool call,
+  also a second save of the same size within one file-system timestamp tick:
+  a note saved within 2 s of its last read is hashed again (spec: SPEC-0003).
 - `note_delete` removes a note; the result counts the links that now point
   nowhere, and git history keeps the file (spec: SPEC-0007).
 - Every tool write is committed to git in the notes root, in the background:

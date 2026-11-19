@@ -44,7 +44,7 @@ func (s *Service) refresh(initial bool) Stats {
 			skipped[c.rel] = reasonTooLarge
 			continue
 		}
-		if _, m, ok := s.idx.Get(c.rel); ok && m.Size == c.size && m.ModTime.Equal(c.modTime) {
+		if _, m, ok := s.idx.Get(c.rel); ok && m.Size == c.size && m.ModTime.Equal(c.modTime) && !racilyClean(m) {
 			keep[c.rel] = true
 			st.Unchanged++
 			continue
@@ -101,4 +101,17 @@ func (s *Service) reportSkipped(counts map[string]int) {
 			s.log.Warn("notes skipped", slog.String("reason", reason), slog.Int("count", n))
 		}
 	}
+}
+
+// racyWindow is how much older than its last read a note's modification
+// time must be before size and time alone can tell that it is unchanged
+// (SPEC-0003 R17). It covers file systems whose timestamps advance in coarse
+// steps.
+const racyWindow = 2 * time.Second
+
+// racilyClean reports whether an entry's file could have been saved again
+// within the same timestamp tick after it was read, so that equal size and
+// modification time prove nothing (SPEC-0003 R17).
+func racilyClean(m index.Meta) bool {
+	return !m.ModTime.Add(racyWindow).Before(m.ReadAt)
 }

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/agonzaNET/memctl/internal/index"
 	"github.com/agonzaNET/memctl/internal/note"
@@ -33,8 +34,35 @@ func benchRootN(b testing.TB, n int) string {
 		if err := os.WriteFile(p, []byte(s.String()), 0o644); err != nil {
 			b.Fatal(err)
 		}
+		// A settled notes root: files saved well before the check, so the
+		// check needs no rehash of racily clean notes (SPEC-0003 R17).
+		old := time.Now().Add(-time.Hour)
+		os.Chtimes(p, old, old)
 	}
 	return root
+}
+
+// BenchmarkCheckRacy is a check right after a bulk change: every note was
+// saved within the last 2 s, so every note is hashed again (SPEC-0003 R17).
+func BenchmarkCheckRacy(b *testing.B) {
+	root := benchRoot(b)
+	now := time.Now()
+	filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		if err == nil && !d.IsDir() {
+			os.Chtimes(p, now, now)
+		}
+		return nil
+	})
+	var buf bytes.Buffer
+	s, _, err := note.Open(root, logger(&buf))
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		buf.Reset()
+		s.Call(func(*index.Index, note.Stats) error { return nil })
+	}
 }
 
 func BenchmarkOpen(b *testing.B) {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/agonzaNET/memctl/internal/index"
 	"github.com/agonzaNET/memctl/internal/parse"
@@ -32,6 +33,7 @@ type loaded struct {
 // readNote reads, hashes and parses one note. The size and modification time
 // come from the open file, so they match the bytes read.
 func readNote(c candidate) loaded {
+	readAt := time.Now() // before the read, so a save during it counts as later
 	f, err := os.Open(c.abs)
 	if err != nil {
 		return loaded{rel: c.rel, err: err}
@@ -55,7 +57,7 @@ func readNote(c candidate) loaded {
 	return loaded{
 		rel:  c.rel,
 		note: parse.Parse(c.rel, data),
-		meta: index.Meta{ModTime: fi.ModTime(), Size: int64(len(data)), SHA256: hex.EncodeToString(sum[:])},
+		meta: index.Meta{ModTime: fi.ModTime(), Size: int64(len(data)), SHA256: hex.EncodeToString(sum[:]), ReadAt: readAt},
 	}
 }
 

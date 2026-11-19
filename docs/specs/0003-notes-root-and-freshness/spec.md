@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -157,7 +157,7 @@ Also turn a note path given by a tool into a safe file path inside the root.
   fixture (`-race` clean); the `notes loaded` line has the counts.
 - [x] **R10** — Edit, touch without change, add, delete and rename a note
   between two checks; the stats and the index match each case.
-- [ ] **R17** — A note saved twice with the same size and the same
+- [x] **R17** — A note saved twice with the same size and the same
   modification time (set with `os.Chtimes`) right after a check is reread at
   the next check; a note whose modification time is well before its last read
   is not read again (an unreadable such note stays in the index).

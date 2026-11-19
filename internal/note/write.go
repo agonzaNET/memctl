@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/agonzaNET/memctl/internal/index"
 	"github.com/agonzaNET/memctl/internal/parse"
@@ -139,6 +140,7 @@ func (s *Service) putFile(rel string, data []byte, prevSHA string) (index.Meta, 
 			return index.Meta{}, err
 		}
 	}
+	readAt := time.Now() // the content is known from here on (SPEC-0003 R17)
 	if err := os.Rename(tmpName, abs); err != nil {
 		return index.Meta{}, err
 	}
@@ -152,7 +154,7 @@ func (s *Service) putFile(rel string, data []byte, prevSHA string) (index.Meta, 
 		return index.Meta{}, err
 	}
 	h := sha256.Sum256(data)
-	m := index.Meta{ModTime: fi.ModTime(), Size: int64(len(data)), SHA256: hex.EncodeToString(h[:])}
+	m := index.Meta{ModTime: fi.ModTime(), Size: int64(len(data)), SHA256: hex.EncodeToString(h[:]), ReadAt: readAt}
 	s.idx.Put(rel, parse.Parse(rel, data), m)
 	return m, nil
 }
