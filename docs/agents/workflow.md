@@ -2,8 +2,9 @@
 
 How a change goes from idea to shipped code in this repo. Read this before
 starting any non-trivial change. The decisions behind it are recorded in
-ADR-0003 (SDD), ADR-0004 (this workflow), ADR-0005 (test-first), ADR-0006
-(commits), and ADR-0007 (changelog) — check their status in the
+ADR-0003 (SDD), ADR-0004 (this workflow) as amended by ADR-0018 (specs first,
+stage plans), ADR-0005 (test-first), ADR-0006 (commits), and ADR-0007
+(changelog) — check their status in the
 [ADR index](../adr/README.md#index) before treating any rule here as settled.
 
 Verification means tests pass, the linter is clean, the documentation
@@ -91,29 +92,48 @@ Outputs, numbered testable **Requirements** (MUST/MUST NOT/SHOULD), Error
 handling, and Acceptance criteria ("done looks like"). Link the governing ADR(s).
 
 Draft the spec in **plan mode** — do not create code or edit implementation files
-in this phase. When the spec is written, **stop and wait for human review** before
-planning.
+in this phase. When the spec is written, **stop and wait for human review**.
+
+**Specs first (ADR-0018).** Write and get acceptance for every spec of the
+planned work before any implementation starts — for `memctl`, every spec of a
+milestone before its first line of code. Specs are reviewed one at a time,
+planned once the stage's specs are all accepted. The one exception is a spec
+that cannot be written without code that does not exist yet (it depends on
+measured behaviour, or on an interface the earlier code settles): note it in
+the stage plan as deferred, and write it once that code is implemented.
 
 > If the change modifies an existing capability, edit its spec in the same change
 > rather than writing a new one. When behaviour and spec disagree, one is a bug.
 
 ## Phase 2 — Plan (how)
 
-After the spec is approved, create `docs/specs/NNNN-slug/plan.md`, alongside the
-spec in the same capability folder. A plan contains:
+After the specs of a stage are accepted, write its plan (ADR-0018):
+
+- **Stage plan** — when several specs only deliver value together (a
+  milestone), one plan for all of them: `docs/plans/NNNN-slug/plan.md`, with its
+  own sequential index. Order the tasks as thin end-to-end slices, so a working
+  result (for example the first tool call) arrives early, and name each task's
+  requirements as `SPEC-NNNN Rn`.
+- **Spec plan** — when a spec stands alone, `docs/specs/NNNN-slug/plan.md`,
+  alongside the spec, with requirements named `Rn`.
+
+A plan contains:
 
 1. **File map** — every file created or modified, and why.
 2. **Dependency order** — which tasks block which.
 3. **Numbered task list** — atomic checkbox tasks, each completable in one
    session. Each task names the spec requirement(s) it implements (e.g. `T2 —
-   reject unknown flags (R3)`), so every requirement maps to at least one task.
+   reject unknown flags (R3)`, or `SPEC-0002 R3` in a stage plan), so every
+   requirement maps to at least one task.
 4. **Definition of done** — the build/test command that proves the feature
    complete, plus the rule that every requirement has a passing test that names it
    and every acceptance-criteria box in the spec is checked.
 
 Stay in **plan mode**; write no implementation code. **Stop and wait for human
 review** of the plan before implementing. Plan files are committed and kept as an
-audit trail — do not delete them after implementation.
+audit trail — do not delete them after implementation. A spec plan that a
+stage plan takes over stays in place with a note at its top naming the stage
+plan.
 
 ## Phase 3 — Implement (task by task, test-first)
 
@@ -209,8 +229,11 @@ harness in a spec, as for any capability.
 docs/specs/
   NNNN-slug/            # one folder per capability
     spec.md             # spec — what the capability must do (permanent contract)
-    plan.md             # plan — file map + numbered tasks (kept as audit trail)
+    plan.md             # plan of a standalone spec (kept as audit trail)
     ...                 # any supporting material for this spec (diagrams, notes)
+docs/plans/
+  NNNN-slug/            # one folder per stage (ADR-0018)
+    plan.md             # stage plan — file map + tasks naming SPEC-NNNN Rn
 ```
 
 It also **updates** (never recreates) `CHANGELOG.md` at the repo root: each
@@ -219,6 +242,8 @@ Phase 4 and [`changelog.md`](changelog.md)).
 
 ## Anti-patterns
 
+- Writing code for a stage before all of its specs are accepted, outside the
+  deferred-spec exception (ADR-0018).
 - Starting to code before a spec exists for a non-trivial change.
 - Modifying a test to make it pass instead of fixing the code.
 - Silently deviating from the plan — surface the conflict first.

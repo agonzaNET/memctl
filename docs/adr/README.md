@@ -30,7 +30,7 @@ of area.
 
 - [ADR-0002](0002-code-modularity.md) — Code modularity (split by responsibility).
 - [ADR-0003](0003-adopt-spec-driven-development.md) — Spec-Driven Development.
-- [ADR-0004](0004-spec-plan-implement-verify-workflow.md) — Spec → Plan → Implement → Verify.
+- [ADR-0004](0004-spec-plan-implement-verify-workflow.md) — Spec → Plan → Implement → Verify ([ADR-0018](0018-specs-first-and-stage-plans.md): specs first, stage plans).
 - [ADR-0005](0005-test-first-development.md) — Test-first development.
 - [ADR-0006](0006-conventional-commits-referencing-specs.md) — Conventional commits referencing the spec.
 - [ADR-0007](0007-keep-a-changelog.md) — Keep a human-readable changelog ([ADR-0008](0008-pre-1-0-versioning.md) for pre-1.0 versions).
@@ -74,6 +74,7 @@ ADR file it points to. When an ADR becomes `Superseded by ADR-NNNN` or
 | [ADR-0015](0015-tool-result-shape.md) | Return Markdown tool results with a one-sentence first line, and errors as a fixed code plus a next step | Accepted | Tools |
 | [ADR-0016](0016-tool-call-log-without-content.md) | Log one line per tool call, without note content | Accepted | Tools |
 | [ADR-0017](0017-path-identity-and-link-resolution.md) | Identify notes by path, resolve links path first, report ambiguity, and keep old paths as aliases on a move | Accepted | Index |
+| [ADR-0018](0018-specs-first-and-stage-plans.md) | Write the specs of a stage before any code, and plan a stage of coupled specs in one plan (amends ADR-0004) | Accepted | Methodology |
 
 ### Superseded / Deprecated
 

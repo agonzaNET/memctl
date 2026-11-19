@@ -1,5 +1,8 @@
 # Plan — SPEC-0001 Note parser
 
+> **Replaced by the M1 stage plan** under `docs/plans/` (ADR-0018), once the
+> M1 specs are accepted. Kept as history; do not implement from it.
+
 Spec: [`spec.md`](spec.md) (Accepted). Governing ADRs: ADR-0002, ADR-0005,
 ADR-0010, ADR-0011.
 

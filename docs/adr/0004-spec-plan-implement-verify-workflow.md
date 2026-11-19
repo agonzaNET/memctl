@@ -8,6 +8,10 @@ Accepted
 Status values: Proposed | Accepted | Rejected | Deprecated | Superseded by ADR-NNNN
 -->
 
+> **Amended by [ADR-0018](0018-specs-first-and-stage-plans.md)**: the specs
+> of a stage are written and accepted before any code, and coupled specs are
+> planned together in one stage plan under `docs/plans/`.
+
 **Area:** Methodology
 
 ## Context
