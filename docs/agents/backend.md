@@ -22,7 +22,7 @@ in Areas **Build**, **Tools** and **Lifecycle**. Find them in the
   when the directive rises, raise the pin in the same commit.
 - **Dependency policy:** stdlib-first. Two third-party modules are allowed
   (ADR-0011): `github.com/modelcontextprotocol/go-sdk`, imported only by
-  `internal/mcpserver`, and `gopkg.in/yaml.v3`, imported only by
+  `internal/mcpserver`, and `go.yaml.in/yaml/v3`, imported only by
   `internal/parse`. Any other module needs an ADR first.
   `internal/arch/imports_test.go` fails on a second importer or an unlisted
   module (ADR-0010); add a module to its map in the change that first imports

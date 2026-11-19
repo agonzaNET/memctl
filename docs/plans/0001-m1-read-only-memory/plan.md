@@ -26,7 +26,7 @@ No spec is deferred.
 
 | File | Change | Why |
 |---|---|---|
-| `go.mod`, `go.sum` | modify | Require the MCP SDK and `gopkg.in/yaml.v3` (ADR-0011) |
+| `go.mod`, `go.sum` | modify | Require the MCP SDK and `go.yaml.in/yaml/v3` (ADR-0011) |
 | `internal/arch/imports_test.go` | modify | Map both modules to their owner packages (ADR-0010) |
 | `cmd/memctl/main.go` | create | Subcommands, flags, environment, exit statuses, version |
 | `cmd/memctl/log.go` | create | JSON logger on stderr |
@@ -63,7 +63,7 @@ in the commit.
 
 ### Slice A — First tool call
 
-- [x] **T1 — Parser core.** Require `gopkg.in/yaml.v3` and map it to
+- [x] **T1 — Parser core.** Require `go.yaml.in/yaml/v3` and map it to
   `internal/parse` in the import test. Types, line loop (BOM, CRLF, line numbers,
   `invalid_utf8`), frontmatter (delimiters, yaml.v3, known fields, raw
   key/value pairs, `bad_field`, `bad_frontmatter`, unclosed block), body,

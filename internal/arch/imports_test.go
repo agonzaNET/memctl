@@ -19,7 +19,7 @@ const modulePath = "github.com/agonzaNET/memctl"
 // change that first imports it, with its line in go.mod; the MCP SDK joins
 // with internal/mcpserver. A module outside ADR-0011 needs an ADR first.
 var thirdParty = map[string]string{
-	"gopkg.in/yaml.v3": "internal/parse",
+	"go.yaml.in/yaml/v3": "internal/parse",
 }
 
 // moduleRoot is the repository root, two levels up from this package.

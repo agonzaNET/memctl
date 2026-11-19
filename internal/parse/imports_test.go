@@ -36,7 +36,7 @@ func TestImports_SPEC0001_R23_pureParser(t *testing.T) {
 		for _, imp := range ast.Imports {
 			p, _ := strconv.Unquote(imp.Path.Value)
 			first, _, _ := strings.Cut(p, "/")
-			if strings.Contains(first, ".") && p != "gopkg.in/yaml.v3" {
+			if strings.Contains(first, ".") && p != "go.yaml.in/yaml/v3" {
 				t.Errorf("%s imports %s", f, p)
 			}
 			if forbidden[p] {

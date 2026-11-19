@@ -4,5 +4,5 @@
 //
 // Parse is a pure function: it reads no files, uses no clock and does not
 // log. It never fails; everything wrong with a note is a Problem. This package
-// is the only importer of gopkg.in/yaml.v3 (ADR-0010).
+// is the only importer of go.yaml.in/yaml/v3 (ADR-0010).
 package parse

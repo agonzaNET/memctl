@@ -48,7 +48,7 @@ own ADR, with the reasoning and the alternatives.
 
 | Design decision | ADR |
 |---|---|
-| Dependencies: go-sdk and yaml.v3 only (D1, D17) | [ADR-0011](../adr/0011-mcp-sdk-and-yaml-v3.md) |
+| Dependencies: go-sdk and yaml.v3 only (D1, D17) | [ADR-0011](../adr/0011-mcp-sdk-and-yaml-v3.md), [ADR-0019](../adr/0019-go-yaml-in-module.md) |
 | D18 — Build and dev environment | [ADR-0012](../adr/0012-build-targets-and-development-environment.md) |
 | D19 — Tool text | [ADR-0013](../adr/0013-agent-first-tool-text.md) |
 | D21 — Shutdown | [ADR-0014](../adr/0014-shutdown-flushes-pending-commits.md) |

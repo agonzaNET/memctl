@@ -27,7 +27,7 @@ search, graph walk, check, writes) reads notes only through this parser.
 
 - `internal/parse`: one pure function from (relative path, bytes) to a parsed
   note. No file system access, no index, no git.
-- YAML frontmatter with `gopkg.in/yaml.v3` (ADR-0011), the only importer of
+- YAML frontmatter with `go.yaml.in/yaml/v3` (ADR-0011), the only importer of
   that module (ADR-0010).
 - The line-based Markdown structure of design D17: ATX headings, fenced code
   blocks, the `## Observations` and `## Relations` sections, `[[links]]`.
@@ -198,7 +198,7 @@ Example, for the note in the design ("Note format v1"):
 ### Boundaries
 
 - **R23** — `internal/parse` MUST NOT read files, use the clock, log, or import
-  any module other than the standard library and `gopkg.in/yaml.v3`, and MUST be
+  any module other than the standard library and `go.yaml.in/yaml/v3`, and MUST be
   the only package that imports yaml.v3 (ADR-0010).
 - **R24** — The parser MUST be deterministic: the same input gives the same
   `Note`, field for field, including the order of lists and problems (by line,
@@ -259,7 +259,7 @@ message that names the line's issue and how to fix it. `memctl check`
 - [ ] **R21, R22** — Invalid UTF-8, empty input and random bytes return a note
   without a panic; a fuzz test (`FuzzParse`) runs in `go test` with its seed
   corpus.
-- [ ] **R23** — `internal/arch/imports_test.go` lists `gopkg.in/yaml.v3` →
+- [ ] **R23** — `internal/arch/imports_test.go` lists `go.yaml.in/yaml/v3` →
   `internal/parse` and passes; `internal/parse` imports nothing else outside the
   standard library.
 - [ ] **R24** — Parsing the same input twice gives equal notes (`reflect.DeepEqual`).

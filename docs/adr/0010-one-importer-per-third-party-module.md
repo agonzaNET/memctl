@@ -9,7 +9,7 @@ Accepted
 ## Context
 
 `memctl` is stdlib-first: the design allows two external modules, the official
-Go MCP SDK and `gopkg.in/yaml.v3` ([ADR-0011](0011-mcp-sdk-and-yaml-v3.md)).
+Go MCP SDK and `go.yaml.in/yaml/v3` ([ADR-0011](0011-mcp-sdk-and-yaml-v3.md)).
 When a module is imported from many packages, its types leak into the domain
 code, an upgrade touches the whole tree, and replacing it becomes a rewrite.
 A rule written only in a guide is easy to break without noticing.
@@ -21,7 +21,7 @@ A rule written only in a guide is easy to break without noticing.
 > allows.
 
 - **Owners.** `github.com/modelcontextprotocol/go-sdk` → `internal/mcpserver`;
-  `gopkg.in/yaml.v3` → `internal/parse`.
+  `go.yaml.in/yaml/v3` → `internal/parse`.
 - **The test.** `internal/arch/imports_test.go` keeps the map of allowed
   modules and their owner package. It fails when non-test code in another
   package imports a module, when code imports a module not in the map, when

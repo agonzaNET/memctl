@@ -4,6 +4,9 @@
 
 Accepted
 
+> **Amended by [ADR-0019](0019-go-yaml-in-module.md)**: YAML support comes from
+> `go.yaml.in/yaml/v3`, the maintained continuation of `gopkg.in/yaml.v3`.
+
 **Area:** Build
 
 ## Context
