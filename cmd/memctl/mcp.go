@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/agonzaNET/memctl/internal/gitlog"
 	"github.com/agonzaNET/memctl/internal/mcpserver"
 	"github.com/agonzaNET/memctl/internal/note"
 )
@@ -51,7 +52,12 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		afterLock()
 	}
 
-	svc, _, err := note.Open(root, log)
+	// The repository test runs at start (SPEC-0008 R1); the committer takes
+	// every successful tool write and commits it in the background.
+	committer := gitlog.New(ctx, gitlog.Config{Root: root, Author: cfg.gitAuthor, Log: log})
+	go committer.Run(ctx)
+
+	svc, _, err := note.Open(root, log, note.WithCommitter(gitCommitter{committer}))
 	if err != nil {
 		log.Error("cannot open the notes root", slog.String("err", err.Error()))
 		return exitError
@@ -59,6 +65,7 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	log.Info("started",
 		slog.String("version", version),
 		slog.String("log_level", cfg.logLevel),
+		slog.String("git_author", cfg.gitAuthor.String()),
 		slog.Int("notes", svc.Index().Len()))
 
 	srv := mcpserver.New(mcpserver.Options{Version: version, Notes: svc, Log: log})
@@ -74,3 +81,10 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 type nopWriteCloser struct{ io.Writer }
 
 func (nopWriteCloser) Close() error { return nil }
+
+// gitCommitter hands the note service's changes to the git committer.
+type gitCommitter struct{ c *gitlog.Committer }
+
+func (g gitCommitter) Enqueue(ch note.Change) {
+	g.c.Add(gitlog.Entry{Tool: ch.Tool, Title: ch.Title, Paths: ch.Paths})
+}

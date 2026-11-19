@@ -6,13 +6,20 @@ import (
 	"io"
 	"log/slog"
 	"strings"
+
+	"github.com/agonzaNET/memctl/internal/gitlog"
 )
 
 // mcpConfig is the configuration of memctl mcp (SPEC-0004, "Inputs").
 type mcpConfig struct {
-	root     string
-	logLevel string
+	root      string
+	logLevel  string
+	gitAuthor gitlog.Author
 }
+
+// authorRule is the rule of --git-author, named in its usage error
+// (SPEC-0008, "Inputs").
+const authorRule = "must be Name <email>: a name of 1 to 100 characters and an email with one @, on one line"
 
 var logLevels = map[string]slog.Level{
 	"debug": slog.LevelDebug,
@@ -28,6 +35,7 @@ func parseMCP(args []string, getenv func(string) string) (mcpConfig, error) {
 	fs.SetOutput(io.Discard)
 	root := fs.String("root", "", "")
 	level := fs.String("log-level", "", "")
+	author := fs.String("git-author", "", "")
 	if err := fs.Parse(args); err != nil {
 		return mcpConfig{}, err
 	}
@@ -56,6 +64,21 @@ func parseMCP(args []string, getenv func(string) string) (mcpConfig, error) {
 		if _, ok := logLevels[cfg.logLevel]; !ok {
 			return mcpConfig{}, errors.New("MEMCTL_LOG_LEVEL must be one of debug, info, warn, error")
 		}
+	}
+	cfg.gitAuthor = gitlog.DefaultAuthor
+	switch {
+	case set["git-author"]:
+		a, err := gitlog.ParseAuthor(*author)
+		if err != nil {
+			return mcpConfig{}, errors.New("--git-author " + authorRule)
+		}
+		cfg.gitAuthor = a
+	case getenv("MEMCTL_GIT_AUTHOR") != "":
+		a, err := gitlog.ParseAuthor(getenv("MEMCTL_GIT_AUTHOR"))
+		if err != nil {
+			return mcpConfig{}, errors.New("MEMCTL_GIT_AUTHOR " + authorRule)
+		}
+		cfg.gitAuthor = a
 	}
 	return cfg, nil
 }

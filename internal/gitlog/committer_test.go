@@ -205,7 +205,7 @@ func TestCommitter_SPEC0008_R6_onlyToolPaths(t *testing.T) {
 	got := git(t, root, "show", "-M", "--name-status", "--format=", "HEAD")
 	want := "D\tgone.md\nR100\told.md\tmoved.md\nA\tnew.md\n"
 	if got != want {
-		t.Fatalf("commit holds:\n%s\nwant:\n%s", got, want)
+		t.Fatalf("commit holds:\n%s\nwant:\n%s\nlog %s", got, want, h.log.String())
 	}
 	status := git(t, root, "status", "--porcelain")
 	if !strings.Contains(status, "M  keep.md") || !strings.Contains(status, " M README.md") {

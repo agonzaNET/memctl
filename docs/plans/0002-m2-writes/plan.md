@@ -99,7 +99,7 @@ in the commit.
   `conflict` in `result.go`, log counts `bytes` and `paths`. Committer is a
   logging stub in `cmd/memctl` until T4.
   *SPEC-0007 R10–R14; R25–R27 for `note_write`.*
-- [ ] **T4 — Git committer.** The `git` runner (allowed subcommands, `-C`,
+- [x] **T4 — Git committer.** The `git` runner (allowed subcommands, `-C`,
   30 s timeout, `GIT_TERMINAL_PROMPT=0`, `-c commit.gpgSign=false`); `IsRepo`
   through it. Repository test at start: `WARN` and drop-all mode outside a
   work tree or without `git`. Non-blocking queue; 2 s quiet window and 30 s
