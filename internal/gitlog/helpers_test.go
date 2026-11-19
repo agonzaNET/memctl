@@ -242,3 +242,12 @@ func readCalls(t *testing.T, logFile string) []string {
 	}
 	return strings.Split(strings.TrimSpace(string(b)), "\n")
 }
+
+func lookGit(t *testing.T) (string, error) {
+	t.Helper()
+	p, err := exec.LookPath("git")
+	if err != nil {
+		t.Skip("git is not installed")
+	}
+	return p, nil
+}

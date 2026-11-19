@@ -97,8 +97,9 @@ type Committer struct {
 	first, last time.Time
 	notify      chan struct{}
 
-	onIdle func()              // test hook: the loop is about to wait
-	sleep  func(time.Duration) // between index.lock retries
+	onIdle  func()              // test hook: the loop is about to wait
+	sleep   func(time.Duration) // between index.lock retries
+	timeout time.Duration       // of each git call
 }
 
 // New tests the root with git (SPEC-0008 R1) and returns a committer. When
