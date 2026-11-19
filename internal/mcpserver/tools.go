@@ -141,4 +141,22 @@ var schemaNoteEdit = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
+const descNoteMove = `Move or rename a note: give it a new path, a new title, or both. Returns the old and new path, the new sha256, and how many notes link to it.
+Use it to reorganise notes or to correct a title; use note_edit to change a note's content.
+With new_title only, the file is renamed after the new title in the same folder (characters that cannot be in a file name become -). With new_path only, the title stays. With both, the note goes to new_path and gets the new title.
+Other notes are never changed. Links to the old path or the old title keep working, because memctl adds the old path (without .md) and the old title to the note's aliases; memctl check lists such links as stale, so they can be updated later. memctl also sets updated.
+Side effect: moves and rewrites the note's file. The change is committed to git in the notes folder within a few seconds, and is never pushed. Use the returned sha256 for a following note_edit.
+Errors: exists means another note is at the target path, or at the same path in other letter case; choose another path or title. not_found means no note matches the ref; use search. ambiguous means several notes share that title or alias; call again with one of the listed paths. invalid_argument means neither new_path nor new_title was given, the new path does not end in .md, is hidden (a name that starts with .) or excluded by a .gitignore file, or the note has no valid frontmatter to record the old names in; fix it and call again. conflict means the note changed while memctl was moving it, and nothing was changed; read it again and retry. internal_error means the move failed and the note is unchanged; try once more, and if it fails again, tell the person.`
+
+var schemaNoteMove = json.RawMessage(`{
+  "type": "object",
+  "properties": {
+    "ref": {"type": "string", "minLength": 1, "maxLength": 1024, "description": "The note to move: a relative path (recommended), a title or an alias."},
+    "new_path": {"type": "string", "minLength": 1, "maxLength": 1024, "description": "The new relative path, ending in .md, for example servers/PA-850.md. Missing folders are created."},
+    "new_title": {"type": "string", "minLength": 1, "maxLength": 200, "description": "The new title, on one line. Without new_path, it also names the file."}
+  },
+  "required": ["ref"],
+  "additionalProperties": false
+}`)
+
 // agent-facing text: end

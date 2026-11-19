@@ -139,7 +139,7 @@ in the commit.
 
 ### Slice C — Move and delete
 
-- [ ] **T8 — `note_move`.** Argument rules; new path from `new_title` (R10);
+- [x] **T8 — `note_move`.** Argument rules; new path from `new_title` (R10);
   `exists`; move onto itself writes nothing; `rename`, then atomic rewrite with
   `title`, `aliases` (old path without `.md`, old title, no duplicates) and
   `updated`; `new_title` on a note without usable frontmatter →

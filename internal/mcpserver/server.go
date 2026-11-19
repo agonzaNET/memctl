@@ -42,6 +42,7 @@ func New(o Options) *Server {
 	s.registerGraph()
 	s.registerWrite()
 	s.registerEdit()
+	s.registerMove()
 	return s
 }
 

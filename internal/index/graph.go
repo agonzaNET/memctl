@@ -255,3 +255,15 @@ func (x *Index) edges() *edgeMaps {
 	x.edgeCache = em
 	return em
 }
+
+// Linkers returns how many other notes have a relation or body link that
+// resolves to p (SPEC-0007 R23, R24).
+func (x *Index) Linkers(p string) int {
+	seen := map[string]bool{}
+	for _, e := range x.edges().in[p] {
+		if e.Source != p {
+			seen[e.Source] = true
+		}
+	}
+	return len(seen)
+}
