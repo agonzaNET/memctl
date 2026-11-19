@@ -16,6 +16,7 @@ written once and not updated afterwards: the settled behaviour lives in the
 specs and the ADRs. List each record in this README.
 
 - [2026-11-19 — M1 check on the development VM](2026-11-19-m1-vm-check.md)
+- [2026-11-19 — M3 release build checked locally](2026-11-19-m3-local-release-build.md)
 
 ## Where it sits in the doc hierarchy
 

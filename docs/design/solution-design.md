@@ -221,3 +221,10 @@ An existing Basic Memory notes root moves to `memctl` once v1 is released, with 
 - [ ] `git init` in the notes root if it is not a git repo yet, and commit the current state as a baseline.
 - [ ] Run `memctl check` on it and fix any observation or relation lines outside their sections by hand.
 - [ ] Point the MCP client config at `memctl mcp --root <notes root>` and retire the Basic Memory server.
+
+## Amendments
+
+| Date | Decision | Change | Why |
+| --- | --- | --- | --- |
+| 2026-11-19 | D15 — Change detection | A file whose mtime is not at least 2 s older than the last read of its entry is hashed again even when mtime and size match ("racily clean"). | Two saves of the same size within one timestamp tick were missed until the next change (found by a property test in stage plan 0002, T12; SPEC-0003 R17). |
+| 2026-11-19 | D24 — Move keeps old links working | `note_move` refuses a note without valid frontmatter, also for a path-only move. | The move could not record the old path in `aliases`, nor keep a title taken from the file name (SPEC-0007 R9). |
