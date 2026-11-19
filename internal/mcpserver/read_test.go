@@ -146,3 +146,35 @@ func TestRead_SPEC0004_R16_section(t *testing.T) {
 		t.Fatalf("missing section: %s", text(t, r))
 	}
 }
+
+func TestRead_SPEC0004_R15_linksList(t *testing.T) {
+	const rel = "runbooks/PAN-OS upgrade procedure.md"
+	e := start(t, map[string]string{
+		rel:                    exampleNote,
+		"decisions/ODR-017.md": "---\ntitle: ODR-017 upgrade cadence\n---\n",
+		"hosts/PA-850.md":      "---\ntitle: PA-850\naliases: [old/fw]\n---\n",
+		"services/PA-850.md":   "---\ntitle: PA-850\n---\n",
+	})
+	got := text(t, e.call(t, "note_read", map[string]any{"ref": rel}))
+	want := "Links:\n" +
+		"- links_to → PA-850: ambiguous (hosts/PA-850.md, services/PA-850.md)\n" +
+		"- implements → decisions/ODR-017.md\n" +
+		"- applies_to → PA-850: ambiguous (hosts/PA-850.md, services/PA-850.md)"
+	if !strings.HasSuffix(got, want) {
+		t.Fatalf("links list:\n%s", got)
+	}
+	l := e.logLines(t, "tool call")
+	if l[len(l)-1]["links"] != 3.0 {
+		t.Fatalf("links count %v", l)
+	}
+
+	e2 := start(t, map[string]string{
+		"a.md":       "Body [[old/fw]] and [[nowhere]]\n",
+		"hosts/x.md": "---\ntitle: X\naliases: [old/fw]\n---\n",
+	})
+	got = text(t, e2.call(t, "note_read", map[string]any{"ref": "a"}))
+	want = "Links:\n- links_to → hosts/x.md (stale: linked as old/fw, an old path)\n- links_to → nowhere: dangling"
+	if !strings.HasSuffix(got, want) {
+		t.Fatalf("stale and dangling:\n%s", got)
+	}
+}
