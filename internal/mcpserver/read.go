@@ -125,42 +125,42 @@ func sortItems(items []lineItem) []string {
 // lines from it to the next heading of the same or a higher level
 // (SPEC-0004 R16).
 func section(n parse.Note, content, name string) (string, string, error) {
-	want := strings.ToLower(strings.TrimSpace(name))
-	for i, h := range n.Headings {
-		if strings.ToLower(strings.TrimSpace(h.Text)) != want {
-			continue
+	h, end, ok := parse.FindSection(n, name)
+	if !ok {
+		var names []string
+		for _, h := range n.Headings {
+			names = append(names, h.Text)
 		}
-		end := -1
-		for _, next := range n.Headings[i+1:] {
-			if next.Level <= h.Level {
-				end = next.Line
-				break
-			}
-		}
-		lines := strings.SplitAfter(content, "\n")
-		from := h.Line - 1
-		to := len(lines)
-		if end > 0 {
-			to = end - 1
-		}
-		if from >= len(lines) {
-			from = len(lines)
-		}
-		if to < from {
-			to = from
-		}
-		return h.Text, strings.Join(lines[from:to], ""), nil
+		return "", "", noHeading(name, names, "read it without section")
 	}
+	lines := strings.SplitAfter(content, "\n")
+	from := h.Line - 1
+	to := len(lines)
+	if end > 0 {
+		to = end - 1
+	}
+	if from >= len(lines) {
+		from = len(lines)
+	}
+	if to < from {
+		to = from
+	}
+	return h.Text, strings.Join(lines[from:to], ""), nil
+}
+
+// noHeading is the not_found error for a missing section: it lists up to 20
+// of the note's headings, or says what to do when it has none.
+func noHeading(name string, headings []string, without string) error {
 	var names []string
-	for i, h := range n.Headings {
+	for i, h := range headings {
 		if i == 20 {
-			names = append(names, fmt.Sprintf("and %d more", len(n.Headings)-20))
+			names = append(names, fmt.Sprintf("and %d more", len(headings)-20))
 			break
 		}
-		names = append(names, h.Text)
+		names = append(names, h)
 	}
 	if len(names) == 0 {
-		return "", "", errorf(CodeNotFound, "The note has no heading %q, and no headings at all; read it without section.", name)
+		return errorf(CodeNotFound, "The note has no heading %q, and no headings at all; %s.", name, without)
 	}
-	return "", "", errorf(CodeNotFound, "The note has no heading %q; its headings are: %s.", name, strings.Join(names, ", "))
+	return errorf(CodeNotFound, "The note has no heading %q; its headings are: %s.", name, strings.Join(names, ", "))
 }

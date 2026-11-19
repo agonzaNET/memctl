@@ -128,7 +128,7 @@ in the commit.
   misread the plain value. Golden tests with comments, unknown keys, block and
   flow lists, quoted values; no frontmatter and `bad_frontmatter` refused.
   *SPEC-0007 R8, R9.*
-- [ ] **T7 — `note_edit`.** `expected_sha` check after the freshness check →
+- [x] **T7 — `note_edit`.** `expected_sha` check after the freshness check →
   `conflict` with current sha and fenced content; `append`,
   `replace_section` (heading lookup as `note_read`, `not_found` with the
   headings), `find_replace` (`no_match`, `not_unique` with count, frontmatter

@@ -29,11 +29,25 @@ func writeAnnotations(destructive, idempotent bool) *mcp.ToolAnnotations {
 // writeError maps a note service error of a write to a tool error.
 func writeError(err error) error {
 	var (
-		arg    *note.ArgError
-		path   *note.PathError
-		exists *note.ExistsError
+		te       *toolError
+		arg      *note.ArgError
+		path     *note.PathError
+		exists   *note.ExistsError
+		conflict *note.ConflictError
+		section  *note.SectionError
+		many     *note.NotUniqueError
 	)
 	switch {
+	case errors.As(err, &te):
+		return err // from ref resolution
+	case errors.As(err, &conflict):
+		return errorf(CodeConflict, "The note changed since you read it, so nothing was changed. Its current sha256 and content follow; decide again on that content and retry with that sha256 as expected_sha.\n\nsha256: %s\n\n%s", conflict.SHA256, fenced(conflict.Content))
+	case errors.As(err, &section):
+		return noHeading(section.Section, section.Headings, "use append or find_replace instead")
+	case errors.Is(err, note.ErrNoMatch):
+		return errorf(CodeNoMatch, "The find text does not occur in the note; read the note again and pass text that it contains exactly.")
+	case errors.As(err, &many):
+		return errorf(CodeNotUnique, "The find text occurs %d times in the note; include more of the surrounding text so that it occurs once, and call again.", many.Count)
 	case errors.As(err, &arg):
 		return errorf(CodeInvalidArgument, "The %s %s; fix it and call again.", arg.Arg, arg.Reason)
 	case errors.As(err, &path):

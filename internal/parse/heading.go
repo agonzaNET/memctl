@@ -45,3 +45,24 @@ func sectionKind(h Heading) (SectionKind, bool) {
 	}
 	return "", false
 }
+
+// FindSection returns the first heading whose text equals name, trimmed and
+// without regard to letter case, and the 1-based line of the next heading of
+// the same or a higher level (0 when the section runs to the end of the
+// file). This is the section of note_read and of note_edit's
+// replace_section (SPEC-0004 R16, SPEC-0007 R17).
+func FindSection(n Note, name string) (h Heading, end int, ok bool) {
+	want := strings.ToLower(strings.TrimSpace(name))
+	for i, h := range n.Headings {
+		if strings.ToLower(strings.TrimSpace(h.Text)) != want {
+			continue
+		}
+		for _, next := range n.Headings[i+1:] {
+			if next.Level <= h.Level {
+				return h, next.Line, true
+			}
+		}
+		return h, 0, true
+	}
+	return Heading{}, 0, false
+}

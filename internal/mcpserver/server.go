@@ -41,6 +41,7 @@ func New(o Options) *Server {
 	s.registerSearch()
 	s.registerGraph()
 	s.registerWrite()
+	s.registerEdit()
 	return s
 }
 
