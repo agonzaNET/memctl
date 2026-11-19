@@ -42,22 +42,22 @@ creates or moves tags. This plan adds:
 
 ## Tasks
 
-- [ ] **T1 — Release notes cut.** `scripts/release-notes.sh X.Y.Z [CHANGELOG]`
+- [x] **T1 — Release notes cut.** `scripts/release-notes.sh X.Y.Z [CHANGELOG]`
   prints the body of `## [X.Y.Z] - …` up to the next `## ` heading or the
   link references; exits 1 when the section is missing or empty. A test
   script with cases: a middle section, the last section before the link
   references, a missing version, an empty section, a version that is a
   prefix of another.
-- [ ] **T2 — Release build.** `scripts/release-build.sh X.Y.Z OUTDIR` runs
+- [x] **T2 — Release build.** `scripts/release-build.sh X.Y.Z OUTDIR` runs
   `make build` for each target with `VERSION`, packs the archives and writes
   `SHA256SUMS`. `make dist VERSION=X.Y.Z` runs it into `dist/`. `make verify`
   runs the script tests.
-- [ ] **T3 — Workflow.** `.github/workflows/release.yml` as settled above.
-- [ ] **T4 — README.** Install from a release (download, `sha256sum -c`, the
+- [x] **T3 — Workflow.** `.github/workflows/release.yml` as settled above.
+- [x] **T4 — README.** Install from a release (download, `sha256sum -c`, the
   macOS quarantine attribute), Claude Code and Claude Desktop setup, flags and
   environment variables, the note format in brief, what git sees,
   `memctl check`, building from source.
-- [ ] **T5 — Docs.** `CLAUDE.md` layout, `environment.md` release steps,
+- [x] **T5 — Docs.** `CLAUDE.md` layout, `environment.md` release steps,
   CHANGELOG entry.
 - [ ] **T6 — Exit check.** Locally: `make dist`, unpack the archive for the
   machine, run it end to end on a fresh git notes root (write, read, edit,

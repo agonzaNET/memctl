@@ -76,11 +76,13 @@ memctl/
 │   ├── index/                  # in-memory index: BM25F, names, backlinks, graph walk (planned, M1)
 │   ├── gitlog/                 # git committer: queue, quiet window, final flush (planned, M2)
 │   └── arch/                   # module-wide tests: one importer per third-party module (ADR-0010)
-├── scripts/                    # check-docs.sh and its regression test
+├── scripts/                    # check-docs.sh, release-notes.sh, release-build.sh and their tests
+├── .github/workflows/          # release.yml: the manual release workflow (ADR-0012)
 ├── docs/
 │   ├── design/                 # the product design — source of truth
 │   ├── adr/                    # architecture decision records; README.md is the index
-│   ├── specs/                  # capability specs and plans
+│   ├── specs/                  # capability specs and their plans
+│   ├── plans/                  # stage plans (ADR-0018)
 │   └── agents/                 # working guides (the how)
 ├── Makefile                    # build, test, verify (make help)
 ├── .mise.toml                  # Go pin (ADR-0012)

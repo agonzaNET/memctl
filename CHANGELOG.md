@@ -28,6 +28,10 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   dangling, ambiguous and stale links, skipped files and a missing git
   repository; it exits 1 when there are errors (spec: SPEC-0005).
 - `memctl version` prints the version of the binary (spec: SPEC-0004).
+- Release archives for Linux (amd64, arm64) and macOS (Apple silicon) with
+  `SHA256SUMS`, published by a manually started GitHub Actions workflow; the
+  README covers installing them and setting up Claude Code and Claude Desktop
+  (ADR-0012).
 - `memctl mcp` serves a notes root from one process only: a second
   `memctl mcp` on the same root stops at once with
   `root <path> is in use by memctl (pid <N>)`. memctl keeps its own files in

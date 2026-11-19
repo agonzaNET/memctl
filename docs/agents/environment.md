@@ -64,17 +64,35 @@ least it in the same commit. Nothing enforces that they agree.
 ```bash
 make build      # bin/memctl for this machine (CGO_ENABLED=0, version from the latest vX.Y.Z tag)
 make test       # go test ./...
-make verify     # test + vet + fmt-check + check-docs — the gate of workflow Phase 4
+make verify     # test + vet + fmt-check + check-docs + script tests — the gate of workflow Phase 4
 ```
 
-Run [`scripts/check-docs.test.sh`](../../scripts/check-docs.test.sh) as well
-whenever you edit `check-docs.sh` itself; `make verify` does not.
+`make verify` runs the regression tests of the scripts
+([`check-docs.test.sh`](../../scripts/check-docs.test.sh) and
+[`release-notes.test.sh`](../../scripts/release-notes.test.sh)) too; add a
+case when you change one of those scripts.
 
 For a one-off binary for another platform:
-`make build GOOS=linux GOARCH=amd64`. Release binaries for `linux/amd64`,
-`linux/arm64` and `darwin/arm64` are built by the GitHub Actions release
-workflow (milestone M3), which the maintainer starts by hand for an existing
-`vX.Y.Z` tag; nothing builds on push or tag.
+`make build GOOS=linux GOARCH=amd64`.
+
+## Releasing
+
+Releases for `linux/amd64`, `linux/arm64` and `darwin/arm64` are published by
+the GitHub Actions workflow `.github/workflows/release.yml` (ADR-0012, stage
+plan 0003). Nothing builds on push or tag; the maintainer releases:
+
+1. In a commit on `main`, rename `## [Unreleased]` in `CHANGELOG.md` to
+   `## [X.Y.Z] - YYYY-MM-DD`, open a new empty `## [Unreleased]` above it, and
+   update the link references (ADR-0007, ADR-0008).
+2. Optionally, `make dist VERSION=X.Y.Z` builds the same archives locally.
+3. Tag the commit `vX.Y.Z` and push `main` and the tag.
+4. Start the workflow (Actions → release → Run workflow, or
+   `gh workflow run release.yml -f tag=vX.Y.Z`). It runs `make verify` on the
+   tag, builds the archives and `SHA256SUMS`, and creates the release with the
+   CHANGELOG section as notes. It fails without that section, and never
+   replaces an existing release.
+
+Agents prepare step 1 when asked; steps 3 and 4 are the maintainer's.
 
 ## Running it locally
 
