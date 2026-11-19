@@ -82,7 +82,7 @@ in the commit.
   load. Tests: two processes, empty lock file, read-only root, `SIGKILL` then
   immediate retake, `git status` clean. CHANGELOG: one `memctl mcp` per root.
   *SPEC-0006 R1–R8.*
-- [ ] **T2 — Atomic write core.** Service `Options` (clock, committer,
+- [x] **T2 — Atomic write core.** Service `Options` (clock, committer,
   fault hooks before rename and before the re-hash). Dot-prefixed temporary
   file in the target folder, `fsync`, mode of the replaced file or 0644,
   `rename`, folder `fsync`; temporary file removed on any failure. Re-hash just
