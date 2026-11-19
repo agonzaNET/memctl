@@ -114,7 +114,7 @@ in the commit.
 
 ### Slice C — Graph and listing
 
-- [ ] **T11 — Graph, listing, link report.** Edges and backlinks, breadth-first
+- [x] **T11 — Graph, listing, link report.** Edges and backlinks, breadth-first
   walk with depth, `relTypes`, unresolved edges of the start, self-links,
   200-note cap, `ErrNotFound`; `List`; `Links()`.
   *SPEC-0002 R15–R21.*
