@@ -54,7 +54,7 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 			return err
 		}
 		p := ref.Path
-		g, err := idx.Walk(p, depth, in.RelTypes)
+		g, err := idx.Walk(p, depth, in.RelTypes, index.EdgesAll)
 		if errors.Is(err, index.ErrBadDepth) {
 			return errorf(CodeInvalidArgument, "The depth must be 1, 2 or 3; fix it and call again.")
 		}

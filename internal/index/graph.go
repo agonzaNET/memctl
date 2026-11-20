@@ -41,9 +41,19 @@ type Graph struct {
 	Truncated bool
 }
 
-// Walk walks relations, body links and backlinks from start (SPEC-0002
-// R15–R19).
-func (x *Index) Walk(start string, depth int, relTypes []string) (Graph, error) {
+// EdgeScope selects the edges a walk lists (SPEC-0002 R28).
+type EdgeScope int
+
+const (
+	// EdgesAll lists every edge between the listed notes (R17).
+	EdgesAll EdgeScope = iota
+	// EdgesStart lists only the edges whose source or target is the start.
+	EdgesStart
+)
+
+// Walk walks relations, body links and backlinks from start and lists the
+// edges of scope (SPEC-0002 R15–R19, R28).
+func (x *Index) Walk(start string, depth int, relTypes []string, scope EdgeScope) (Graph, error) {
 	if depth == 0 {
 		depth = 1
 	}
@@ -108,6 +118,9 @@ func (x *Index) Walk(start string, depth int, relTypes []string) (Graph, error) 
 	// the start's unresolved edges, which are listed, never followed (R17).
 	seen := map[string]bool{}
 	add := func(e Edge, target string) {
+		if scope == EdgesStart && e.Source != start && target != start {
+			return
+		}
 		key := e.Source + "\x00" + e.Type + "\x00" + target
 		if !seen[key] {
 			seen[key] = true
