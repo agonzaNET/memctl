@@ -59,8 +59,8 @@ func compare(t *testing.T, round int, a, b *index.Index) {
 		}
 	}
 	for _, q := range []string{"alpha", "firewall proxy", "t1"} {
-		ha, _ := a.Search(index.Query{Text: q, Limit: 50})
-		hb, _ := b.Search(index.Query{Text: q, Limit: 50})
+		ha, _ := hitsOf(a.Search(index.Query{Text: q, Limit: 50}))
+		hb, _ := hitsOf(b.Search(index.Query{Text: q, Limit: 50}))
 		if !reflect.DeepEqual(ha, hb) {
 			t.Fatalf("round %d: Search(%s) differs", round, q)
 		}
