@@ -42,8 +42,9 @@ docs/agents/changelog.md.
   repository; it exits 1 when there are errors (spec: SPEC-0005).
 - `memctl version` prints the version of the binary (spec: SPEC-0004).
 - Release archives for Linux (amd64, arm64) and macOS (Apple silicon) with
-  `SHA256SUMS`, published by a manually started GitHub Actions workflow; the
-  README covers installing them and setting up Claude Code and Claude Desktop
+  `SHA256SUMS`, published by a manually started GitHub Actions workflow that
+  stops when `govulncheck` finds a vulnerability the code calls; the README
+  covers installing them and setting up Claude Code and Claude Desktop
   (ADR-0012).
 - `memctl mcp` serves a notes root from one process only: a second
   `memctl mcp` on the same root stops at once with

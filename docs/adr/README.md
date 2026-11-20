@@ -76,6 +76,7 @@ ADR file it points to. When an ADR becomes `Superseded by ADR-NNNN` or
 | [ADR-0017](0017-path-identity-and-link-resolution.md) | Identify notes by path, resolve links path first, report ambiguity, and keep old paths as aliases on a move | Accepted | Index |
 | [ADR-0018](0018-specs-first-and-stage-plans.md) | Write the specs of a stage before any code, and plan a stage of coupled specs in one plan (amends ADR-0004) | Accepted | Methodology |
 | [ADR-0019](0019-go-yaml-in-module.md) | Take YAML support from go.yaml.in/yaml/v3, the maintained continuation of yaml.v3 (amends ADR-0011) | Accepted | Build |
+| [ADR-0020](0020-vulnerability-check-in-release-workflow.md) | Run govulncheck in the release workflow and stop the release on a reachable vulnerability (amends ADR-0012) | Accepted | Build |
 
 ### Superseded / Deprecated
 

@@ -4,6 +4,10 @@
 
 Accepted
 
+> **Amended by [ADR-0020](0020-vulnerability-check-in-release-workflow.md)**:
+> the release workflow also runs `govulncheck` and stops on a reachable
+> vulnerability.
+
 **Area:** Build
 
 ## Context

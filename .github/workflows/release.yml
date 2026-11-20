@@ -1,7 +1,8 @@
 # Release workflow (ADR-0012, stage plan 0003).
 #
 # Started by hand for an existing vX.Y.Z tag. It checks out that tag, runs
-# make verify, builds the three release archives and SHA256SUMS, and creates
+# make verify and govulncheck (ADR-0020), builds the three release archives
+# and SHA256SUMS, and creates
 # the GitHub release with the tag's CHANGELOG section as notes. It never
 # pushes code, never creates or moves tags, and fails if the release exists.
 
@@ -66,6 +67,13 @@ jobs:
 
       - name: Verify
         run: make verify
+
+      # Stops the release when the code calls a known vulnerability in the
+      # standard library or a module; uncalled ones are only listed (ADR-0020).
+      - name: Vulnerability check
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.10.0
+          "$(go env GOPATH)/bin/govulncheck" ./...
 
       - name: Build the release archives
         run: scripts/release-build.sh "$VERSION" dist
