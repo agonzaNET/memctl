@@ -43,7 +43,7 @@ var schemaNoteRead = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
-const descSearch = `Search the notes by words and rank them by relevance. Returns up to limit notes, best first, each with its title, path, type, tags, score and the line that matches best, and says how many notes match in total when there are more than limit.
+const descSearch = `Search the notes by words and rank them by relevance. Returns up to limit notes, best first, each with its title, path, type, tags, score and the line that matches best, and says how many notes match in total when there are more than limit. Of a line longer than 200 characters, 200 are shown: a long line is cut around the first matching word, and … marks each cut side.
 Use it to find notes when you do not know their path or title, then read the best hits with note_read. A note matches when it contains any of the words; notes with more of them, or with them in the title, aliases or tags, rank higher. Words are matched whole and without regard to letter case, with no stemming, so try other word forms or synonyms when a search finds nothing. An identifier written with -, ., _, / or : between its parts, such as IT-104, 10.50.4.15 or fw-eu1-01, matches only notes that contain the whole identifier; search for one part, such as 104, to find it inside identifiers.
 Narrow the search with type, tags (a note must have all of them) and folder (a folder and everything below it).
 An empty result is not an error: no note contains the words. Read-only and safe to repeat.
