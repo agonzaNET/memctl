@@ -2,6 +2,7 @@ package mcpserver_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -233,6 +234,78 @@ func TestList_SPEC0004_R30_descriptionNamesDates(t *testing.T) {
 	for _, w := range []string{"updated", "file changed", "tags"} {
 		if !strings.Contains(d, w) {
 			t.Fatalf("description lacks %q:\n%s", w, d)
+		}
+	}
+}
+
+func TestContext_SPEC0004_R31_edgesStart(t *testing.T) {
+	e := start(t, graphFiles())
+	got := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2, "edges": "start"}))
+	want := `Found 4 notes within 2 hops of "Start", plus the note itself.
+
+Notes:
+- 0 · s.md — Start
+- 1 · a.md — A
+- 1 · b.md — B
+- 1 · in.md — In
+- 2 · c.md — C
+
+Edges of the start note:
+- in.md —see_also→ s.md
+- s.md —links_to→ b.md
+- s.md —links_to→ dup: ambiguous (x/dup.md, y/dup.md)
+- s.md —links_to→ nowhere: dangling
+- s.md —depends_on→ a.md`
+	if got != want {
+		t.Fatalf("got:\n%s\n\nwant:\n%s", got, want)
+	}
+
+	def := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2}))
+	all := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2, "edges": "all"}))
+	if def != all || !strings.Contains(all, "\nEdges:\n") || !strings.Contains(all, "- a.md —runs_on→ c.md") {
+		t.Fatalf("default and all differ or miss an edge:\n%s\n\n%s", def, all)
+	}
+	if r := e.call(t, "context", map[string]any{"ref": "s", "edges": "other"}); !r.IsError || strings.HasPrefix(text(t, r), "invalid_argument") {
+		t.Fatalf("edges other must be refused by the schema: %s", text(t, r))
+	}
+}
+
+func TestContext_SPEC0004_R31_schemaAndDescription(t *testing.T) {
+	e := start(t, map[string]string{"a.md": "a"})
+	res, err := e.cs.ListTools(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tool := range res.Tools {
+		if tool.Name != "context" {
+			continue
+		}
+		raw, _ := json.Marshal(tool.InputSchema)
+		var schema struct {
+			Properties map[string]struct {
+				Type    string   `json:"type"`
+				Enum    []string `json:"enum"`
+				Default any      `json:"default"`
+			} `json:"properties"`
+		}
+		if err := json.Unmarshal(raw, &schema); err != nil {
+			t.Fatal(err)
+		}
+		p := schema.Properties["edges"]
+		if p.Type != "string" || !reflect.DeepEqual(p.Enum, []string{"all", "start"}) || p.Default != "all" {
+			t.Fatalf("edges schema %s", raw)
+		}
+	}
+	d := toolDescription(t, "context")
+	for _, s := range []string{
+		"every connection between the listed notes",
+		"unless edges is start",
+		"edges start to get the same notes with only the start note's connections",
+		"edges all, the default",
+		"dozens of notes and hundreds of connections",
+	} {
+		if !strings.Contains(d, s) {
+			t.Fatalf("description lacks %q:\n%s", s, d)
 		}
 	}
 }
