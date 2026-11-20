@@ -54,8 +54,22 @@ func resolveRefFull(idx *index.Index, ref string) (index.Resolution, error) {
 	case index.Ambiguous:
 		return r, errorf(CodeAmbiguous, "%q matches several notes: %s; call again with one of these paths as ref.", ref, strings.Join(r.Candidates, ", "))
 	default:
-		return r, errorf(CodeNotFound, "No note matches %q; use search to find the note, then pass its path.", ref)
+		return r, notFound(idx, ref)
 	}
+}
+
+// notFound is the not_found error of an unknown ref, with up to three
+// paths that a search for the ref's words finds (SPEC-0004 R28).
+func notFound(idx *index.Index, ref string) error {
+	found, err := idx.Search(index.Query{Text: ref, Limit: 3})
+	if err != nil || len(found.Hits) == 0 {
+		return errorf(CodeNotFound, "No note matches %q; use search to find the note, then pass its path.", ref)
+	}
+	paths := make([]string, len(found.Hits))
+	for i, h := range found.Hits {
+		paths[i] = h.Path
+	}
+	return errorf(CodeNotFound, "No note matches %q; closest by search: %s; pass one of these paths, or use search.", ref, strings.Join(paths, ", "))
 }
 
 // resolvedBy returns how a ref resolved when not by path, and the other

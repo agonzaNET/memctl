@@ -304,7 +304,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R27** — `note_read` and `context` by title and by alias show the step;
   a path ref that is also another note's title names that note; a path ref
   with no other match adds nothing.
-- [ ] **R28** — An unknown ref whose words match notes lists up to three paths;
+- [x] **R28** — An unknown ref whose words match notes lists up to three paths;
   one whose words match nothing gives the plain sentence. No ref text is
   logged.
 - [x] **R15, R17, R18** — `note_read` of the design's example note equals a

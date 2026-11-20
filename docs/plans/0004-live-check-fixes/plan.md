@@ -101,7 +101,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
   metadata item and `context` line; `context` first line `plus the note
   itself`; description names the edge rule.
   *SPEC-0002 R23; SPEC-0004 R22, R27.*
-- [ ] **T5 — Not-found suggestions.** A dangling ref runs `Search` with the
+- [x] **T5 — Not-found suggestions.** A dangling ref runs `Search` with the
   ref's text, limit 3; two sentences of R28; nothing logged.
   *SPEC-0004 R28.*
 
