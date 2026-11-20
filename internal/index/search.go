@@ -71,8 +71,8 @@ const connectors = "-._/:"
 
 // chains splits lower-cased text into chains of parts (runs of letters and
 // digits). Neighbouring parts stay in one chain while exactly one connector
-// separates them; each chain keeps its parts and its text from the first to
-// the last part.
+// separates them; each chain keeps its parts with their offsets and its text
+// from the first to the last part.
 func chains(text string) []chain {
 	lower := strings.ToLower(text)
 	var out []chain
@@ -92,6 +92,7 @@ func chains(text string) []chain {
 		if start >= 0 {
 			c := &out[len(out)-1]
 			c.parts = append(c.parts, lower[start:i])
+			c.starts = append(c.starts, start)
 			c.last = i
 			start, gapRunes, gapJoins = -1, 0, true
 		}
@@ -103,6 +104,7 @@ func chains(text string) []chain {
 	if start >= 0 {
 		c := &out[len(out)-1]
 		c.parts = append(c.parts, lower[start:])
+		c.starts = append(c.starts, start)
 		c.last = len(lower)
 	}
 	for i := range out {
@@ -111,9 +113,12 @@ func chains(text string) []chain {
 	return out
 }
 
+// chain is one run of parts; first, last and starts are byte offsets in
+// the lower-cased text.
 type chain struct {
 	first, last int
 	parts       []string
+	starts      []int
 	text        string
 }
 
