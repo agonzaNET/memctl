@@ -21,18 +21,25 @@ docs/agents/changelog.md.
 ### Added
 
 - `context` takes `edges`: `start` lists the same notes with only the
-  connections to and from the start note, so a walk at depth 2 or 3 stays
-  small; `all`, the default, lists every connection between the notes as
-  before (spec: SPEC-0002, SPEC-0004).
+  connections to and from the start note, and names for each note further
+  than one hop the note it was reached through (`via`), so a walk at depth 2
+  or 3 stays small; `all`, the default, lists every connection between the
+  notes as before (spec: SPEC-0002, SPEC-0004).
+- `context` shows the number of connections in the heading of its list,
+  `Edges (<m>):` (spec: SPEC-0004).
+- A `search` that finds no notes names words in the notes that are a query
+  word followed by digits, such as `cisco1` for `cisco`, to search for
+  instead (spec: SPEC-0002, SPEC-0004).
 
 ### Changed
 
 - A `search` hit on a line longer than 200 characters shows the part of the
-  line around the first matching word, with `…` on each side that was cut,
-  instead of the first 200 characters (spec: SPEC-0002, SPEC-0004).
+  line around the first matching word, cut at whole words, with `…` on each
+  side that was cut, instead of the first 200 characters (spec: SPEC-0002,
+  SPEC-0004).
 - The suggestions for an unknown ref include near names: a word such as
-  `cisco` also finds notes that hold `cisco1` or `cisco12`. `search` results
-  do not change (spec: SPEC-0002, SPEC-0004).
+  `cisco` also finds notes that hold `cisco1` or `cisco12`. `search` ranking
+  does not change (spec: SPEC-0002, SPEC-0004).
 
 ### Security
 

@@ -76,9 +76,9 @@ A flag wins over its environment variable.
 
 | Tool | What it does |
 |---|---|
-| `search` | Full-text search (BM25F), with type, tag and folder filters; identifiers such as `IT-104` or `10.50.4.15` match whole; each hit shows the matching line, cut around the first match when long |
+| `search` | Full-text search (BM25F), with type, tag and folder filters; identifiers such as `IT-104` or `10.50.4.15` match whole; each hit shows the matching line, cut around the first match when long; without hits, it names near names such as `cisco1` for `cisco` |
 | `note_read` | A note, or one section of it, with its links and its `sha256` |
-| `context` | The notes linked to and from a note, up to three hops, with every link between them, or with `edges` `start` only the links of the start note |
+| `context` | The notes linked to and from a note, up to three hops, with every link between them, or with `edges` `start` only the links of the start note and, for each farther note, the note it was reached through |
 | `list` | Notes by folder, type or tag, with tags and a date |
 | `note_write` | Create a note from a title and a body |
 | `note_edit` | Append, replace a section, or replace one piece of text; needs the `sha256` from `note_read`, so a change made meanwhile in an editor is never overwritten |

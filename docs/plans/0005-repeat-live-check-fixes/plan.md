@@ -149,26 +149,26 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
 
 ### Slice E — Live-check findings (V1–V4)
 
-- [ ] **T10 — Snippet cut at words (V1).** At a cut edge between two
+- [x] **T10 — Snippet cut at words (V1).** At a cut edge between two
   non-whitespace runes, move the edge inward to the nearest whitespace,
   unless that removes part of the centred token or empties the window; then
   trim and add `…`. Update the R27 table for word-structured lines and add
   the cases of the R14, R27 acceptance box; update the long-line `search`
   test of R19.
   *SPEC-0002 R27; SPEC-0004 R19.*
-- [ ] **T11 — `via` names (V2).** `Node.Via` for distance 2 and more: the
+- [x] **T11 — `via` names (V2).** `Node.Via` for distance 2 and more: the
   smallest path among the notes one hop nearer that share a followed edge,
   set during the walk and the same in both scopes. With `edges` `start`,
   `(via <path>)` on those `Notes` lines; `context` description: the `via`
   names, depth 1 lists fewer notes and `start` fewer connections.
   *SPEC-0002 R30; SPEC-0004 R31.*
-- [ ] **T12 — Near names after a search without hits (V3).** `Result.Near`
+- [x] **T12 — Near names after a search without hits (V3).** `Result.Near`
   from the near-name tokens of every hit before the limit; `search` with no
   hits searches again with `NearNames` and the same arguments and adds the
   line of R32 (five words at most, `, and <k> more`); description names it;
   nothing logged.
   *SPEC-0002 R29; SPEC-0004 R32.*
-- [ ] **T13 — Edge counts (V4).** `Edges (<m>):`,
+- [x] **T13 — Edge counts (V4).** `Edges (<m>):`,
   `Edges of the start note (<m>):`; `none.` unchanged; golden files.
   *SPEC-0004 R22, R31.*
 - [ ] **T14 — Changelog, check again and close.** `CHANGELOG.md`
