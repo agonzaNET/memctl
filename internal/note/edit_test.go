@@ -193,7 +193,7 @@ func TestEdit_SPEC0007_R9_noUsableFrontmatter(t *testing.T) {
 		if _, err := s.Edit(resolvePath("a.md"), note.EditOp{ExpectedSHA: shaOf(t, root, "a.md"), Op: "append", Text: "added"}); err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
-		if got := readFile(t, root, "a.md"); got != in+"added\n" {
+		if got := readFile(t, root, "a.md"); got != in+"\nadded\n" { // a new paragraph (R16), updated untouched
 			t.Fatalf("%s: %q", name, got)
 		}
 	}

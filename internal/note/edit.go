@@ -151,12 +151,15 @@ func checkEditOp(op EditOp) error {
 func applyEdit(n parse.Note, content string, op EditOp) (string, error) {
 	switch op.Op {
 	case "append":
-		// After a newline if the file does not end in one; the file ends in
-		// exactly one newline (SPEC-0007 R16).
-		if content != "" && !strings.HasSuffix(content, "\n") {
-			content += "\n"
+		// A new paragraph: the file's trailing blank lines dropped, one blank
+		// line, the text without its leading blank lines, one final newline
+		// (SPEC-0007 R16).
+		text := trimBlankLines(op.Text)
+		head := trimTrailingBlank(content)
+		if head == "" {
+			return text + "\n", nil
 		}
-		return strings.TrimRight(content+op.Text, "\r\n") + "\n", nil
+		return head + "\n\n" + text + "\n", nil
 	case "replace_section":
 		return replaceSection(n, content, op.Section, op.Text)
 	default:
@@ -196,14 +199,50 @@ func replaceSection(n parse.Note, content, name, text string) (string, error) {
 	if end > 0 && end-1 < len(lines) {
 		tail = strings.Join(lines[end-1:], "")
 	}
-	body := strings.TrimRight(text, "\r\n")
-	if body != "" {
-		body += "\n"
-	}
-	if tail != "" {
-		body += "\n"
+	// One blank line after the heading, then the text without its leading
+	// and trailing blank lines, then a blank line before a next heading
+	// (SPEC-0007 R17).
+	body := "\n"
+	if t := trimBlankLines(text); t != "" {
+		body += t + "\n"
+		if tail != "" {
+			body += "\n"
+		}
 	}
 	return head + body + tail, nil
+}
+
+// trimTrailingBlank drops the trailing line breaks and whitespace-only lines
+// of s; the last line that holds text keeps its trailing spaces.
+func trimTrailingBlank(s string) string {
+	for {
+		s = strings.TrimRight(s, "\r\n")
+		i := strings.LastIndex(s, "\n")
+		if strings.TrimSpace(s[i+1:]) != "" || s == "" {
+			return s
+		}
+		s = s[:i+1]
+	}
+}
+
+// trimBlankLines drops the leading and trailing whitespace-only lines and
+// line breaks of s; the first and last lines that hold text keep their
+// indentation and trailing spaces.
+func trimBlankLines(s string) string {
+	s = trimTrailingBlank(s)
+	for {
+		i := strings.Index(s, "\n")
+		if i < 0 {
+			if strings.TrimSpace(s) == "" {
+				return ""
+			}
+			return s
+		}
+		if strings.TrimSpace(s[:i]) != "" {
+			return s
+		}
+		s = s[i+1:]
+	}
 }
 
 // editableFrontmatter reports whether note_edit may set updated: the note

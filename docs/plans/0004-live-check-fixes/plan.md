@@ -117,7 +117,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ### Slice D — Writes
 
-- [ ] **T8 — `append` and `replace_section`.** Paragraph rule for `append`;
+- [x] **T8 — `append` and `replace_section`.** Paragraph rule for `append`;
   one blank line after the heading for `replace_section`; `section_not_found`
   with the `append` advice; description of `append`. Golden files of R16 and
   R17.

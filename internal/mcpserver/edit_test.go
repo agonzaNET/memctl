@@ -32,7 +32,7 @@ func TestEdit_SPEC0007_R15_R16_readThenEdit(t *testing.T) {
 	if res.IsError || got != "Edited \"Runbook\" at r.md.\n\nsha256: "+sum(string(b)) {
 		t.Fatalf("result %q", got)
 	}
-	if !strings.HasSuffix(string(b), "n\nappended\n") || !strings.Contains(string(b), "updated: ") {
+	if !strings.HasSuffix(string(b), "n\n\nappended\n") || !strings.Contains(string(b), "updated: ") {
 		t.Fatalf("file %q", b)
 	}
 	// The returned sha is good for the next edit.

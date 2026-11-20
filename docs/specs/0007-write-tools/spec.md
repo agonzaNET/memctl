@@ -263,10 +263,10 @@ is unchanged.
 - [x] **R15** — Stale `expected_sha` returns the current content and sha.
 - [x] **R18, R19** — `find_replace` with zero and two matches, an edit inside
   the frontmatter, and a no-op edit.
-- [ ] **R16** — Golden tests: `append` to a file ending in no newline, one
+- [x] **R16** — Golden tests: `append` to a file ending in no newline, one
   newline and three blank lines; text with leading blank lines; a file with
   only frontmatter; an empty file. The description names the paragraph rule.
-- [ ] **R17** — Golden tests: `replace_section` of a heading followed by a
+- [x] **R17** — Golden tests: `replace_section` of a heading followed by a
   blank line and of one followed directly by text, text with leading and
   trailing blank lines, empty text, the last section of the file; a missing
   section gives `section_not_found` with the headings and the `append` advice.
