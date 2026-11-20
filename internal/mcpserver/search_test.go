@@ -66,7 +66,7 @@ func TestSearch_SPEC0004_R21_counts(t *testing.T) {
 	e := searchFixture(t)
 	e.call(t, "search", map[string]any{"query": "firewall secret-word firewall"})
 	l := e.logLines(t, "tool call")
-	if len(l) != 1 || l[0]["tool"] != "search" || l[0]["results"] != 2.0 || l[0]["terms"] != 3.0 {
+	if len(l) != 1 || l[0]["tool"] != "search" || l[0]["results"] != 2.0 || l[0]["terms"] != 2.0 { // "secret-word" is one term (SPEC-0002 R24)
 		t.Fatalf("log %v", l)
 	}
 	if strings.Contains(e.log.String(), "secret") {

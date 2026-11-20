@@ -62,13 +62,14 @@ func (s *Server) search(in searchIn, log *callLog) (*mcp.CallToolResult, error) 
 	log.set("terms", terms)
 	var res *mcp.CallToolResult
 	err = s.opts.Notes.Call(func(idx *index.Index, _ note.Stats) error {
-		hits, err := idx.Search(index.Query{Text: in.Query, Type: in.Type, Tags: in.Tags, Folder: folder, Limit: in.Limit})
+		found, err := idx.Search(index.Query{Text: in.Query, Type: in.Type, Tags: in.Tags, Folder: folder, Limit: in.Limit})
 		if errors.Is(err, index.ErrEmptyQuery) {
 			return errorf(CodeInvalidArgument, "The query has no word to search for; pass at least one word and call again.")
 		}
 		if err != nil {
 			return err
 		}
+		hits := found.Hits
 		log.set("results", len(hits))
 		if len(hits) == 0 {
 			res = success(fmt.Sprintf("Found no notes for %q.", in.Query), "")
@@ -93,7 +94,7 @@ func (s *Server) search(in searchIn, log *callLog) (*mcp.CallToolResult, error) 
 
 func uniqWords(q string) map[string]bool {
 	m := map[string]bool{}
-	for _, t := range index.Tokenize(q) {
+	for _, t := range index.QueryTerms(q) {
 		m[t] = true
 	}
 	return m

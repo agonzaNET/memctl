@@ -80,7 +80,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ### Slice A — Identifier search
 
-- [ ] **T1 — Compound tokens.** Tokenizer emits parts and compounds; indexing
+- [x] **T1 — Compound tokens.** Tokenizer emits parts and compounds; indexing
   uses both and counts both in field lengths; query terms are compounds plus
   parts outside compounds; `Result{Hits, Total}`; tags in hits. Update the
   hand-computed BM25F fixture values.

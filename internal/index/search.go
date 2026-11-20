@@ -23,11 +23,19 @@ type Query struct {
 	Limit  int
 }
 
+// Result is the answer to a search: the hits up to the limit, and the
+// number of hits before the limit was applied (SPEC-0002 R25).
+type Result struct {
+	Hits  []Hit
+	Total int
+}
+
 // Hit is one search result.
 type Hit struct {
 	Path        string
 	Title       string
 	Type        string
+	Tags        []string
 	Score       float64
 	Snippet     string
 	SnippetLine int
@@ -60,16 +68,84 @@ type docTerms struct {
 	tf   map[string]*[numFields]int
 }
 
-// Tokenize lower-cases text and splits it into runs of letters and digits
-// (SPEC-0002 R7).
-func Tokenize(text string) []string {
-	f := strings.FieldsFunc(strings.ToLower(text), func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
-	})
-	if len(f) == 0 {
-		return nil
+// connectors join parts into a compound (SPEC-0002 R7).
+const connectors = "-._/:"
+
+// chains splits lower-cased text into chains of parts (runs of letters and
+// digits). Neighbouring parts stay in one chain while exactly one connector
+// separates them; each chain keeps its parts and its text from the first to
+// the last part.
+func chains(text string) []chain {
+	lower := strings.ToLower(text)
+	var out []chain
+	start := -1      // byte offset of the part being read, -1 between parts
+	gapRunes := 0    // runes since the last part ended
+	gapJoins := true // that gap holds only connectors
+	for i, r := range lower {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			if start < 0 {
+				start = i
+				if len(out) == 0 || gapRunes != 1 || !gapJoins {
+					out = append(out, chain{first: i})
+				}
+			}
+			continue
+		}
+		if start >= 0 {
+			c := &out[len(out)-1]
+			c.parts = append(c.parts, lower[start:i])
+			c.last = i
+			start, gapRunes, gapJoins = -1, 0, true
+		}
+		gapRunes++
+		if !strings.ContainsRune(connectors, r) {
+			gapJoins = false
+		}
 	}
-	return f
+	if start >= 0 {
+		c := &out[len(out)-1]
+		c.parts = append(c.parts, lower[start:])
+		c.last = len(lower)
+	}
+	for i := range out {
+		out[i].text = lower[out[i].first:out[i].last]
+	}
+	return out
+}
+
+type chain struct {
+	first, last int
+	parts       []string
+	text        string
+}
+
+// Tokenize lower-cases text and returns its tokens for the index: every
+// part, and after the parts of a chain of two or more, the chain itself as
+// a compound (SPEC-0002 R7).
+func Tokenize(text string) []string {
+	var out []string
+	for _, c := range chains(text) {
+		out = append(out, c.parts...)
+		if len(c.parts) > 1 {
+			out = append(out, c.text)
+		}
+	}
+	return out
+}
+
+// QueryTerms returns the terms of a query: each compound, and each part
+// that is not inside a compound, in order and without repeats
+// (SPEC-0002 R24).
+func QueryTerms(text string) []string {
+	var out []string
+	for _, c := range chains(text) {
+		if len(c.parts) > 1 {
+			out = append(out, c.text)
+		} else {
+			out = append(out, c.parts[0])
+		}
+	}
+	return uniq(out)
 }
 
 // observationLines returns the set of file lines that are observations.
@@ -188,11 +264,11 @@ func inFolder(p, folder string) bool {
 	return folder == "" || strings.HasPrefix(p, folder+"/")
 }
 
-// Search ranks the notes for q with BM25F (SPEC-0002 R7–R14).
-func (x *Index) Search(q Query) ([]Hit, error) {
-	terms := uniq(Tokenize(q.Text))
+// Search ranks the notes for q with BM25F (SPEC-0002 R7–R14, R24, R25).
+func (x *Index) Search(q Query) (Result, error) {
+	terms := QueryTerms(q.Text)
 	if len(terms) == 0 {
-		return nil, ErrEmptyQuery
+		return Result{}, ErrEmptyQuery
 	}
 	limit := q.Limit
 	if limit <= 0 {
@@ -236,7 +312,7 @@ func (x *Index) Search(q Query) ([]Hit, error) {
 		if !matches(p, e.note, q) {
 			continue
 		}
-		hits = append(hits, Hit{Path: p, Title: e.note.Title, Type: e.note.Type, Score: s})
+		hits = append(hits, Hit{Path: p, Title: e.note.Title, Type: e.note.Type, Tags: e.note.Tags, Score: s})
 	}
 	sort.Slice(hits, func(i, j int) bool {
 		if hits[i].Score != hits[j].Score {
@@ -244,6 +320,7 @@ func (x *Index) Search(q Query) ([]Hit, error) {
 		}
 		return hits[i].Path < hits[j].Path
 	})
+	total := len(hits)
 	if len(hits) > limit {
 		hits = hits[:limit]
 	}
@@ -254,7 +331,7 @@ func (x *Index) Search(q Query) ([]Hit, error) {
 	for i := range hits {
 		hits[i].Snippet, hits[i].SnippetLine = snippet(x.notes[hits[i].Path].note, termSet)
 	}
-	return hits, nil
+	return Result{Hits: hits, Total: total}, nil
 }
 
 func uniq(in []string) []string {

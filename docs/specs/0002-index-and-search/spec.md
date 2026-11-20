@@ -226,10 +226,10 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   `Stale` true; a plain alias gives `Stale` false.
 - [x] **R6** — A note whose two aliases normalise the same resolves, not
   ambiguous.
-- [ ] **R7** — Tokenizer table: `PA-850`, `C#`, `10.11.0.51`, `10.11.0.51.`,
+- [x] **R7** — Tokenizer table: `PA-850`, `C#`, `10.11.0.51`, `10.11.0.51.`,
   `11.1.16-h2`, `fw-inf-oob-net-eu1-fw1`, `aa:bb:cc`, `a - b`, `a--b`,
   `http://x`, `Größe`, mixed English and German, empty string.
-- [ ] **R24** — Query terms of `IT-104 rollback` are `it-104`, `rollback`; on a
+- [x] **R24** — Query terms of `IT-104 rollback` are `it-104`, `rollback`; on a
   fixture where one note holds `IT-104` and nine hold `104` or `IT` alone, a
   search for `IT-104` returns the one note, and a search for `104` returns every
   note with `104`, the compound one included. Field lengths count compounds.
@@ -239,7 +239,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   above one with a single term.
 - [x] **R10, R11, R12** — Filters (type, two tags, folder boundary), ordering
   ties by path, default and capped limit.
-- [ ] **R25** — `Total` with 25 hits and the default limit is 25 while 10 hits
+- [x] **R25** — `Total` with 25 hits and the default limit is 25 while 10 hits
   are returned; hits carry their tags.
 - [x] **R13** — `"--- !!"` returns `ErrEmptyQuery`.
 - [x] **R14** — Snippet from an observation, from the body, title-only match,
