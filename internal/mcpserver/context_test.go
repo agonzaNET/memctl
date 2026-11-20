@@ -36,7 +36,7 @@ Notes:
 - 1 · b.md — B
 - 1 · in.md — In
 
-Edges:
+Edges (5):
 - in.md —see_also→ s.md
 - s.md —links_to→ b.md
 - s.md —links_to→ dup: ambiguous (x/dup.md, y/dup.md)
@@ -250,7 +250,7 @@ Notes:
 - 1 · in.md — In
 - 2 · c.md — C (via a.md)
 
-Edges of the start note:
+Edges of the start note (5):
 - in.md —see_also→ s.md
 - s.md —links_to→ b.md
 - s.md —links_to→ dup: ambiguous (x/dup.md, y/dup.md)
@@ -262,7 +262,7 @@ Edges of the start note:
 
 	def := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2}))
 	all := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2, "edges": "all"}))
-	if def != all || !strings.Contains(all, "\nEdges:\n") || !strings.Contains(all, "- a.md —runs_on→ c.md") || strings.Contains(all, "(via ") {
+	if def != all || !strings.Contains(all, "\nEdges (6):\n") || !strings.Contains(all, "- a.md —runs_on→ c.md") || strings.Contains(all, "(via ") {
 		t.Fatalf("default and all differ or miss an edge:\n%s\n\n%s", def, all)
 	}
 	if r := e.call(t, "context", map[string]any{"ref": "s", "edges": "other"}); !r.IsError || strings.HasPrefix(text(t, r), "invalid_argument") {
@@ -309,5 +309,15 @@ func TestContext_SPEC0004_R31_schemaAndDescription(t *testing.T) {
 		if !strings.Contains(d, s) {
 			t.Fatalf("description lacks %q:\n%s", s, d)
 		}
+	}
+}
+
+func TestContext_SPEC0004_R22_R31_noEdges(t *testing.T) {
+	e := start(t, map[string]string{"lone.md": "---\ntitle: Lone\n---\nalone\n"})
+	if got := text(t, e.call(t, "context", map[string]any{"ref": "lone"})); !strings.HasSuffix(got, "\n\nEdges: none.") {
+		t.Fatalf("all:\n%s", got)
+	}
+	if got := text(t, e.call(t, "context", map[string]any{"ref": "lone", "edges": "start"})); !strings.HasSuffix(got, "\n\nEdges of the start note: none.") {
+		t.Fatalf("start:\n%s", got)
 	}
 }
