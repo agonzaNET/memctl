@@ -55,9 +55,9 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 			return err
 		}
 		p := ref.Path
-		scope, heading := index.EdgesAll, "Edges:"
+		scope, heading := index.EdgesAll, "Edges"
 		if in.Edges == "start" {
-			scope, heading = index.EdgesStart, "Edges of the start note:"
+			scope, heading = index.EdgesStart, "Edges of the start note"
 		}
 		g, err := idx.Walk(p, depth, in.RelTypes, scope)
 		if errors.Is(err, index.ErrBadDepth) {
@@ -88,9 +88,10 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 			}
 			b.WriteString("\n")
 		}
-		b.WriteString("\n" + heading)
 		if len(g.Edges) == 0 {
-			b.WriteString(" none.")
+			fmt.Fprintf(&b, "\n%s: none.", heading)
+		} else {
+			fmt.Fprintf(&b, "\n%s (%d):", heading, len(g.Edges))
 		}
 		for _, e := range g.Edges {
 			fmt.Fprintf(&b, "\n- %s —%s→ %s", e.Source, e.Type, describe(e.Target, e.Resolution))
