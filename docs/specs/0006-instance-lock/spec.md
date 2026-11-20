@@ -2,7 +2,12 @@
 
 ## Status
 
-Implemented
+Accepted
+
+> Amended on 2026-11-20 for finding L15 of the live check
+> ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
+> delivered by stage plan 0004: R5 changed. Until the stage is implemented,
+> the code matches the version of 2026-11-19.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -45,8 +50,9 @@ process on the same root stops at once and says which process holds it.
   by a newline.
 - `<root>/.memory/.gitignore` with the single line `*`, so nothing in
   `.memory/` is ever committed.
-- On refusal: exit status 1, one `ERROR` log line, and the message
-  `root <path> is in use by memctl (pid <N>)` on stderr.
+- On refusal: exit status 1 and one `ERROR` log line with the message
+  `root <path> is in use by memctl (pid <N>)`; the message is also printed as a
+  plain line when stderr is a terminal.
 
 ## Behaviour & Requirements
 
@@ -60,10 +66,14 @@ process on the same root stops at once and says which process holds it.
 - **R4** — After taking the lock, the process MUST truncate the file and write
   its PID and a newline.
 - **R5** — When the lock is held by another process, `memctl mcp` MUST read the
-  PID from the file, print `root <path> is in use by memctl (pid <N>)` (or
+  PID from the file, log one `ERROR` line with the message
+  `root <path> is in use by memctl (pid <N>)` (or
   `root <path> is in use by another memctl process` when the PID cannot be
-  read) to stderr, log one `ERROR` line with the same text, and exit with status 1
-  without loading the notes.
+  read), and exit with status 1 without loading the notes. `<path>` MUST be the
+  root as given; when the resolved root differs, it MUST follow in parentheses
+  (`root /tmp/notes (/private/tmp/notes) is in use …`). The message MUST also
+  be printed as a plain line to stderr only when stderr is a terminal
+  (character device), so a client's log holds it once.
 - **R6** — When `.memory/` or the lock file cannot be created or opened (for
   example a read-only root), `memctl mcp` MUST exit with status 1 and an
   `ERROR` line that names the path and the operation.
@@ -87,9 +97,13 @@ process on the same root stops at once and says which process holds it.
 - [x] **R2** — A root without `.memory/` gets the folder, its mode, and
   `.memory/.gitignore`; an existing `.memory/.gitignore` with other content is
   unchanged; `git status` in the root shows nothing from `.memory/`.
-- [x] **R3, R4, R5** — Two processes on one root: the second exits with status 1
-  and the first one's PID in its message; with an empty lock file, the message
-  without a PID.
+- [x] **R3, R4** — Two processes on one root: the second exits with status 1;
+  the lock file holds the first one's PID.
+- [ ] **R5** — The second process's stderr, captured through a pipe, holds the
+  message once, in the `ERROR` line, with the first one's PID; with an empty
+  lock file, the message without a PID; a root given through a symlink shows
+  the given path and the resolved one in parentheses; a root given as resolved
+  shows it once.
 - [x] **R6** — A read-only root gives status 1 and the `ERROR` line.
 - [x] **R7, R8** — After the holder is killed with `SIGKILL`, a new process takes
   the lock at once; the lock file still exists after every kind of exit.
@@ -99,3 +113,5 @@ process on the same root stops at once and says which process holds it.
 - Design: D12, "Change detection, concurrency and git" in
   [`../../design/solution-design.md`](../../design/solution-design.md).
 - SPEC-0003 (notes root), SPEC-0004 (`memctl mcp`), SPEC-0005 (`memctl check`).
+- Live check of 2026-11-20, finding L15:
+  [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).
