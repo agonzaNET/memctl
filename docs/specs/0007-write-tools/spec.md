@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -242,9 +242,10 @@ is unchanged.
 - [x] **R24** — Delete reports the linkers; a second delete gives `not_found`.
 - [x] **R25, R26, R27** — Tool list annotations; `check-docs.sh` check 5 passes;
   captured log lines carry the counts and no argument value.
-- [ ] **Live check** — In a Claude Code session on a scratch root, create, edit,
+- [x] **Live check** — In a Claude Code session on a scratch root, create, edit,
   rename and delete notes; edit one in an editor between a read and an edit and
   see `conflict`. Recorded as a verification record.
+  *(Run with Claude Desktop: [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).)*
 
 ## References
 

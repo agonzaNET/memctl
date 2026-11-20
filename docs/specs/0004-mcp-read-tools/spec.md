@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -273,9 +273,10 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   truncation line.
 - [x] **R24, R25** — `list` golden output, 501 notes give 500 lines and the
   total.
-- [ ] **Live check** — `claude mcp add` with the built binary on a copy of a real
+- [x] **Live check** — `claude mcp add` with the built binary on a copy of a real
   notes root: the four tools answer, and an edit in an editor shows up on the
   next call. Recorded as a verification record under `docs/design/`.
+  *(Run with Claude Desktop: [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).)*
 
 ## References
 

@@ -182,7 +182,7 @@ in the commit.
   sequence of T12 goes back to editor saves of the same size. Benchmarks give
   the synthetic notes an old modification time, as a settled notes root has.
   *SPEC-0003 R17.*
-- [ ] **T13 — Live check and close.** Build with `make build`; in a Claude
+- [x] **T13 — Live check and close.** Build with `make build`; in a Claude
   Code session on a scratch git root: create, edit, rename and delete notes;
   edit one in an editor between a read and an edit and see `conflict`; check
   `git log` (one commit per change or batch, author `memctl`); start a second
