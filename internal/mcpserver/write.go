@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/agonzaNET/memctl/internal/index"
 	"github.com/agonzaNET/memctl/internal/note"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -62,6 +63,20 @@ func writeError(err error) error {
 	return unchangedError{err}
 }
 
+// unresolvedList renders a written note's dangling and ambiguous links in
+// the format of note_read's Links list, or nothing (SPEC-0007 R29).
+func unresolvedList(es []index.Edge) string {
+	if len(es) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("\n\nUnresolved links:")
+	for _, e := range es {
+		fmt.Fprintf(&b, "\n- %s → %s", e.Type, describe(e.Target, e.Resolution))
+	}
+	return b.String()
+}
+
 type noteWriteIn struct {
 	Title  string   `json:"title"`
 	Folder string   `json:"folder,omitempty"`
@@ -83,6 +98,7 @@ func (s *Server) registerWrite() {
 func (s *Server) noteWrite(in noteWriteIn, log *callLog) (*mcp.CallToolResult, error) {
 	log.set("bytes", 0)
 	log.set("paths", 0)
+	log.set("unresolved", 0)
 	w, err := s.opts.Notes.Write(note.NewNote{Title: in.Title, Folder: in.Folder, Body: in.Body, Type: in.Type, Tags: in.Tags})
 	if err != nil {
 		return nil, writeError(err)
@@ -94,5 +110,7 @@ func (s *Server) noteWrite(in noteWriteIn, log *callLog) (*mcp.CallToolResult, e
 		body += fmt.Sprintf("\n\nOther notes have the same title: %s. Link to this note by its path, [[%s]], so the link stays unique.",
 			strings.Join(w.SameTitle, ", "), strings.TrimSuffix(w.Path, ".md"))
 	}
+	log.set("unresolved", len(w.Unresolved))
+	body += unresolvedList(w.Unresolved)
 	return success(fmt.Sprintf("Created %q at %s.", w.Title, w.Path), body), nil
 }

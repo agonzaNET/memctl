@@ -142,6 +142,22 @@ func (x *Index) Walk(start string, depth int, relTypes []string) (Graph, error) 
 	return g, nil
 }
 
+// Unresolved returns the relations and body links of the note at p whose
+// target is dangling or ambiguous, ordered by line (SPEC-0007 R29).
+func (x *Index) Unresolved(p string) []Edge {
+	if _, ok := x.notes[p]; !ok {
+		return nil
+	}
+	var out []Edge
+	for _, e := range x.outgoing(p) {
+		if e.Resolution.Status != Resolved {
+			out = append(out, e)
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Line < out[j].Line })
+	return out
+}
+
 // outgoing returns the relations and body links of a note, resolved, in
 // file order (SPEC-0002 R15).
 func (x *Index) outgoing(p string) []Edge {

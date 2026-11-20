@@ -31,6 +31,7 @@ func (s *Server) registerEdit() {
 func (s *Server) noteEdit(in noteEditIn, log *callLog) (*mcp.CallToolResult, error) {
 	log.set("bytes", 0)
 	log.set("paths", 0)
+	log.set("unresolved", 0)
 	if in.Text == nil && (in.Op == "append" || in.Op == "replace_section") {
 		return nil, errorf(CodeInvalidArgument, "The text argument is required for %s; pass the text and call again.", in.Op)
 	}
@@ -54,5 +55,7 @@ func (s *Server) noteEdit(in noteEditIn, log *callLog) (*mcp.CallToolResult, err
 	}
 	log.set("bytes", e.Bytes)
 	log.set("paths", 1)
+	log.set("unresolved", len(e.Unresolved))
+	body += unresolvedList(e.Unresolved)
 	return success(fmt.Sprintf("Edited %q at %s.", e.Title, e.Path), body), nil
 }

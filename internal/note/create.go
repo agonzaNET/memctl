@@ -29,8 +29,9 @@ type NewNote struct {
 // Written is the result of a successful Write.
 type Written struct {
 	Path, Title, SHA256 string
-	Bytes               int      // size of the written file
-	SameTitle           []string // other notes with the same title (R14)
+	Bytes               int          // size of the written file
+	SameTitle           []string     // other notes with the same title (R14)
+	Unresolved          []index.Edge // dangling and ambiguous links of the note (R29)
 }
 
 // ExistsError reports a note at the target path, or at a path equal to it
@@ -76,7 +77,7 @@ func (s *Service) Write(n NewNote) (Written, error) {
 		if err != nil {
 			return Change{}, err
 		}
-		w = Written{Path: rel, Title: n.Title, SHA256: m.SHA256, Bytes: len(data)}
+		w = Written{Path: rel, Title: n.Title, SHA256: m.SHA256, Bytes: len(data), Unresolved: idx.Unresolved(rel)}
 		for _, p := range idx.Titled(n.Title) {
 			if p != rel {
 				w.SameTitle = append(w.SameTitle, p)

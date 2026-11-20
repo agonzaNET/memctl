@@ -33,7 +33,8 @@ type EditOp struct {
 type Edited struct {
 	Path, Title, SHA256 string
 	Bytes               int
-	Unchanged           bool // the edit left the file as it was; nothing was written
+	Unchanged           bool         // the edit left the file as it was; nothing was written
+	Unresolved          []index.Edge // dangling and ambiguous links of the note (SPEC-0007 R29)
 }
 
 // ConflictError is an expected_sha that is not the note's current hash; it
@@ -111,7 +112,7 @@ func (s *Service) Edit(resolve Resolver, op EditOp) (Edited, error) {
 			return Change{}, err
 		}
 		after, _, _ := idx.Get(rel)
-		out = Edited{Path: rel, Title: after.Title, SHA256: m.SHA256, Bytes: len(edited)}
+		out = Edited{Path: rel, Title: after.Title, SHA256: m.SHA256, Bytes: len(edited), Unresolved: idx.Unresolved(rel)}
 		return Change{Tool: "note_edit", Title: after.Title, Paths: []string{rel}}, nil
 	})
 	if err != nil {

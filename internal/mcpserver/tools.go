@@ -98,7 +98,7 @@ var schemaList = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
-const descNoteWrite = `Create a new note from a title and a body, with an optional type and tags. Returns the new note's path and sha256.
+const descNoteWrite = `Create a new note from a title and a body, with an optional type and tags. Returns the new note's path and sha256, and lists the links in it that match no note (dangling) or several notes (ambiguous), so you can fix them at once.
 Use it only for a note that does not exist yet: search first to check, and use note_edit to change an existing note.
 The file is named after the title, in folder (the notes root when absent): folder runbooks and title PAN-OS upgrade give runbooks/PAN-OS upgrade.md. Characters that cannot be in a file name, such as / and :, become -. Link to the note by that path without .md.
 Pass only the note text in body, without a frontmatter block; memctl writes title, type, tags, created and updated.
@@ -120,7 +120,7 @@ var schemaNoteWrite = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
-const descNoteEdit = `Change an existing note with one operation: append text at the end, replace the text of one section, or replace one exact piece of text. Returns the note's new sha256.
+const descNoteEdit = `Change an existing note with one operation: append text at the end, replace the text of one section, or replace one exact piece of text. Returns the note's new sha256, and lists the links in the note that match no note (dangling) or several notes (ambiguous).
 Call note_read first and pass the sha256 it returned as expected_sha: the edit only happens if the note is still exactly the version you read, so a change made meanwhile by a person or another agent is never overwritten. After an edit, use the returned sha256 for the next edit of the same note.
 op append adds text at the end of the file as a new paragraph, after one blank line; to extend the last paragraph or list instead, use find_replace or replace_section. op replace_section keeps the heading line named by section (compared without regard to letter case) and replaces everything under it, up to the next heading of the same or a higher level, with one blank line and text. op find_replace replaces find with replace once, anywhere in the file including the frontmatter; find must occur exactly once. memctl sets updated in the frontmatter. An edit that changes nothing writes nothing.
 Side effect: rewrites the note's file. The change is committed to git in the notes folder within a few seconds, and is never pushed.

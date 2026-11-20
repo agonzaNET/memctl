@@ -125,7 +125,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 - [x] **T9 — Linker lists.** `note_move` and `note_delete` name up to 10
   linkers, sorted, with `and <k> more`.
   *SPEC-0007 R23, R24.*
-- [ ] **T10 — Unresolved links.** After `note_write` and `note_edit`, list the
+- [x] **T10 — Unresolved links.** After `note_write` and `note_edit`, list the
   note's dangling and ambiguous links in the `Links` format; count
   `unresolved` in the log line.
   *SPEC-0007 R29.*
