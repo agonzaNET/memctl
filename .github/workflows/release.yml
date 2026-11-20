@@ -63,7 +63,7 @@ jobs:
           cache: false
 
       - name: Release notes from CHANGELOG.md
-        run: scripts/release-notes.sh "$VERSION" CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+        run: bash scripts/release-notes.sh "$VERSION" CHANGELOG.md > "$RUNNER_TEMP/notes.md"
 
       - name: Verify
         run: make verify
@@ -76,7 +76,7 @@ jobs:
           "$(go env GOPATH)/bin/govulncheck" ./...
 
       - name: Build the release archives
-        run: scripts/release-build.sh "$VERSION" dist
+        run: bash scripts/release-build.sh "$VERSION" dist
 
       - name: Create the release
         env:
