@@ -1,6 +1,7 @@
 package mcpserver_test
 
 import (
+	"fmt"
 	"context"
 	"strings"
 	"testing"
@@ -49,5 +50,24 @@ func TestDelete_SPEC0007_R25_R27_annotationsAndLog(t *testing.T) {
 	}
 	if s := e.log.String(); strings.Contains(s, "ecret") {
 		t.Fatalf("log holds argument text: %s", s)
+	}
+}
+
+func TestDeleteMove_SPEC0007_R23_R24_linkerNames(t *testing.T) {
+	files := map[string]string{"t.md": "---\ntitle: T\n---\n", "u.md": "---\ntitle: U\n---\n"}
+	for i := 0; i < 3; i++ {
+		files[fmt.Sprintf("l%d.md", i)] = "[[t]]\n"
+	}
+	for i := 0; i < 12; i++ {
+		files[fmt.Sprintf("m%02d.md", i)] = "[[u]]\n"
+	}
+	e := start(t, files)
+	got := text(t, e.call(t, "note_move", map[string]any{"ref": "t", "new_path": "x/t.md"}))
+	if !strings.Contains(got, "3 notes link to it: l0.md, l1.md, l2.md.") {
+		t.Fatalf("move:\n%s", got)
+	}
+	got = text(t, e.call(t, "note_delete", map[string]any{"ref": "u"}))
+	if !strings.Contains(got, "12 notes link to it: m00.md, m01.md, m02.md, m03.md, m04.md, m05.md, m06.md, m07.md, m08.md, m09.md and 2 more.") {
+		t.Fatalf("delete:\n%s", got)
 	}
 }
