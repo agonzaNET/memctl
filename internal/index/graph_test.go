@@ -79,6 +79,42 @@ func TestWalk_SPEC0002_R15_R16_R17_depths(t *testing.T) {
 	}
 }
 
+func TestWalk_SPEC0002_R17_edgesAmongListed(t *testing.T) {
+	x := index.New()
+	put(x, "s.md", "---\ntitle: S\n---\n[[a]] [[b]] [[s]]\n")
+	put(x, "a.md", "---\ntitle: A\n---\n[[c]]\n")
+	put(x, "b.md", "---\ntitle: B\n---\n[[d]]\n")
+	put(x, "c.md", "---\ntitle: C\n---\nsee [[d]]\nagain [[d]]\n\n## Relations\n- depends_on [[d]]\n")
+	put(x, "d.md", "---\ntitle: D\n---\n")
+	g, err := x.Walk("s.md", 2, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(nodes(g), []nd{{"s.md", 0}, {"a.md", 1}, {"b.md", 1}, {"c.md", 2}, {"d.md", 2}}) {
+		t.Fatalf("nodes %v", nodes(g))
+	}
+	want := []string{
+		"a.md:4 links_to c resolved",
+		"b.md:4 links_to d resolved",
+		"c.md:4 links_to d resolved", // the link on line 5 is the same edge
+		"c.md:8 depends_on d resolved",
+		"s.md:4 links_to a resolved",
+		"s.md:4 links_to b resolved",
+	}
+	if !reflect.DeepEqual(edges(g), want) {
+		t.Fatalf("edges %v", edges(g))
+	}
+	g, _ = x.Walk("s.md", 2, []string{"links_to"})
+	for _, e := range edges(g) {
+		if e == "c.md:8 depends_on d resolved" {
+			t.Fatalf("relTypes let another type through: %v", edges(g))
+		}
+	}
+	if len(g.Edges) != 5 {
+		t.Fatalf("relTypes edges %v", edges(g))
+	}
+}
+
 func TestWalk_SPEC0002_R16_R19_errors(t *testing.T) {
 	x := graphFixture()
 	for _, d := range []int{-1, 4} {
