@@ -41,7 +41,7 @@ The twenty-four decisions below were agreed with Alberto on 2026-11-19 and frame
 | D6 | Cloud | Removed entirely. | No sync, accounts, routing or promo code paths. |
 | D7 | Name | `memctl` for binary, repo and module. | No rename churn later. |
 | D8 | Repo | github.com/agonzaNET/memctl (personal GitHub, not aai-infra); Go module path is the same. | Own CI; stays open-sourceable. |
-| D9 | `context` scope | Graph neighbours only: relations, body links (`links_to`) and backlinks; no tag matches. Edge types can be filtered. | Predictable, small output; tag queries go through `search`. |
+| D9 | `context` scope | Graph neighbours only: relations, body links (`links_to`) and backlinks; no tag matches. Edge types can be filtered. The result lists every edge between the notes it returns. | Predictable, small output; tag queries go through `search`. |
 | D10 | Commit author | Default identity `memctl <memctl@localhost>`. | AI edits are separable from human edits in history and blame. |
 | D11 | Licence | MIT. | Permissive and simple; the clean-room build carries no AGPL obligation. |
 | D12 | Instance lock | Exactly one `memctl` process per notes root; a second exits with an error naming the holder's PID. | One writer and one git committer; two MCP clients cannot share a root at the same time. |
@@ -120,7 +120,7 @@ The index is built from the files on every start and lives only in process memor
 | Inverted index, term → postings | per field: title, aliases, tags, observations, body | `search` |
 | Field lengths | per note and field, plus averages | BM25F scoring |
 
-Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, tags 2, observations 1.5, body 1, a note matching any query term, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German.
+Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, tags 2, observations 1.5, body 1, a note matching any query term, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German. Runs joined by `-`, `.`, `_`, `/` or `:` (identifiers such as `IT-104`, `10.50.4.15`, `11.1.16-h2`) are indexed whole as well as in parts; a query term written as such an identifier matches only the whole identifier, so a lookup by ticket, address or version is not flooded by notes that share one fragment.
 
 Links are resolved at query time (D23): path, then title, then alias, then file stem. At the first step that finds any note, one match resolves the link and several make it ambiguous; later steps are not tried. Creating a missing target or moving a note therefore needs no link rewrite. Unresolved targets are reported as dangling and ambiguous ones as ambiguous, never as errors of the tool call that reads them.
 
@@ -162,7 +162,7 @@ Files always win: the index follows the disk, and a tool write never overwrites 
 4. Update the index entry for that file directly.
 5. Queue a git commit.
 
-**Git.** If the root is in a git work tree, a background goroutine commits queued paths after 2 s of quiet, or at the latest 30 s after the first queued write, one commit per batch, by shelling out to the `git` CLI. The message is `memory: <tool> <title>` for one change, and `memory: <n> changes` with one line per change for a batch. Author and committer come from `--git-author` (D13, default `memctl <memctl@localhost>`). It stages and commits only the paths a tool touched (`git commit --only`), so changes a person has staged stay as they are; git hooks run as configured; commits are not signed, so a key that needs a passphrase or a touch can never block a background commit. It never pulls, pushes or touches other branches. If the root is not a git repo, commits are skipped and `memctl check` warns.
+**Git.** If the root is in a git work tree, a background goroutine commits queued paths after 2 s of quiet, or at the latest 30 s after the first queued write, one commit per batch, by shelling out to the `git` CLI. The message is `memory: <tool> <path>` for one change (`memory: note_move <old path> → <new path>` for a move), and `memory: <n> changes` with one line per change for a batch. Author and committer come from `--git-author` (D13, default `memctl <memctl@localhost>`). It stages and commits only the paths a tool touched (`git commit --only`), so changes a person has staged stay as they are. A change made outside memctl, found by the freshness check or left uncommitted when memctl starts, is committed on its own as `memory: external change <path>`, with the repository's git identity when it has one and the `--git-author` identity otherwise, before any tool write to that path is committed; it is never folded into a tool's commit (D10); git hooks run as configured; commits are not signed, so a key that needs a passphrase or a touch can never block a background commit. It never pulls, pushes or touches other branches. If the root is not a git repo, commits are skipped and `memctl check` warns.
 
 **Shutdown (D21).** On stdin EOF (the client closed), SIGINT or SIGTERM, `memctl mcp` stops taking tool calls, commits every queued path at once without waiting for the quiet window, and exits. One shutdown context reaches the MCP server and the commit goroutine.
 
@@ -184,7 +184,7 @@ Three milestones, about 1.5–2 weeks in total with Claude Code, each ending in 
 
 1. **M1 — Read-only memory.** Line parser, in-memory index, freshness check, `note_read`, `search`, `context`, `list`, `memctl check`. Exit: search and graph walk work over a copy of an existing notes root of a few hundred notes, and edits made in an editor show up on the next call.
 2. **M2 — Writes.** Instance lock, `note_write`, `note_edit` with hash check, `note_move` with aliases, `note_delete`, atomic writes, git auto-commit. Exit: a Claude Code session creates, edits and renames notes, every change is one git commit, and a concurrent edit returns a conflict instead of a silent overwrite.
-3. **M3 — Release.** A manually triggered release workflow in GitHub Actions (`workflow_dispatch`, input: an existing `vX.Y.Z` tag), README with client setup. Exit: a release binary runs end to end on a fresh notes root.
+3. **M3 — Release.** Released only after the findings of the M1/M2 live check are fixed (stage plan 0004). A manually triggered release workflow in GitHub Actions (`workflow_dispatch`, input: an existing `vX.Y.Z` tag), README with client setup. Exit: a release binary runs end to end on a fresh notes root.
 4. **v2 — Semantic search.** `Embedder` backed by TEI over HTTP, hybrid BM25 + cosine ranking.
 
 ## Backlog after v2
@@ -228,3 +228,8 @@ An existing Basic Memory notes root moves to `memctl` once v1 is released, with 
 | --- | --- | --- | --- |
 | 2026-11-19 | D15 — Change detection | A file whose mtime is not at least 2 s older than the last read of its entry is hashed again even when mtime and size match ("racily clean"). | Two saves of the same size within one timestamp tick were missed until the next change (found by a property test in stage plan 0002, T12; SPEC-0003 R17). |
 | 2026-11-19 | D24 — Move keeps old links working | `note_move` refuses a note without valid frontmatter, also for a path-only move. | The move could not record the old path in `aliases`, nor keep a title taken from the file name (SPEC-0007 R9). |
+| 2026-11-20 | Search tokenizer | Identifiers joined by `-`, `.`, `_`, `/` or `:` are indexed whole as well as in parts; a query identifier matches only whole. | A search for `IT-104` or an IP address returned every note sharing one fragment (live check 2026-11-20, L3). |
+| 2026-11-20 | D9 — `context` scope | The result lists every edge between the notes it returns, not only the edges the walk followed. | Edges between two notes at the maximum depth were missing, so the graph looked complete when it was not (live check, L4). |
+| 2026-11-20 | Git — messages | One-change commits name the path, a move names the old and the new path. | Titles repeat across folders; `git log -- <path>` works on paths (live check, L11). |
+| 2026-11-20 | Git — external changes | A change made outside memctl is committed on its own as `memory: external change <path>`, with the repository's git identity or the `--git-author` identity. | An editor change was committed inside memctl's next commit of that note, under memctl's name, against D10 (live check, L10). |
+| 2026-11-20 | Milestones | M3 releases only after the live-check findings are fixed in stage plan 0004. | The maintainer chose to fix every finding before v0.1.0. |
