@@ -65,7 +65,7 @@ func TestCommitter_SPEC0008_R8_R10_R11_hookFails(t *testing.T) {
 	h.add(t, gitlog.Entry{Tool: "note_write", Title: "Next", Paths: []string{"next.md"}})
 	h.clock.Advance(2 * time.Second)
 	h.idle(t)
-	if got := git(t, root, "show", "--name-only", "--format=%s", "HEAD"); got != "memory: note_write Next\n\nnext.md\n" {
+	if got := git(t, root, "show", "--name-only", "--format=%s", "HEAD"); got != "memory: note_write next.md\n\nnext.md\n" {
 		t.Fatalf("next commit %q", got)
 	}
 }

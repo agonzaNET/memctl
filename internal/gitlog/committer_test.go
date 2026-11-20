@@ -58,7 +58,7 @@ func TestCommitter_SPEC0008_R1_subfolderOfRepository(t *testing.T) {
 	h.add(t, gitlog.Entry{Tool: "note_write", Title: "A", Paths: []string{"a.md"}})
 	h.clock.Advance(2 * time.Second)
 	h.idle(t)
-	if got := git(t, repo, "show", "--name-only", "--format=%s", "HEAD"); got != "memory: note_write A\n\nnotes/deep/a.md\n" {
+	if got := git(t, repo, "show", "--name-only", "--format=%s", "HEAD"); got != "memory: note_write notes/deep/a.md\n\nnotes/deep/a.md\n" {
 		t.Fatalf("commit %q", got)
 	}
 }
@@ -153,7 +153,7 @@ func TestCommitter_SPEC0008_R3_addDoesNotBlock(t *testing.T) {
 
 func TestMessage_SPEC0008_R5(t *testing.T) {
 	one := gitlog.Message([]gitlog.Entry{{Tool: "note_write", Title: "PAN-OS upgrade", Paths: []string{"runbooks/PAN-OS upgrade.md"}}})
-	if one != "memory: note_write PAN-OS upgrade\n" {
+	if one != "memory: note_write runbooks/PAN-OS upgrade.md\n" {
 		t.Fatalf("one entry: %q", one)
 	}
 	three := gitlog.Message([]gitlog.Entry{
@@ -161,12 +161,16 @@ func TestMessage_SPEC0008_R5(t *testing.T) {
 		{Tool: "note_move", Title: "B\nsecond\r\nline", Paths: []string{"old/b.md", "new/b.md"}},
 		{Tool: "note_delete", Title: "C", Paths: []string{"c.md"}},
 	})
-	want := "memory: 3 changes\n\n- note_write A (a.md)\n- note_move B second line (new/b.md)\n- note_delete C (c.md)\n"
+	want := "memory: 3 changes\n\n- note_write a.md\n- note_move old/b.md → new/b.md\n- note_delete c.md\n"
 	if three != want {
 		t.Fatalf("three entries:\n%q\nwant\n%q", three, want)
 	}
-	if got := gitlog.Message([]gitlog.Entry{{Tool: "note_edit", Title: "x\ny", Paths: []string{"x.md"}}}); got != "memory: note_edit x y\n" {
-		t.Fatalf("line break in a single title: %q", got)
+	if got := gitlog.Message([]gitlog.Entry{{Tool: "note_move", Title: "B", Paths: []string{"old/b.md", "new/b.md"}}}); got != "memory: note_move old/b.md → new/b.md\n" {
+		t.Fatalf("one move: %q", got)
+	}
+	// A rename that keeps the path names the path once.
+	if got := gitlog.Message([]gitlog.Entry{{Tool: "note_move", Title: "B2", Paths: []string{"b.md"}}}); got != "memory: note_move b.md\n" {
+		t.Fatalf("rename in place: %q", got)
 	}
 }
 

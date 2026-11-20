@@ -96,7 +96,7 @@ func TestE2E_SPEC0008_R12_flushOnStdinEOF(t *testing.T) {
 	if code := s.exit(t, 20*time.Second); code != 0 {
 		t.Fatalf("status %d; stderr %s", code, s.stderr.String())
 	}
-	if got := gitLog(t, root); got != "memory: note_write Last words\n" {
+	if got := gitLog(t, root); got != "memory: note_write Last words.md\n" {
 		t.Fatalf("git log %q; stderr %s", got, s.stderr.String())
 	}
 	if byMsg(jsonLines(t, s.stderr.String()), "stopped") == nil {
@@ -112,7 +112,7 @@ func TestE2E_SPEC0008_R12_flushOnSIGTERM(t *testing.T) {
 	if code := s.exit(t, 20*time.Second); code != 0 {
 		t.Fatalf("status %d; stderr %s", code, s.stderr.String())
 	}
-	if got := gitLog(t, root); got != "memory: note_write Signalled\n" {
+	if got := gitLog(t, root); got != "memory: note_write Signalled.md\n" {
 		t.Fatalf("git log %q; stderr %s", got, s.stderr.String())
 	}
 }
