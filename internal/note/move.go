@@ -19,8 +19,8 @@ type MoveOp struct{ NewPath, NewTitle string }
 type Moved struct {
 	OldPath, Path, Title, SHA256 string
 	Bytes                        int
-	Linkers                      int  // other notes that link to the note
-	Same                         bool // the note already had that path and title; nothing was written
+	Linkers                      []string // other notes that link to the note, sorted
+	Same                         bool     // the note already had that path and title; nothing was written
 }
 
 // Move moves or renames a note (SPEC-0007 R20–R23), as one tool write. It

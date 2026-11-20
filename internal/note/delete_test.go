@@ -24,7 +24,7 @@ func TestDelete_SPEC0007_R24(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if d.Path != "hosts/a.md" || d.Title != "A" || d.Dangling != 3 {
+	if d.Path != "hosts/a.md" || d.Title != "A" || len(d.Dangling) != 3 {
 		t.Fatalf("result %+v", d)
 	}
 	if _, err := os.Stat(filepath.Join(root, "hosts", "a.md")); !errors.Is(err, os.ErrNotExist) {

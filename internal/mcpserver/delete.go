@@ -30,10 +30,10 @@ func (s *Server) noteDelete(in noteDeleteIn, log *callLog) (*mcp.CallToolResult,
 		return nil, writeError(err)
 	}
 	log.set("paths", 1)
-	log.set("linkers", d.Dangling)
+	log.set("linkers", len(d.Dangling))
 	body := linkersNotice(d.Dangling,
 		"No other note linked to it.",
-		"%s to it; those links now point to no note, and memctl check lists them as dangling.") +
+		"%s Those links now point to no note, and memctl check lists them as dangling.") +
 		" git history in the notes folder keeps the file, so a person can restore it."
 	return success(fmt.Sprintf("Deleted %q at %s.", d.Title, d.Path), body), nil
 }

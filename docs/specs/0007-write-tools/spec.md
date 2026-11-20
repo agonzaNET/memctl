@@ -274,7 +274,7 @@ is unchanged.
   an existing note; aliases after two moves; links to the old path still resolve
   (SPEC-0002 R5 `Stale`).
 - [x] **R24** — A second delete gives `not_found`.
-- [ ] **R23, R24** — Move and delete with 3 linkers name all three; with 12,
+- [x] **R23, R24** — Move and delete with 3 linkers name all three; with 12,
   name 10 and `and 2 more`.
 - [ ] **R29** — `note_write` with a dangling and an ambiguous link lists both;
   with resolved links only, no list; `note_edit` that adds a dangling link

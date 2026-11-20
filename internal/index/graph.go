@@ -272,14 +272,14 @@ func (x *Index) edges() *edgeMaps {
 	return em
 }
 
-// Linkers returns how many other notes have a relation or body link that
-// resolves to p (SPEC-0007 R23, R24).
-func (x *Index) Linkers(p string) int {
-	seen := map[string]bool{}
+// Linkers returns, sorted, the other notes that have a relation or body
+// link that resolves to p (SPEC-0007 R23, R24).
+func (x *Index) Linkers(p string) []string {
+	seen := map[string]struct{}{}
 	for _, e := range x.edges().in[p] {
 		if e.Source != p {
-			seen[e.Source] = true
+			seen[e.Source] = struct{}{}
 		}
 	}
-	return len(seen)
+	return sortedSet(seen)
 }

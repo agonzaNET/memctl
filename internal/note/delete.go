@@ -9,7 +9,7 @@ import (
 // Deleted is the result of a successful Delete.
 type Deleted struct {
 	Path, Title string
-	Dangling    int // other notes whose links to it now resolve to nothing
+	Dangling    []string // other notes whose links to it now resolve to nothing, sorted
 }
 
 // Delete removes a note and its index entry (SPEC-0007 R24), as one tool
@@ -30,7 +30,7 @@ func (s *Service) Delete(resolve Resolver) (Deleted, error) {
 			return Change{}, err
 		}
 		n, _, _ := idx.Get(rel)
-		linkers := idx.Linkers(rel)
+		linkers := idx.Linkers(rel) // sorted paths
 		if err := s.removeFile(rel, hashOf(data)); err != nil {
 			return Change{}, err
 		}

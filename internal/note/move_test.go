@@ -36,7 +36,7 @@ func TestMove_SPEC0007_R20_R22_R23_byPath(t *testing.T) {
 	if got := readFile(t, root, "servers/a2.md"); got != want {
 		t.Fatalf("moved file:\n%q\nwant\n%q", got, want)
 	}
-	if mv.OldPath != "hosts/a.md" || mv.Path != "servers/a2.md" || mv.Title != "A" || mv.Linkers != 2 || mv.SHA256 != sum([]byte(want)) || mv.Bytes != len(want) || mv.Same {
+	if mv.OldPath != "hosts/a.md" || mv.Path != "servers/a2.md" || mv.Title != "A" || len(mv.Linkers) != 2 || mv.SHA256 != sum([]byte(want)) || mv.Bytes != len(want) || mv.Same {
 		t.Fatalf("result %+v", mv)
 	}
 	if got := rec.changes(); !reflect.DeepEqual(got, []note.Change{{Tool: "note_move", Title: "A", Paths: []string{"hosts/a.md", "servers/a2.md"}}}) {

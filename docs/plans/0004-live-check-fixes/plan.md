@@ -122,7 +122,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
   with the `append` advice; description of `append`. Golden files of R16 and
   R17.
   *SPEC-0007 R16, R17.*
-- [ ] **T9 — Linker lists.** `note_move` and `note_delete` name up to 10
+- [x] **T9 — Linker lists.** `note_move` and `note_delete` name up to 10
   linkers, sorted, with `and <k> more`.
   *SPEC-0007 R23, R24.*
 - [ ] **T10 — Unresolved links.** After `note_write` and `note_edit`, list the

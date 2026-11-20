@@ -143,7 +143,7 @@ var schemaNoteEdit = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
-const descNoteMove = `Move or rename a note: give it a new path, a new title, or both. Returns the old and new path, the new sha256, and how many notes link to it.
+const descNoteMove = `Move or rename a note: give it a new path, a new title, or both. Returns the old and new path, the new sha256, and the notes that link to it (how many, and up to 10 of their paths).
 Use it to reorganise notes or to correct a title; use note_edit to change a note's content.
 With new_title only, the file is renamed after the new title in the same folder (characters that cannot be in a file name become -). With new_path only, the title stays. With both, the note goes to new_path and gets the new title.
 Other notes are never changed. Links to the old path or the old title keep working, because memctl adds the old path (without .md) and the old title to the note's aliases; memctl check lists such links as stale, so they can be updated later. memctl also sets updated.
@@ -161,7 +161,7 @@ var schemaNoteMove = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
-const descNoteDelete = `Delete a note: its file is removed. Returns its title and path, and how many notes link to it.
+const descNoteDelete = `Delete a note: its file is removed. Returns its title and path, and the notes that linked to it (how many, and up to 10 of their paths), so you can fix their links.
 Use it only when the person wants the note gone; to rename or reorganise a note, use note_move, which keeps links working. Read the note first if you are not sure it is the right one.
 Links in other notes are not changed: after a delete they point to no note, and memctl check lists them as dangling.
 Side effect: removes the file. The change is committed to git in the notes folder within a few seconds, and is never pushed; git history keeps the file, so a person can restore it.
