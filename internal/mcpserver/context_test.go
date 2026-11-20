@@ -3,10 +3,13 @@ package mcpserver_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 )
 
 func graphFiles() map[string]string {
@@ -86,13 +89,19 @@ func TestList_SPEC0004_R24_render(t *testing.T) {
 		"ops/a.md":   "---\ntitle: A\n---\n",
 		"other/c.md": "---\ntitle: C\ntype: runbook\n---\n",
 	})
+	mt := time.Date(2026, 3, 4, 12, 0, 0, 0, time.Local)
+	for _, p := range []string{"ops/a.md", "ops/b.md", "other/c.md"} {
+		if err := os.Chtimes(filepath.Join(e.root, p), mt, mt); err != nil {
+			t.Fatal(err)
+		}
+	}
 	got := text(t, e.call(t, "list", map[string]any{}))
-	want := "Listed 3 notes.\n\n- ops/a.md — A\n- ops/b.md — B (runbook) · updated 2026-11-19\n- other/c.md — C (runbook)"
+	want := "Listed 3 notes.\n\n- ops/a.md — A · file changed 2026-03-04\n- ops/b.md — B (runbook) · tags fw · updated 2026-11-19\n- other/c.md — C (runbook) · file changed 2026-03-04"
 	if got != want {
 		t.Fatalf("got:\n%s", got)
 	}
 	got = text(t, e.call(t, "list", map[string]any{"folder": "ops/", "type": "runbook", "tag": "FW"}))
-	if got != "Listed 1 note.\n\n- ops/b.md — B (runbook) · updated 2026-11-19" {
+	if got != "Listed 1 note.\n\n- ops/b.md — B (runbook) · tags fw · updated 2026-11-19" {
 		t.Fatalf("filtered:\n%s", got)
 	}
 	if got := text(t, e.call(t, "list", map[string]any{"type": "host"})); got != "Found no notes that match." {
@@ -218,5 +227,14 @@ func TestContext_SPEC0004_R22_edgeAtMaxDepth(t *testing.T) {
 	got := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2}))
 	if !strings.HasPrefix(got, `Found 4 notes within 2 hops of "S", plus the note itself.`) || strings.Count(got, "- c.md —links_to→ d.md") != 1 {
 		t.Fatalf("got:\n%s", got)
+	}
+}
+
+func TestList_SPEC0004_R30_descriptionNamesDates(t *testing.T) {
+	d := toolDescription(t, "list")
+	for _, w := range []string{"updated", "file changed", "tags"} {
+		if !strings.Contains(d, w) {
+			t.Fatalf("description lacks %q:\n%s", w, d)
+		}
 	}
 }

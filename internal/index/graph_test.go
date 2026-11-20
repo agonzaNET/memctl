@@ -191,3 +191,13 @@ func TestLinks_SPEC0002_R21_report(t *testing.T) {
 		t.Fatalf("links\n%v\nwant\n%v", got, want)
 	}
 }
+
+func TestList_SPEC0002_R26_modTime(t *testing.T) {
+	x := index.New()
+	mt := time.Date(2026, 3, 4, 12, 0, 0, 0, time.UTC)
+	x.Put("a.md", note("a.md", "---\ntitle: A\n---\n"), index.Meta{ModTime: mt})
+	es := x.List(index.Filter{})
+	if len(es) != 1 || !es[0].ModTime.Equal(mt) || !es[0].Updated.IsZero() {
+		t.Fatalf("entries %+v", es)
+	}
+}
