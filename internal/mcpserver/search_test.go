@@ -116,6 +116,28 @@ func TestSearch_SPEC0004_R29_more(t *testing.T) {
 	}
 }
 
+func TestSearch_SPEC0004_R29_maximumLimit(t *testing.T) {
+	files := map[string]string{}
+	for i := 0; i < 55; i++ {
+		files[fmt.Sprintf("n/n%02d.md", i)] = "---\ntitle: n\n---\nword\n"
+	}
+	e := start(t, files)
+	got := text(t, e.call(t, "search", map[string]any{"query": "word", "limit": 50}))
+	if !strings.HasPrefix(got, `Found 55 notes for "word"; showing the first 50.`) {
+		t.Fatalf("first line:\n%s", got)
+	}
+	lines := strings.Split(strings.TrimRight(got, "\n"), "\n")
+	last := lines[len(lines)-1]
+	for _, w := range []string{"type", "tags", "folder"} {
+		if !strings.Contains(last, w) {
+			t.Fatalf("last line %q lacks %q", last, w)
+		}
+	}
+	if strings.Contains(last, "limit") {
+		t.Fatalf("last line %q offers a higher limit at the maximum", last)
+	}
+}
+
 func TestSearch_SPEC0004_R19_descriptionNamesIdentifiers(t *testing.T) {
 	d := toolDescription(t, "search")
 	for _, w := range []string{"IT-104", "tags", "how many"} {
