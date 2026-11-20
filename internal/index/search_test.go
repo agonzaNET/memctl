@@ -275,7 +275,8 @@ func TestSearch_SPEC0002_R14_snippets(t *testing.T) {
 	check("title.md", "First real line", 6)
 	check("empty.md", "", 0)
 	long := got["long.md"]
-	if n := len([]rune(long.Snippet)); n != 201 || !strings.HasSuffix(long.Snippet, "…") || long.SnippetLine != 4 {
-		t.Errorf("long snippet: %d runes, %q", n, long.Snippet[:20])
+	// The cut splits the long word, which is dropped (R27).
+	if long.Snippet != "firewall…" || long.SnippetLine != 4 {
+		t.Errorf("long snippet: %q", long.Snippet)
 	}
 }

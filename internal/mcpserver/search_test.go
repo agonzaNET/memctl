@@ -153,7 +153,7 @@ func TestSearch_SPEC0004_R19_longLineSnippet(t *testing.T) {
 		"long.md": "---\ntitle: Long\n---\n" + line + "\n",
 	})
 	r := e.call(t, "search", map[string]any{"query": "needle"})
-	want := "   > L4: …" + strings.Repeat("x", 96) + " needle " + strings.Repeat("y", 96) + "…"
+	want := "   > L4: …needle…" // the partial words at both cuts are dropped (SPEC-0002 R27)
 	if r.IsError || !strings.HasSuffix(text(t, r), want) {
 		t.Fatalf("got:\n%s", text(t, r))
 	}

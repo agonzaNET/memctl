@@ -22,22 +22,23 @@ func TestSnippet_SPEC0002_R27_window(t *testing.T) {
 			want:  ä(99) + " needle " + ä(93),
 		},
 		{
+			// The cut at rune 200 splits the last word, which is dropped.
 			name:  "match near the start",
 			query: "needle",
 			line:  ä(19) + " needle " + ä(473),
-			want:  ä(19) + " needle " + ä(173) + "…",
+			want:  ä(19) + " needle…",
 		},
 		{
-			name:  "match in the middle",
+			name:  "match in the middle, partial words dropped",
 			query: "needle",
 			line:  ä(249) + " needle " + ä(243),
-			want:  "…" + ä(96) + " needle " + ä(96) + "…",
+			want:  "…needle…",
 		},
 		{
 			name:  "match near the end",
 			query: "needle",
 			line:  ä(479) + " needle " + ä(13),
-			want:  "…" + ä(179) + " needle " + ä(13),
+			want:  "…needle " + ä(13),
 		},
 		{
 			name:  "spaces at cut edges trimmed",
@@ -49,35 +50,46 @@ func TestSnippet_SPEC0002_R27_window(t *testing.T) {
 			name:  "compound query term",
 			query: "IT-104",
 			line:  ä(249) + " IT-104 " + ä(243),
-			want:  "…" + ä(96) + " IT-104 " + ä(96) + "…",
+			want:  "…IT-104…",
 		},
 		{
-			// "104" starts at rune 253: the window starts at 253 − 98.
+			// "104" starts at rune 253; the word around it is kept whole.
 			name:  "part inside a compound",
 			query: "104",
 			line:  ä(249) + " IT-104 " + ä(243),
-			want:  "…" + ä(94) + " IT-104 " + ä(98) + "…",
+			want:  "…IT-104…",
 		},
 		{
-			// "pa" and "pa-850" both start at rune 250; the longer one
-			// centres the window.
+			// "pa" and "pa-850" both start at rune 250. Centred on
+			// "pa-850" the window is [153, 353) and both edges split a
+			// word; centred on "pa" it would be [151, 351), whose edges
+			// fall next to spaces and keep ä(97) and ä(94).
 			name:  "earliest then longest token",
 			query: "pa PA-850",
-			line:  ä(249) + " PA-850 " + ä(243),
-			want:  "…" + ä(96) + " PA-850 " + ä(96) + "…",
+			line:  ä(151) + " " + ä(97) + " PA-850 " + ä(94) + " " + ä(148),
+			want:  "…PA-850 " + ä(94) + "…",
 		},
 		{
 			name:  "first of two matched terms",
 			query: "alpha needle",
 			line:  ä(99) + " needle " + ä(193) + " alpha " + ä(193),
-			want:  "…" + ä(96) + " needle " + ä(96) + "…",
+			want:  "…needle…",
 		},
 		{
+			// Dropping the partial word would empty the window.
 			name:  "title-only hit cut at the end",
 			query: "needle",
 			title: "needle",
 			line:  ä(300),
 			want:  ä(200) + "…",
+		},
+		{
+			// The token ends a word that starts at rune 251; moving the
+			// left edge (299) to the next space (403) would drop it.
+			name:  "cut that would drop the token stays",
+			query: "IT-104",
+			line:  ä(250) + " " + ä(144) + "(IT-104) " + ä(96),
+			want:  "…" + ä(96) + "(IT-104)…",
 		},
 	}
 	for _, tt := range tests {
