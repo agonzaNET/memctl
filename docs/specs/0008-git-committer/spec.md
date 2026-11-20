@@ -2,7 +2,13 @@
 
 ## Status
 
-Implemented
+Accepted
+
+> Amended on 2026-11-20 for findings L10 and L11 of the live check
+> ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
+> delivered by stage plan 0004: R2 and R5 changed; R14 to R16
+> added; the scope now covers changes made outside memctl. Until the stage is implemented, the code
+> matches the version of 2026-11-19.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -34,8 +40,8 @@ anything a tool did not change, and never push.
 **Out of scope**
 
 - `git push`, `pull`, `fetch`, branches, merges, tags: never.
-- Committing files a tool did not write; uncommitted human edits stay as they
-  are.
+- Changes outside the notes, and changes to notes that neither the freshness
+  check nor the start-up scan of R15 finds.
 
 ## Inputs
 
@@ -44,7 +50,9 @@ anything a tool did not change, and never push.
 | `--git-author` | `MEMCTL_GIT_AUTHOR` | `memctl <memctl@localhost>` | `Name <email>`, name 1–100 characters, email with one `@`, no line break |
 
 - From each successful write: the changed paths (relative to the root), the
-  tool name and the note title.
+  tool name and the note title; for a move, the old and the new path.
+- From each freshness check (SPEC-0003 R18) and from the start-up scan (R15):
+  the paths of notes changed outside memctl.
 
 ## Outputs
 
@@ -62,7 +70,8 @@ anything a tool did not change, and never push.
   is not `true`, or `git` cannot be run, it MUST log one `WARN` line, and the
   committer MUST accept and drop every batch without running git.
 - **R2** — The committer MUST only run `git` with these subcommands:
-  `rev-parse`, `check-ignore`, `add`, `commit`. Every call MUST use `-C <root>`,
+  `rev-parse`, `check-ignore`, `add`, `commit`, and for external changes
+  `status` and `config --get`. Every call MUST use `-C <root>`,
   a 30 s timeout, `GIT_TERMINAL_PROMPT=0`, and `-c commit.gpgSign=false`.
 
 ### Queue and timing
@@ -72,10 +81,10 @@ anything a tool did not change, and never push.
 - **R4** — A batch MUST be committed when 2 s pass with no new entry, or 30 s
   after the first entry of the batch, whichever comes first.
 - **R5** — One batch MUST be one commit. A batch of one entry MUST have the
-  message `memory: <tool> <title>`. A batch of several MUST have the subject
-  `memory: <n> changes` and a body with one line per entry,
-  `- <tool> <title> (<path>)`, in queue order. Titles MUST have line breaks
-  replaced by spaces.
+  message `memory: <tool> <path>`, and a move `memory: note_move <old path> → <new path>`.
+  A batch of several MUST have the subject `memory: <n> changes` and a body
+  with one line per entry, `- <tool> <path>` (a move
+  `- note_move <old path> → <new path>`), in queue order.
 
 ### The commit
 
@@ -100,10 +109,34 @@ anything a tool did not change, and never push.
   output text; the failure class is one of `index_locked`, `hook_failed`,
   `timeout`, `git_error`.
 
+### Changes made outside memctl (design, "Git")
+
+- **R14** — External changes MUST be queued apart from tool entries and
+  committed in their own commits, never in a tool's commit: one path gives the
+  message `memory: external change <path>`, several give the subject
+  `memory: <n> external changes` and a body with one line `- <path>` each,
+  sorted. Author and committer MUST be the repository's identity when
+  `git config --get user.name` and `git config --get user.email` in the root
+  both return a value, and the `--git-author` identity otherwise. They MUST
+  follow the timing of R4 and the rules of R6, R8 to R11, and be committed
+  before a tool batch that is due at the same moment.
+- **R15** — At start, after R1, the committer MUST run
+  `git status --porcelain=v1 -z --untracked-files=all` in the root and queue as
+  external changes the paths that the walk treats as notes (SPEC-0003 R3 to R5)
+  and deleted paths ending in `.md`, so changes made while memctl was not
+  running are committed too.
+- **R16** — Before a tool writes a path that has a pending external change, the
+  write MUST wait until the pending external changes are committed (at most
+  the 30 s timeout of R2); when that commit fails, the write MUST go on after
+  the `ERROR` line of R10. A person's edit made within the quiet window after a
+  tool wrote the same path, and before that tool's commit, is a known limit:
+  the two changes end up in one commit.
+
 ### Shutdown (ADR-0014)
 
 - **R12** — On the shutdown context (stdin EOF, SIGINT, SIGTERM), after the tool
-  call in progress finishes, the committer MUST commit the pending batch at once,
+  call in progress finishes, the committer MUST commit the pending external
+  changes and the pending batch at once,
   without waiting for the quiet window, and `memctl mcp` MUST exit only after
   that commit returns (success or failure).
 - **R13** — A second SIGINT or SIGTERM during shutdown MUST exit at once with
@@ -120,12 +153,14 @@ anything a tool did not change, and never push.
 
 ## Acceptance criteria — "Done looks like"
 
-- [x] **R1, R2** — A root outside git, a subfolder of a repository, and a `PATH`
-  without `git`; a fake `git` on `PATH` records only the allowed subcommands and
-  options.
+- [x] **R1** — A root outside git, a subfolder of a repository, and a `PATH`
+  without `git`.
+- [ ] **R2** — A fake `git` on `PATH` records only the allowed subcommands and
+  options, `status` and `config --get` included.
 - [x] **R3, R4** — With a fake clock: one write commits after 2 s; writes every
   second commit at 30 s; tool calls return before the commit.
-- [x] **R5** — Messages for one and three entries; a title with a line break.
+- [ ] **R5** — Messages for one entry, a move, and three entries with a move
+  among them; paths, not titles.
 - [x] **R6** — With a person's staged change in another file, a tool commit
   contains only the tool's paths, and the person's change stays staged; a move
   and a delete are committed as such; an ignored path is dropped.
@@ -138,6 +173,22 @@ anything a tool did not change, and never push.
   held for 10 s: `ERROR` `index_locked`; log lines hold no title or path.
 - [x] **R12** — An end-to-end test writes a note and closes stdin at once; the
   commit exists when the process has exited.
+- [ ] **R12 (again)** — An editor change found by a check, then stdin closed at
+  once: the external commit exists when the process has exited.
+- [ ] **R14** — An editor change to a note, then a tool write to another note:
+  two commits, the external one first, with the repository identity when
+  `user.name` and `user.email` are set and `--git-author` when not; three
+  external paths give one commit with the sorted body.
+- [ ] **R15** — A note edited, one added and one deleted while memctl was not
+  running are committed as external changes after start; an untracked
+  `x.txt` and a file under an ignored folder are not.
+- [ ] **R16** — An editor change to a note, then `note_edit` on it within the
+  quiet window: the external commit holds the editor change only, the tool
+  commit holds the edit only; with the external commit failing, the edit is
+  written and committed after the `ERROR` line.
+- [ ] **Live check (again)** — The exit check of stage plan 0004 repeats the git
+  checks of the live check of 2026-11-20, with an editor change between two
+  tool writes.
 - [x] **R13** — A second SIGTERM during a slow fake commit exits at once with
   status 1.
 
@@ -147,3 +198,6 @@ anything a tool did not change, and never push.
   [`../../design/solution-design.md`](../../design/solution-design.md).
 - [ADR-0014](../../adr/0014-shutdown-flushes-pending-commits.md).
 - SPEC-0004 (`memctl mcp`), SPEC-0005 (`memctl check`), SPEC-0007 (write tools).
+- SPEC-0003 R18 (external changes found by the freshness check).
+- Live check of 2026-11-20, findings L10, L11:
+  [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).

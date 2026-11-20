@@ -2,7 +2,12 @@
 
 ## Status
 
-Implemented
+Accepted
+
+> Amended on 2026-11-20 for finding L10 of the live check
+> ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
+> delivered by stage plan 0004: R18 added. Until the stage is implemented, the code
+> matches the version of 2026-11-19.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -107,6 +112,10 @@ Also turn a note path given by a tool into a safe file path inside the root.
   of the same size within one timestamp tick of the file system ("racily
   clean", as git calls it); once the entry is read 2 s or more after the
   file's modification time, R10 alone applies again.
+- **R18** — The check MUST hand the paths it found `Added`, `Changed` or
+  `Removed` to the committer as external changes (SPEC-0008 R14), before the
+  tool call runs; `Unchanged` paths and the writes of the tools themselves
+  (R4 of SPEC-0007 keeps them out of the check) MUST NOT be handed over.
 - **R11** — A change to a `.gitignore` file MUST take effect on the next check:
   notes it now ignores are removed and notes it no longer ignores are added.
 - **R12** — The check MUST run inside the service mutex, so no tool call sees a
@@ -161,6 +170,9 @@ Also turn a note path given by a tool into a safe file path inside the root.
   modification time (set with `os.Chtimes`) right after a check is reread at
   the next check; a note whose modification time is well before its last read
   is not read again (an unreadable such note stays in the index).
+- [ ] **R18** — Between two checks, an edit, an added note and a deleted note
+  reach a committer stub as three external paths; a touch without change and a
+  tool write reach it as none.
 - [x] **R11** — Adding `drafts/` to `.gitignore` removes `drafts/*.md` on the
   next check; removing the line adds them back.
 - [x] **R12** — Concurrent tool calls under `-race` never observe a partial
