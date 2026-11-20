@@ -6,9 +6,10 @@ Accepted
 
 > Amended on 2026-11-20 for findings L10 and L11 of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
-> delivered by stage plan 0004: R2 and R5 changed; R14 to R16
-> added; the scope now covers changes made outside memctl. Until the stage is implemented, the code
-> matches the version of 2026-11-19.
+> delivered by stage plan 0004: R2 and R5 changed; R14 to R16 added; the scope
+> now covers changes made outside memctl. R2 amended again on 2026-11-20 after
+> the release audit: every git call reads paths literally, never as patterns
+> (stage plan 0004 T17).
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -72,7 +73,9 @@ anything a tool did not change, and never push.
 - **R2** — The committer MUST only run `git` with these subcommands:
   `rev-parse`, `check-ignore`, `add`, `commit`, and for external changes
   `status` and `config --get`. Every call MUST use `-C <root>`,
-  a 30 s timeout, `GIT_TERMINAL_PROMPT=0`, and `-c commit.gpgSign=false`.
+  a 30 s timeout, `GIT_TERMINAL_PROMPT=0`, `GIT_LITERAL_PATHSPECS=1` (a path
+  is never read as a pattern, so `[draft] x.md` or `*.md` names only that
+  file), and `-c commit.gpgSign=false`.
 
 ### Queue and timing
 
@@ -157,6 +160,8 @@ anything a tool did not change, and never push.
   without `git`.
 - [x] **R2** — A fake `git` on `PATH` records only the allowed subcommands and
   options, `status` and `config --get` included.
+- [ ] **R2 (literal paths)** — Tool writes to `[draft] x.md` and `*.md` commit
+  only those files, and a person's unstaged change to `d x.md` stays unstaged.
 - [x] **R3, R4** — With a fake clock: one write commits after 2 s; writes every
   second commit at 30 s; tool calls return before the commit.
 - [x] **R5** — Messages for one entry, a move, and three entries with a move

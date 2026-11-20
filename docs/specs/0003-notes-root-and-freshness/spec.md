@@ -6,8 +6,7 @@ Accepted
 
 > Amended on 2026-11-20 for finding L10 of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
-> delivered by stage plan 0004: R18 added. Until the stage is implemented, the code
-> matches the version of 2026-11-19.
+> delivered by stage plan 0004: R18 added.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated

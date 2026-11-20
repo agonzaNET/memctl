@@ -21,6 +21,7 @@ none of the findings marked for this stage.
 | D — Writes | T8–T10 | `append` starts a paragraph, `replace_section` keeps the blank line, writes list unresolved links, move and delete name the linkers |
 | E — Git | T11–T13 | Commit messages name paths; editor changes get their own commits, also those made while memctl was stopped |
 | F — Lock message | T14 | The refusal names the given root and appears once in a client's log |
+| H — Release audit | T17–T19 | Paths reach git literally; no higher-limit hint at the maximum; docs and test nits of the audit fixed |
 | G — Close | T15–T16 | Benchmarks rerun, CHANGELOG, live check repeated, specs `Implemented` |
 
 ## File map
@@ -50,6 +51,9 @@ none of the findings marked for this stage.
 | `cmd/memctl/mcp.go` | modify | Lock message once, plain line only to a terminal; start-up scan wiring (SPEC-0006 R5, SPEC-0008 R15) |
 | `*_test.go`, `testdata/` | modify | Tests named `SPEC0002_R24` style; golden files updated |
 | `CHANGELOG.md` | modify | Rewrite the `[Unreleased]` `Added` entries the stage changes (nothing has been released, so no `Changed` entries) |
+| `internal/gitlog/run.go` | modify (T17) | `GIT_LITERAL_PATHSPECS=1` on every git call (SPEC-0008 R2) |
+| `internal/mcpserver/search.go` | modify (T18) | Higher-limit hint only below the maximum (SPEC-0004 R29) |
+| `cmd/memctl/main.go`, `CLAUDE.md`, `README.md`, `scripts/release-notes.sh`, `docs/agents/changelog.md`, two `internal/mcpserver` tests | modify (T19) | Nits of the release audit; no requirement changes |
 | `docs/design/YYYY-MM-DD-live-check-fixes.md` | create (T16) | Verification record of the repeated live check |
 | Specs and `docs/specs/README.md` | modify | Acceptance boxes; `Implemented` |
 
@@ -66,6 +70,7 @@ T6, T7                        (slice C; independent)
 T8 → T9 → T10                 (slice D; T10 needs T5's render helper)
 T11 → T12 → T13               (slice E)
 T14                           (slice F; independent)
+T17, T18, T19                 (slice H; independent; added after the release audit)
 all → T15 → T16               (slice G)
 ```
 
@@ -154,6 +159,27 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
   a character device.
   *SPEC-0006 R5.*
 
+### Slice H — Release audit
+
+Added on 2026-11-20 from the release audit of commit `2ce451e`, before T16, so
+the repeated live check covers the code that is released.
+
+- [ ] **T17 — Literal paths.** `GIT_LITERAL_PATHSPECS=1` in the environment of
+  every git call, so `git add -A` and `git commit --only` never read a note
+  path such as `[draft] x.md` or `*.md` as a pattern and never stage a
+  person's change to another file.
+  *SPEC-0008 R2.*
+- [ ] **T18 — Hint at the maximum limit.** The closing line of a truncated
+  `search` names a higher `limit` only when the call's `limit` is below 50.
+  *SPEC-0004 R29.*
+- [ ] **T19 — Audit nits.** `memctl check` usage names `MEMCTL_ROOT`;
+  `CLAUDE.md` layout without "planned"; README says BM25F;
+  `release-notes.sh` drops HTML comments from the notes, with a test case; the
+  release steps in `changelog.md` keep the comment under the new
+  `[Unreleased]`; tests stop reading the deprecated `Logging` capability
+  field and the S1011 loop.
+  *No requirement changes.*
+
 ### Slice G — Close
 
 - [x] **T15 — Benchmarks and changelog.** Rerun `BenchmarkBuild`,
@@ -191,6 +217,8 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 | SPEC-0008 | R5 | T11 |
 | SPEC-0008 | R2, R12, R14, R16 | T12 |
 | SPEC-0008 | R15 | T13 |
+| SPEC-0008 | R2 (literal paths) | T17 |
+| SPEC-0004 | R29 (maximum limit) | T18 |
 
 ## Definition of done
 

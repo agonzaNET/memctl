@@ -6,9 +6,10 @@ Accepted
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
-> delivered by stage plan 0004: R14, R16, R19, R22 and R24 changed; R27 to
-> R30 added; the code `section_not_found` added. Until the stage is
-> implemented, the code matches the version of 2026-11-19.
+> delivered by stage plan 0004: R14, R16, R19, R22 and R24 changed; R27 to R30
+> added; the code `section_not_found` added. R29 amended again on 2026-11-20
+> after the release audit: the hint to pass a higher `limit` appears only when
+> the call's `limit` is below 50 (stage plan 0004 T18).
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -234,8 +235,9 @@ for a note without one, the file's modification date.
   MUST give `invalid_argument`. No hits MUST be a success.
 - **R29** — When `Total` (SPEC-0002 R25) is larger than the hits returned, the
   first line MUST read `Found <total> notes for "<query>"; showing the first <n>.`
-  and the last line MUST say that a higher `limit` (up to 50) or a `type`,
-  `tags` or `folder` filter narrows or widens the view.
+  and the last line MUST say that a `type`, `tags` or `folder` filter narrows
+  the search and, only when the call's `limit` is below 50, that a higher
+  `limit` (up to 50) shows more.
 - **R20** — A `folder` argument MUST be normalised by removing a leading `./`
   and a trailing `/`; a `folder` with `..`, `\` or an absolute path MUST give
   `invalid_argument`. The same holds for `list`.
@@ -317,6 +319,8 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R19, R29** — `search` golden output with tags, no hits, empty query; 25
   hits with the default limit give the `showing the first 10` line and the
   last line; 3 hits give the plain first line.
+- [ ] **R29 (maximum limit)** — With `limit` 50 and more matches, the last
+  line names the filters and no higher `limit`.
 - [x] **R22, R23** — `context` golden output at depth 1 and 2 with the new first
   line and an edge between two notes at depth 2, `rel_types`, truncation line;
   the description names the edge rule.
