@@ -224,3 +224,22 @@ func TestRead_SPEC0004_R28_suggestions(t *testing.T) {
 		t.Fatalf("ref in log: %s", e.log.String())
 	}
 }
+
+func TestRead_SPEC0004_R28_nearNames(t *testing.T) {
+	e := start(t, map[string]string{
+		"hosts/edge router.md": "---\ntitle: Edge router\n---\nModel cisco1 in rack 4.\n",
+		"misc/other.md":        "---\ntitle: Other\n---\nnothing\n",
+	})
+	r := e.call(t, "note_read", map[string]any{"ref": "cisco"})
+	want := `not_found: No note matches "cisco"; closest by search: hosts/edge router.md; pass one of these paths, or use search.`
+	if !r.IsError || text(t, r) != want {
+		t.Fatalf("got %q", text(t, r))
+	}
+	r = e.call(t, "search", map[string]any{"query": "cisco"})
+	if r.IsError || text(t, r) != `Found no notes for "cisco".` {
+		t.Fatalf("search must not use near names: %q", text(t, r))
+	}
+	if strings.Contains(e.log.String(), "cisco") {
+		t.Fatalf("ref in log: %s", e.log.String())
+	}
+}
