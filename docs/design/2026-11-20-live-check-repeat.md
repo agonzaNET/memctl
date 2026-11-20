@@ -44,11 +44,13 @@ recur: no delay in about 35 calls.
 | ID | Finding | Kind | Settled in |
 |---|---|---|---|
 | N1 | The repository had `user.name` but no `user.email`, so external changes were committed as `memctl <memctl@localhost>` (as SPEC-0008 R14 says), with nothing telling the person why | Spec gap | SPEC-0008 R17, stage plan 0004 T20: one `WARN` at start names the missing key; README states the rule |
-| N2 | A `search` snippet cut at about 200 characters can end before the matched term, so the hit does not show why it matched | UX | Design, "Backlog for 0.x" |
-| N3 | `context` at depth 2 on a real root returns 33 notes and about 170 edges: complete, but costly for an agent's context | UX | Design, "Backlog for 0.x" |
-| N4 | Whole-identifier matching keeps `cisco` from matching `cisco1`, so `not_found` suggestions miss near names (SPEC-0002 R24, by design) | UX | Design, "Backlog for 0.x" |
+| N2 | A `search` snippet cut at about 200 characters can end before the matched term, so the hit does not show why it matched | UX | SPEC-0002 R27, for v0.2.0 |
+| N3 | `context` at depth 2 on a real root returns 33 notes and about 170 edges: complete, but costly for an agent's context | UX | SPEC-0002 R28, SPEC-0004 R31, for v0.2.0 |
+| N4 | Whole-identifier matching keeps `cisco` from matching `cisco1`, so `not_found` suggestions miss near names (SPEC-0002 R24, by design) | UX | SPEC-0002 R29, SPEC-0004 R28, for v0.2.0 |
 | N5 | On a fresh copy every note shows `file changed` with the copy date | Informational | No change |
 
 The maintainer decided on 2026-11-20 to fix N1 before the first release (v0.1.0)
 and to leave N2 to N4 for a later 0.x version. T20 was verified by its Go
-test and a sample run after this check.
+test and a sample run after this check. After v0.1.0 was published, the
+maintainer decided to fix N2 to N4 in v0.2.0; the specs were amended on
+2026-11-20.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented
+Accepted
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -10,6 +10,11 @@ Implemented
 > added; the code `section_not_found` added. R29 amended again on 2026-11-20
 > after the release audit: the hint to pass a higher `limit` appears only when
 > the call's `limit` is below 50 (stage plan 0004 T18).
+>
+> Amended again on 2026-11-20 for findings N2 to N4 of the repeated live
+> check ([`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md)),
+> for v0.2.0: R19, R22 and R28 changed; R31 and the `context` input `edges`
+> added. Until they are implemented, the code matches v0.1.0.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -73,6 +78,7 @@ A flag wins over its environment variable.
 | `context` | `ref` | string | yes | as `note_read` |
 | | `depth` | integer | no | 1–3, default 1 |
 | | `rel_types` | array of string | no | at most 20 items; relation types or `links_to` |
+| | `edges` | string | no | `all` or `start`, default `all` |
 | `list` | `folder` | string | no | as `search` |
 | | `type` | string | no | as `search` |
 | | `tag` | string | no | 1–64 characters |
@@ -121,8 +127,9 @@ score with two decimals, and the snippet with its line number.
 **`context`** — first line
 `Found <n> notes within <depth> hops of "<title>", plus the note itself.`,
 then a `Notes` list (distance, path, title) and an `Edges` list
-(`source —type→ target`, with `dangling` or `ambiguous` where it applies), and
-a last line when the walk was truncated.
+(`source —type→ target`, with `dangling` or `ambiguous` where it applies),
+headed `Edges of the start note:` when `edges` is `start`, and a last line
+when the walk was truncated.
 
 **`list`** — first line `Listed <n> notes.` (or `Found no notes that match.`),
 then one line per note: path, title, type, tags, and the `updated` date or,
@@ -203,7 +210,9 @@ for a note without one, the file's modification date.
   list item for `note_read`), so a silent pick between a path and a title is
   visible. A ref resolved by path with an empty `Also` adds nothing.
 - **R28** — For a `dangling` ref, the tool MUST run `index.Search` with the
-  ref's text and a limit of 3. With hits, the sentence MUST read
+  ref's text, a limit of 3 and `NearNames` set (SPEC-0002 R29), so that
+  `cisco` suggests a note that holds only `cisco1`; `search` MUST NOT set
+  `NearNames`. With hits, the sentence MUST read
   `No note matches "<ref>"; closest by search: <path>, <path>; pass one of these paths, or use search.`;
   without, `No note matches "<ref>"; use search to find the note, then pass its path.`
 
@@ -232,7 +241,9 @@ for a note without one, the file's modification date.
   render each hit as `<rank>. **<title>** — <path> (<type>) · tags <t1>, <t2> · score <s>`
   (`(<type>)` and `· tags …` only when present) and, on the next line,
   `   > L<line>: <snippet>` when the snippet is not empty. A query with no word
-  MUST give `invalid_argument`. No hits MUST be a success.
+  MUST give `invalid_argument`. No hits MUST be a success. The tool
+  description MUST say that a long line is cut around the first matching word
+  (SPEC-0002 R27).
 - **R29** — When `Total` (SPEC-0002 R25) is larger than the hits returned, the
   first line MUST read `Found <total> notes for "<query>"; showing the first <n>.`
   and the last line MUST say that a `type`, `tags` or `folder` filter narrows
@@ -246,13 +257,22 @@ for a note without one, the file's modification date.
 ### `context`
 
 - **R22** — `context` MUST resolve `ref` (R14), call `index.Walk` (SPEC-0002
-  R16–R19) with `depth` and `rel_types`, and render the notes and edges in the
-  order the walk returns them. `<n>` in the first line counts the notes
-  without the start note, which the `Notes` list shows at distance 0. The
-  tool description MUST say that the edges are every connection between the
-  listed notes. When the walk is truncated, the last line MUST
-  say that it stopped at 200 notes and that a smaller `depth` or `rel_types`
-  narrows it.
+  R16–R19, R28) with `depth`, `rel_types` and the edge scope of `edges` (R31),
+  and render the notes and edges in the order the walk returns them. `<n>` in
+  the first line counts the notes without the start note, which the `Notes`
+  list shows at distance 0. The tool description MUST say that the edges are
+  every connection between the listed notes unless `edges` is `start`. When
+  the walk is truncated, the last line MUST say that it stopped at 200 notes
+  and that a smaller `depth` or `rel_types` narrows it.
+- **R31** — `edges` MUST be in the `context` input schema as a string with
+  `enum` `["all", "start"]` and default `all`. `all` or no value MUST call
+  `index.Walk` with `EdgesAll`; `start` MUST call it with `EdgesStart`
+  (SPEC-0002 R28), and the edge list MUST then be headed
+  `Edges of the start note:` instead of `Edges:`, while the first line and the
+  `Notes` list do not change. The tool description MUST name both values, say
+  that `start` returns the same notes with only the start note's connections,
+  and say that depth 2 or 3 can return dozens of notes and hundreds of
+  connections, so depth 1 or `edges` `start` keeps a result small.
 - **R23** — Log counts: `notes`, `edges`, `depth`.
 
 ### `list`
@@ -328,6 +348,22 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R24, R30** — `list` golden output with tags, a note with `updated` and
   one without (`file changed`), 501 notes give 500 lines and the total; the
   description names both dates.
+- [ ] **R19 (snippet)** — `search` golden output with a hit on a long line
+  shows the snippet with `…` on both sides, as `index.Search` returns it; the
+  description says that a long line is cut around the first matching word.
+- [ ] **R22, R31** — `context` golden output at depth 2 with `edges` `start`:
+  the same first line and `Notes` list as with `all`, the
+  `Edges of the start note:` heading and only the start note's edges; no
+  `edges` gives the output of `edges` `all`; `edges` `other` is refused by the
+  SDK; the tool list shows the enum and the default; the description names
+  both values and the size sentence.
+- [ ] **R28 (near names)** — An unknown ref `cisco` on a root whose only near
+  note holds `cisco1` lists that note's path; `search` for `cisco` on the same
+  root finds no notes.
+- [ ] **Live check (v0.2.0)** — The maintainer repeats the search of a long
+  line, `context` at depth 2 with `edges` `start`, and an unknown ref with a
+  near name, with the built binary on a copy of a real notes root. Recorded as
+  a verification record under `docs/design/`.
 - [x] **Live check (again)** — The exit check of stage plan 0004 repeats the
   read checks of the live check of 2026-11-20 on a copy of a real notes root.
 - [x] **Live check** — `claude mcp add` with the built binary on a copy of a real
@@ -343,3 +379,5 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - SPEC-0001, SPEC-0002, SPEC-0003; SPEC-0005 (`memctl check`) — planned.
 - Live check of 2026-11-20, findings C1, C2, C4/L7, L2, L4, L5, L8, L9, L17:
   [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).
+- Repeated live check of 2026-11-20, findings N2 to N4:
+  [`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md).

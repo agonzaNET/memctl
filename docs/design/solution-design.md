@@ -41,7 +41,7 @@ The twenty-four decisions below were agreed with Alberto on 2026-11-19 and frame
 | D6 | Cloud | Removed entirely. | No sync, accounts, routing or promo code paths. |
 | D7 | Name | `memctl` for binary, repo and module. | No rename churn later. |
 | D8 | Repo | github.com/agonzaNET/memctl (personal GitHub, not aai-infra); Go module path is the same. | Own CI; stays open-sourceable. |
-| D9 | `context` scope | Graph neighbours only: relations, body links (`links_to`) and backlinks; no tag matches. Edge types can be filtered. The result lists every edge between the notes it returns. | Predictable, small output; tag queries go through `search`. |
+| D9 | `context` scope | Graph neighbours only: relations, body links (`links_to`) and backlinks; no tag matches. Edge types can be filtered. The result lists every edge between the notes it returns, or on request only the start note's edges. | Predictable, small output; tag queries go through `search`. |
 | D10 | Commit author | Default identity `memctl <memctl@localhost>`. | AI edits are separable from human edits in history and blame. |
 | D11 | Licence | MIT. | Permissive and simple; the clean-room build carries no AGPL obligation. |
 | D12 | Instance lock | Exactly one `memctl` process per notes root; a second exits with an error naming the holder's PID. | One writer and one git committer; two MCP clients cannot share a root at the same time. |
@@ -120,7 +120,7 @@ The index is built from the files on every start and lives only in process memor
 | Inverted index, term → postings | per field: title, aliases, tags, observations, body | `search` |
 | Field lengths | per note and field, plus averages | BM25F scoring |
 
-Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, tags 2, observations 1.5, body 1, a note matching any query term, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German. Runs joined by `-`, `.`, `_`, `/` or `:` (identifiers such as `IT-104`, `10.50.4.15`, `11.1.16-h2`) are indexed whole as well as in parts; a query term written as such an identifier matches only the whole identifier, so a lookup by ticket, address or version is not flooded by notes that share one fragment.
+Startup parses all files in parallel (one goroutine per CPU). Search ranks with BM25F, field weights title 3, aliases 2, tags 2, observations 1.5, body 1, a note matching any query term, tuned later against real queries. The tokenizer lower-cases and splits on Unicode letters and digits, with no stemming, since notes mix English and German. Runs joined by `-`, `.`, `_`, `/` or `:` (identifiers such as `IT-104`, `10.50.4.15`, `11.1.16-h2`) are indexed whole as well as in parts; a query term written as such an identifier matches only the whole identifier, so a lookup by ticket, address or version is not flooded by notes that share one fragment. Only for the suggestions of a `not_found` error, a query word of letters also matches the same word followed by digits (`cisco` → `cisco1`, `eu` → `eu1`), so a near name is still offered; `search` ranking keeps whole-word matching. A snippet of a line longer than 200 characters is cut around the first matched term, with `…` on each cut side.
 
 Links are resolved at query time (D23): path, then title, then alias, then file stem. At the first step that finds any note, one match resolves the link and several make it ambiguous; later steps are not tried. Creating a missing target or moving a note therefore needs no link rewrite. Unresolved targets are reported as dangling and ambiguous ones as ambiguous, never as errors of the tool call that reads them.
 
@@ -135,8 +135,8 @@ Eight tools cover v1, each with MCP annotations (`readOnlyHint`, `destructiveHin
 | `note_edit` | No | No | `ref`, `op` (`append`, `replace_section`, `find_replace`), `expected_sha` | Fails on hash mismatch, so external edits are never overwritten |
 | `note_move` | No | No | `ref`, `new_path` or `new_title` | Moves or renames the file; appends the old path, and the old title if it changed, to `aliases` (D24); never edits other notes |
 | `note_delete` | No | Yes | `ref` | Removes file; git keeps history |
-| `search` | Yes | No | `query`, `type`, `tags`, `folder`, `limit` | BM25F ranking, returns snippets |
-| `context` | Yes | No | `ref`, `depth` (default 1, max 3), `rel_types` | Graph walk over relations and backlinks |
+| `search` | Yes | No | `query`, `type`, `tags`, `folder`, `limit` | BM25F ranking, returns snippets cut around the first match |
+| `context` | Yes | No | `ref`, `depth` (default 1, max 3), `rel_types`, `edges` (`all` default, `start`) | Graph walk over relations and backlinks; `edges` `start` lists only the start note's edges |
 | `list` | Yes | No | `folder`, `type`, `tag` | Directory listing |
 
 All tools return Markdown text, with no JSON envelope and no `structuredContent` (D22):
@@ -189,13 +189,11 @@ Three milestones, about 1.5–2 weeks in total with Claude Code, each ending in 
 
 ## Backlog for 0.x
 
-Small changes to v1 behaviour, found in the repeated live check of 2026-11-20
-([`2026-11-20-live-check-repeat.md`](2026-11-20-live-check-repeat.md)). Each
-needs a spec amendment before code.
+Small changes to v1 behaviour. Each needs a spec amendment before code.
 
-- **Snippet around the match:** centre a `search` snippet on the first matched term, with an ellipsis on each cut side, so a long line still shows why the note matched (N2).
-- **Smaller `context` results:** an option to list only the start note's edges, or to filter edges by type, and the expected size in the description (N3).
-- **Near names in suggestions:** let a word match as the prefix of a letters-and-digits identifier (`cisco` → `cisco1`) in `not_found` suggestions only, not in `search` ranking (N4).
+None open. The three findings of the repeated live check of 2026-11-20
+([`2026-11-20-live-check-repeat.md`](2026-11-20-live-check-repeat.md)) listed
+here, N2 to N4, moved to SPEC-0002 and SPEC-0004 for v0.2.0 (see Amendments).
 
 ## Backlog after v2
 
@@ -244,3 +242,6 @@ An existing Basic Memory notes root moves to `memctl` once v1 is released, with 
 | 2026-11-20 | Git — external changes | A change made outside memctl is committed on its own as `memory: external change <path>`, with the repository's git identity or the `--git-author` identity. | An editor change was committed inside memctl's next commit of that note, under memctl's name, against D10 (live check, L10). |
 | 2026-11-20 | Milestones | M3 releases only after the live-check findings are fixed in stage plan 0004. | The maintainer chose to fix every finding before v0.1.0. |
 | 2026-11-20 | Git — external changes | When the repository lacks `user.name` or `user.email`, a `WARN` at start names the missing key and the `--git-author` identity used instead. | A repository with a name but no email had a person's edits committed as memctl with no reason given (repeated live check, N1). |
+| 2026-11-20 | Search snippets | A snippet of a line longer than 200 characters is a 200-character window centred on the first matched term, with `…` on each cut side. Which line is chosen does not change. | A snippet cut at the end of a long line could stop before the matched term, so the hit did not show why it matched (repeated live check, N2; SPEC-0002 R27). |
+| 2026-11-20 | D9 — `context` scope | `context` takes `edges`: `all` (the default, as before) or `start`, which lists only the edges whose source or target is the start note; the notes are the same. The description says that depth 2 or 3 can return dozens of notes and hundreds of edges. | Depth 2 on a real root returned 33 notes and about 170 edges: complete, but costly in an agent's context (repeated live check, N3; SPEC-0002 R28, SPEC-0004 R31). |
+| 2026-11-20 | Search tokenizer — suggestions | In `not_found` suggestions only, a query word of at least two letters also matches the same word followed by digits (`cisco` → `cisco1`). `search` results and ranking do not change. | Whole-word matching kept a near name such as `cisco1` out of the suggestions for `cisco` (repeated live check, N4; SPEC-0002 R29, SPEC-0004 R28). |

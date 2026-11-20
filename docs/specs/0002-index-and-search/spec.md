@@ -2,11 +2,16 @@
 
 ## Status
 
-Implemented
+Accepted
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
 > delivered by stage plan 0004: R7 and R17 changed; R23 to R26 added.
+>
+> Amended again on 2026-11-20 for findings N2 to N4 of the repeated live
+> check ([`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md)),
+> for v0.2.0: R14 changed; R27 to R29 added; `Query.NearNames` and the edge
+> scope of `Walk` added. Until they are implemented, the code matches v0.1.0.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -53,9 +58,9 @@ never written to disk (design D14).
   Replaces any entry with the same path.
 - `Remove(path)`.
 - `Resolve(target)`: a link target or a tool `ref`, as written.
-- `Search(Query{Text, Type, Tags, Folder, Limit})`.
-- `Walk(start, depth, relTypes)`: a resolved note path, a depth, an optional
-  list of edge types.
+- `Search(Query{Text, Type, Tags, Folder, Limit, NearNames})`.
+- `Walk(start, depth, relTypes, scope)`: a resolved note path, a depth, an
+  optional list of edge types, and an edge scope, `EdgesAll` or `EdgesStart`.
 - `List(Filter{Folder, Type, Tag})`.
 - `Links()`: no input.
 
@@ -127,6 +132,14 @@ never written to disk (design D14).
   `IT-104 rollback` gives `it-104`, `rollback`. So a compound in the query
   matches only notes that hold the whole compound, and a part alone (`104`)
   still matches notes that hold it inside a compound.
+- **R29** — `Query.NearNames` MUST default to false, which leaves R24
+  unchanged. When true, each query term (R24) that is one part of at least two
+  runes, all letters (`unicode.IsLetter`), MUST also match every indexed token
+  that is that term followed by one or more digits (`unicode.IsDigit`) and
+  nothing else: `cisco` matches `cisco1` and `cisco12`, not `ciscoasa`; `eu`
+  matches `eu1`. Each such token MUST count as one more distinct query term in
+  R9, R10, R14 and R27. Only the suggestions of a `not_found` error set it
+  (SPEC-0004 R28).
 - **R8** — Five fields MUST be indexed per note: `title`, `aliases` (all aliases
   joined), `tags` (all tags joined), `observations` (all observation texts
   joined) and `body` (the body without the lines recorded as observations,
@@ -153,10 +166,21 @@ never written to disk (design D14).
   `index.ErrEmptyQuery` and no hits.
 - **R14** — Each hit's snippet MUST be the observation with the most distinct
   query terms, or, when no observation has one, the body line with the most;
-  ties go to the earlier line. The snippet MUST be the line's text, trimmed and
-  cut to 200 runes with `…` when longer, and `SnippetLine` its file line. A hit
-  that matches only in the title or aliases MUST have the first non-empty body
-  line, or an empty snippet when the body is empty.
+  ties go to the earlier line. The snippet MUST be the line's text, trimmed and,
+  when longer than 200 runes, cut as R27 says, and `SnippetLine` its file line.
+  A hit that matches only in the title or aliases MUST have the first non-empty
+  body line, or an empty snippet when the body is empty.
+- **R27** — A snippet line longer than 200 runes MUST be cut to a window of 200
+  runes of it. When the line holds a token (R7) equal to a query term, the
+  window MUST be centred on the first such token: of the tokens that start at
+  the earliest rune, the longest. The window starts at that token's first rune
+  minus ⌊(200 − its length in runes) / 2⌋, or at its first rune when it is 200
+  runes or longer, and is then clamped to the range 0 to (line length − 200).
+  When the line holds no query term (a hit on the title or aliases only, R14),
+  the window MUST start at the line's first rune. Spaces at a cut edge MUST be
+  trimmed, and `…` MUST be added on each side where text was cut. A line of 200
+  runes or fewer MUST be returned whole. Which line is chosen (R14) does not
+  change.
 
 ### Graph (design D9)
 
@@ -179,6 +203,12 @@ never written to disk (design D14).
   target MUST be listed once, at their first line. Edges MUST be ordered by
   source path, then line, then target. A note's links to itself MUST NOT
   appear.
+- **R28** — `Walk` MUST take an edge scope. `EdgesAll`, the zero value, MUST
+  list the edges of R17. `EdgesStart` MUST list only those edges of R17 whose
+  source or target is the start note: its own outgoing edges, dangling and
+  ambiguous ones included, and the edges from listed notes to it. The scope
+  MUST NOT change which notes are reached, their distances or `Truncated`, and
+  `relTypes` applies in both scopes.
 - **R18** — The walk MUST stop adding notes at 200 and set `Truncated`.
 - **R19** — `Walk` on a path that is not in the index MUST return
   `index.ErrNotFound`.
@@ -262,6 +292,23 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   their results on the development machine are recorded in the stage plan.
 - [x] **R22 (again)** — The benchmarks are rerun with compound tokens and the
   edges among listed notes, and the results are recorded in stage plan 0004.
+- [ ] **R14, R27** — Snippet table: a line of 200 runes is returned whole; a
+  500-rune line with the matched term near the start (`…` at the end only),
+  in the middle (`…` on both sides, the term at the window's centre) and near
+  the end (`…` at the start only); a compound query term (`it-104`) and a part
+  inside a compound (`104`) centre on that token; the first of two matched
+  terms wins; a title-only hit with a long first body line is cut at the end;
+  spaces at a cut edge are trimmed; a multi-byte rune (`ä`) counts as one.
+- [ ] **R28** — On the graph fixture at depth 2, `EdgesStart` gives the same
+  nodes and `Truncated` as `EdgesAll`, and only the edges whose source or
+  target is the start, its dangling and ambiguous edges and its backlinks
+  included; with `relTypes`, both filters apply.
+- [ ] **R29** — On a fixture with notes holding `cisco1`, `cisco12`,
+  `ciscoasa` and `eu1`: with `NearNames`, `cisco` finds the `cisco1` and
+  `cisco12` notes and not `ciscoasa`, `eu` finds `eu1`, a one-letter `c` and
+  the compound `cisco-core` find none of them, and `cisco1` does not find
+  `cisco12`; without it, `cisco` finds none of them; a note with both `cisco`
+  and `cisco1` ranks above a note with `cisco1` only.
 
 ## References
 
@@ -270,5 +317,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
 - [ADR-0017](../../adr/0017-path-identity-and-link-resolution.md).
 - Live check of 2026-11-20, findings C1, C2, L3, L4, L6, L8:
   [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).
+- Repeated live check of 2026-11-20, findings N2 to N4:
+  [`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md).
 - SPEC-0001 (note parser); SPEC-0003 (notes root and freshness check),
   SPEC-0004 (MCP read tools), SPEC-0005 (`memctl check`) — planned.
