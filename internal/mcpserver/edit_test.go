@@ -65,7 +65,7 @@ func TestEdit_SPEC0007_R17_R18_R19_codes(t *testing.T) {
 		code string
 		says []string
 	}{
-		{map[string]any{"op": "replace_section", "section": "Missing", "text": "x"}, "not_found", []string{"Steps", "Notes"}},
+		{map[string]any{"op": "replace_section", "section": "Missing", "text": "x"}, "section_not_found", []string{"Steps", "Notes"}},
 		{map[string]any{"op": "find_replace", "find": "absent", "replace": "x"}, "no_match", nil},
 		{map[string]any{"op": "find_replace", "find": "dup", "replace": "x"}, "not_unique", []string{"2"}},
 		{map[string]any{"op": "append"}, "invalid_argument", []string{"text"}},

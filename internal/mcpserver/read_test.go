@@ -143,8 +143,30 @@ func TestRead_SPEC0004_R16_section(t *testing.T) {
 	}
 
 	r := e.call(t, "note_read", map[string]any{"ref": rel, "section": "Missing"})
-	if !r.IsError || !strings.HasPrefix(text(t, r), "not_found: ") || !strings.Contains(text(t, r), "Observations") {
+	if !r.IsError || !strings.HasPrefix(text(t, r), "section_not_found: ") || !strings.Contains(text(t, r), "Observations") ||
+		!strings.Contains(text(t, r), "pass one of them") {
 		t.Fatalf("missing section: %s", text(t, r))
+	}
+}
+
+func TestRead_SPEC0004_R16_sectionLinks(t *testing.T) {
+	const rel = "runbooks/PAN-OS upgrade procedure.md"
+	e := start(t, map[string]string{rel: exampleNote})
+	// The Relations section holds two relations; the body link above it is
+	// not listed.
+	got := text(t, e.call(t, "note_read", map[string]any{"ref": rel, "section": "Relations"}))
+	want := "Links in this section:\n- implements → ODR-017: dangling\n- applies_to → PA-850: dangling"
+	if !strings.HasSuffix(got, want) || strings.Contains(got, "links_to") {
+		t.Fatalf("got:\n%s", got)
+	}
+	got = text(t, e.call(t, "note_read", map[string]any{"ref": rel, "section": "Observations"}))
+	if !strings.HasSuffix(got, "Links in this section: none.") {
+		t.Fatalf("got:\n%s", got)
+	}
+	// Without section, the whole note's list is unchanged.
+	got = text(t, e.call(t, "note_read", map[string]any{"ref": rel}))
+	if !strings.Contains(got, "\nLinks:\n- links_to → PA-850: dangling") {
+		t.Fatalf("got:\n%s", got)
 	}
 }
 
