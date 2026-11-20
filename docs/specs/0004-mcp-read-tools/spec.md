@@ -2,7 +2,13 @@
 
 ## Status
 
-Implemented
+Accepted
+
+> Amended on 2026-11-20 for the findings of the live check
+> ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
+> delivered by stage plan 0004: R14, R16, R19, R22 and R24 changed; R27 to
+> R30 added; the code `section_not_found` added. Until the stage is
+> implemented, the code matches the version of 2026-11-19.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -107,16 +113,19 @@ Links:
 `````
 
 **`search`** — first line `Found <n> notes for "<query>".` (or
-`Found no notes for "<query>".`), then one numbered entry per hit: title, path,
-type, score with two decimals, and the snippet with its line number.
+`Found no notes for "<query>".`, or `Found <total> notes for "<query>"; showing
+the first <n>.`), then one numbered entry per hit: title, path, type, tags,
+score with two decimals, and the snippet with its line number.
 
-**`context`** — first line `Found <n> notes within <depth> hops of "<title>".`,
+**`context`** — first line
+`Found <n> notes within <depth> hops of "<title>", plus the note itself.`,
 then a `Notes` list (distance, path, title) and an `Edges` list
 (`source —type→ target`, with `dangling` or `ambiguous` where it applies), and
 a last line when the walk was truncated.
 
 **`list`** — first line `Listed <n> notes.` (or `Found no notes that match.`),
-then one line per note: path, title, type, updated date.
+then one line per note: path, title, type, tags, and the `updated` date or,
+for a note without one, the file's modification date.
 
 **Logs** — JSON on stderr; one `INFO` `tool call` line per call (ADR-0016).
 
@@ -182,9 +191,20 @@ then one line per note: path, title, type, updated date.
 ### Refs
 
 - **R14** — A `ref` MUST be resolved with `index.Resolve` (SPEC-0002 R4).
-  `dangling` MUST give `not_found` with a sentence that suggests `search`;
+  `dangling` MUST give `not_found` (R28 adds the suggestions);
   `ambiguous` MUST give `ambiguous` with every candidate path in the sentence and
   the advice to pass a path.
+- **R27** — When a `ref` resolves by title, alias or stem (SPEC-0002 R23
+  `Step`), `note_read` MUST add the item `- resolved by: <step> "<ref>"` after
+  `sha256` in the metadata list, and `context` MUST add the line
+  `Resolved by <step> "<ref>".` after the first line. When `Also` is not empty,
+  both MUST add `Other notes with this name: <paths>.` in the same place (as a
+  list item for `note_read`), so a silent pick between a path and a title is
+  visible. A ref resolved by path with an empty `Also` adds nothing.
+- **R28** — For a `dangling` ref, the tool MUST run `index.Search` with the
+  ref's text and a limit of 3. With hits, the sentence MUST read
+  `No note matches "<ref>"; closest by search: <path>, <path>; pass one of these paths, or use search.`;
+  without, `No note matches "<ref>"; use search to find the note, then pass its path.`
 
 ### `note_read`
 
@@ -196,8 +216,11 @@ then one line per note: path, title, type, updated date.
   heading whose text equals `section` (case-insensitive, trimmed) to the line
   before the next heading of the same or a higher level, or the end of the file;
   the first line MUST then read `Read section "<heading>" of "<title>" at <path>.`
-  No match MUST give `not_found`, with the headings of the note in the sentence
-  (at most 20).
+  No match MUST give `section_not_found`, with the headings of the note in the
+  sentence (at most 20) and the advice to pass one of them. With `section`, the
+  list MUST be headed `Links in this section:` and hold only the relations and
+  links on the section's lines (`Links in this section: none.` when there are
+  none).
 - **R17** — `sha256` MUST be the hex SHA-256 of the whole file as it is on disk,
   also when `section` is given.
 - **R18** — Log counts: `bytes` (content returned), `links`.
@@ -205,9 +228,14 @@ then one line per note: path, title, type, updated date.
 ### `search`
 
 - **R19** — `search` MUST call `index.Search` (SPEC-0002) with the arguments and
-  render each hit as `<rank>. **<title>** — <path> (<type>) · score <s>` and, on
-  the next line, `   > L<line>: <snippet>` when the snippet is not empty. A query
-  with no word MUST give `invalid_argument`. No hits MUST be a success.
+  render each hit as `<rank>. **<title>** — <path> (<type>) · tags <t1>, <t2> · score <s>`
+  (`(<type>)` and `· tags …` only when present) and, on the next line,
+  `   > L<line>: <snippet>` when the snippet is not empty. A query with no word
+  MUST give `invalid_argument`. No hits MUST be a success.
+- **R29** — When `Total` (SPEC-0002 R25) is larger than the hits returned, the
+  first line MUST read `Found <total> notes for "<query>"; showing the first <n>.`
+  and the last line MUST say that a higher `limit` (up to 50) or a `type`,
+  `tags` or `folder` filter narrows or widens the view.
 - **R20** — A `folder` argument MUST be normalised by removing a leading `./`
   and a trailing `/`; a `folder` with `..`, `\` or an absolute path MUST give
   `invalid_argument`. The same holds for `list`.
@@ -217,7 +245,10 @@ then one line per note: path, title, type, updated date.
 
 - **R22** — `context` MUST resolve `ref` (R14), call `index.Walk` (SPEC-0002
   R16–R19) with `depth` and `rel_types`, and render the notes and edges in the
-  order the walk returns them. When the walk is truncated, the last line MUST
+  order the walk returns them. `<n>` in the first line counts the notes
+  without the start note, which the `Notes` list shows at distance 0. The
+  tool description MUST say that the edges are every connection between the
+  listed notes. When the walk is truncated, the last line MUST
   say that it stopped at 200 notes and that a smaller `depth` or `rel_types`
   narrows it.
 - **R23** — Log counts: `notes`, `edges`, `depth`.
@@ -227,6 +258,12 @@ then one line per note: path, title, type, updated date.
 - **R24** — `list` MUST call `index.List` (SPEC-0002 R20) and render at most 500
   entries; when there are more, the last line MUST give the total and say that
   `folder`, `type` or `tag` narrows the list.
+- **R30** — Each `list` line MUST read
+  `- <path> — <title> (<type>) · tags <t1>, <t2> · updated <YYYY-MM-DD>`, with
+  `(<type>)` and `· tags …` only when present, and
+  `· file changed <YYYY-MM-DD>` from `ModTime` (SPEC-0002 R26) in place of
+  `· updated …` when the note has no `updated`. The tool description MUST say
+  which of the two dates a line shows.
 - **R25** — Log counts: `results`.
 
 ## Error handling
@@ -236,7 +273,8 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 | Code | When | Tools |
 |---|---|---|
 | `invalid_argument` | A value passed the schema but breaks a rule (empty query after tokenising, bad folder) | `search`, `list` |
-| `not_found` | A `ref` matches no note; a `section` matches no heading | `note_read`, `context` |
+| `not_found` | A `ref` matches no note | `note_read`, `context` |
+| `section_not_found` | A `section` matches no heading of the note | `note_read` |
 | `ambiguous` | A `ref` matches several notes | `note_read`, `context` |
 | `internal_error` | Anything unexpected (the root became unreadable, a read failed); the sentence is fixed, and the cause is logged once at `ERROR` without note content | all |
 
@@ -263,16 +301,31 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R13** — `check-docs.sh` passes with the markers present; a description
   naming a spec number fails it.
 - [x] **R14** — A ref by path, by title, by alias, ambiguous and unknown.
-- [x] **R15, R16, R17, R18** — `note_read` of the design's example note equals a
+- [ ] **R27** — `note_read` and `context` by title and by alias show the step;
+  a path ref that is also another note's title names that note; a path ref
+  with no other match adds nothing.
+- [ ] **R28** — An unknown ref whose words match notes lists up to three paths;
+  one whose words match nothing gives the plain sentence. No ref text is
+  logged.
+- [x] **R15, R17, R18** — `note_read` of the design's example note equals a
   golden file; a note containing a run of four backticks gets a five-backtick
-  fence;
-  `section` hit, nested heading, miss.
-- [x] **R19, R20, R21** — `search` golden output, no hits, empty query, folder
-  normalisation and rejection.
-- [x] **R22, R23** — `context` golden output at depth 1 and 2, `rel_types`,
-  truncation line.
-- [x] **R24, R25** — `list` golden output, 501 notes give 500 lines and the
-  total.
+  fence.
+- [ ] **R16** — `section` hit with a link inside and one outside the section
+  (only the inside one listed), a section without links, nested heading, miss
+  (`section_not_found` with the headings).
+- [x] **R20, R21** — Folder normalisation and rejection; log counts.
+- [ ] **R19, R29** — `search` golden output with tags, no hits, empty query; 25
+  hits with the default limit give the `showing the first 10` line and the
+  last line; 3 hits give the plain first line.
+- [ ] **R22, R23** — `context` golden output at depth 1 and 2 with the new first
+  line and an edge between two notes at depth 2, `rel_types`, truncation line;
+  the description names the edge rule.
+- [x] **R25** — `list` log counts.
+- [ ] **R24, R30** — `list` golden output with tags, a note with `updated` and
+  one without (`file changed`), 501 notes give 500 lines and the total; the
+  description names both dates.
+- [ ] **Live check (again)** — The exit check of stage plan 0004 repeats the
+  read checks of the live check of 2026-11-20 on a copy of a real notes root.
 - [x] **Live check** — `claude mcp add` with the built binary on a copy of a real
   notes root: the four tools answer, and an edit in an editor shows up on the
   next call. Recorded as a verification record under `docs/design/`.
@@ -284,3 +337,5 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   [`../../design/solution-design.md`](../../design/solution-design.md).
 - [`../../agents/tools.md`](../../agents/tools.md).
 - SPEC-0001, SPEC-0002, SPEC-0003; SPEC-0005 (`memctl check`) — planned.
+- Live check of 2026-11-20, findings C1, C2, C4/L7, L2, L4, L5, L8, L9, L17:
+  [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).
