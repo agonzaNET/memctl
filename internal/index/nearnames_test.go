@@ -61,3 +61,30 @@ func TestSearch_SPEC0002_R29_nearNames(t *testing.T) {
 		t.Fatalf("near name not a query term for the snippet: %q", r.Hits[1].Snippet)
 	}
 }
+
+func TestSearch_SPEC0002_R29_nearList(t *testing.T) {
+	x := index.New()
+	put(x, "a.md", "---\ntitle: Alpha\ntype: host\n---\nrouter cisco1\n")
+	put(x, "b.md", "---\ntitle: Bravo\n---\nrouter cisco12\n")
+	put(x, "c.md", "---\ntitle: Charlie\n---\nrouter ciscoasa\n")
+	near := func(q index.Query) []string {
+		t.Helper()
+		r, err := x.Search(q)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return r.Near
+	}
+	if got := near(index.Query{Text: "cisco", NearNames: true}); !reflect.DeepEqual(got, []string{"cisco1", "cisco12"}) {
+		t.Fatalf("near %v", got)
+	}
+	if got := near(index.Query{Text: "cisco", NearNames: true, Type: "host"}); !reflect.DeepEqual(got, []string{"cisco1"}) {
+		t.Fatalf("near with a type filter %v", got)
+	}
+	if got := near(index.Query{Text: "cisco", NearNames: true, Limit: 1}); !reflect.DeepEqual(got, []string{"cisco1", "cisco12"}) {
+		t.Fatalf("near with limit 1 %v", got)
+	}
+	if got := near(index.Query{Text: "cisco router"}); got != nil {
+		t.Fatalf("near without NearNames %v", got)
+	}
+}

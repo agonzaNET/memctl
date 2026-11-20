@@ -161,3 +161,37 @@ func TestSearch_SPEC0004_R19_longLineSnippet(t *testing.T) {
 		t.Fatalf("description: %s", d)
 	}
 }
+
+func TestSearch_SPEC0004_R32_nearNameHint(t *testing.T) {
+	files := map[string]string{
+		"hosts/a.md": "---\ntitle: A\ntype: host\n---\nrouter cisco1\n",
+		"hosts/b.md": "---\ntitle: B\ntype: host\n---\nrouter cisco12\n",
+	}
+	for i := 1; i <= 6; i++ {
+		files[fmt.Sprintf("fw/f%d.md", i)] = fmt.Sprintf("---\ntitle: F%d\n---\nfirewall fw%d\n", i, i)
+	}
+	e := start(t, files)
+	check := func(args map[string]any, want string) {
+		t.Helper()
+		r := e.call(t, "search", args)
+		if r.IsError || text(t, r) != want {
+			t.Fatalf("%v:\n got %q\nwant %q", args, text(t, r), want)
+		}
+	}
+	check(map[string]any{"query": "cisco"},
+		"Found no notes for \"cisco\".\n\nSome notes hold a query word followed by digits: cisco1, cisco12; search for one of these words.")
+	check(map[string]any{"query": "fw"},
+		"Found no notes for \"fw\".\n\nSome notes hold a query word followed by digits: fw1, fw2, fw3, fw4, fw5, and 1 more; search for one of these words.")
+	check(map[string]any{"query": "cisco", "type": "runbook"}, `Found no notes for "cisco".`)
+	check(map[string]any{"query": "zzz"}, `Found no notes for "zzz".`)
+	r := e.call(t, "search", map[string]any{"query": "router"})
+	if r.IsError || strings.Contains(text(t, r), "Some notes hold") {
+		t.Fatalf("hint with hits: %s", text(t, r))
+	}
+	if strings.Contains(e.log.String(), "cisco1") || strings.Contains(e.log.String(), "fw1") {
+		t.Fatalf("near names in log: %s", e.log.String())
+	}
+	if d := toolDescription(t, "search"); !strings.Contains(d, "a query word followed by digits") {
+		t.Fatalf("description: %s", d)
+	}
+}
