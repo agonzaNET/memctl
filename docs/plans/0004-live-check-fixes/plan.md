@@ -21,7 +21,7 @@ none of the findings marked for this stage.
 | D — Writes | T8–T10 | `append` starts a paragraph, `replace_section` keeps the blank line, writes list unresolved links, move and delete name the linkers |
 | E — Git | T11–T13 | Commit messages name paths; editor changes get their own commits, also those made while memctl was stopped |
 | F — Lock message | T14 | The refusal names the given root and appears once in a client's log |
-| H — Release audit | T17–T19 | Paths reach git literally; no higher-limit hint at the maximum; docs and test nits of the audit fixed |
+| H — Release audit | T17–T20 | Paths reach git literally; no higher-limit hint at the maximum; docs and test nits of the audit fixed; a missing git identity key is named at start |
 | G — Close | T15–T16 | Benchmarks rerun, CHANGELOG, live check repeated, specs `Implemented` |
 
 ## File map
@@ -54,6 +54,7 @@ none of the findings marked for this stage.
 | `internal/gitlog/run.go` | modify (T17) | `GIT_LITERAL_PATHSPECS=1` on every git call (SPEC-0008 R2) |
 | `internal/mcpserver/search.go` | modify (T18) | Higher-limit hint only below the maximum (SPEC-0004 R29) |
 | `cmd/memctl/main.go`, `CLAUDE.md`, `README.md`, `scripts/release-notes.sh`, `docs/agents/changelog.md`, two `internal/mcpserver` tests | modify (T19) | Nits of the release audit; no requirement changes |
+| `internal/gitlog/committer.go`, `README.md` | modify (T20) | `WARN` for a missing `user.name` or `user.email` (SPEC-0008 R17) |
 | `docs/design/YYYY-MM-DD-live-check-fixes.md` | create (T16) | Verification record of the repeated live check |
 | Specs and `docs/specs/README.md` | modify | Acceptance boxes; `Implemented` |
 
@@ -71,6 +72,7 @@ T8 → T9 → T10                 (slice D; T10 needs T5's render helper)
 T11 → T12 → T13               (slice E)
 T14                           (slice F; independent)
 T17, T18, T19                 (slice H; independent; added after the release audit)
+T16 → T20                     (slice H; added after the repeated live check)
 all → T15 → T16               (slice G)
 ```
 
@@ -180,6 +182,12 @@ the repeated live check covers the code that is released.
   `[Unreleased]`; tests stop reading the deprecated `Logging` capability
   field and the S1011 loop.
   *No requirement changes.*
+- [ ] **T20 — Missing identity named.** From finding N1 of the repeated live
+  check: at start, one `WARN` `incomplete git identity` names a missing
+  `user.name` or `user.email` and the `--git-author` identity used instead
+  for external changes; README states the rule. Verified by its test and a
+  sample run, after T16.
+  *SPEC-0008 R17.*
 
 ### Slice G — Close
 
@@ -220,6 +228,7 @@ the repeated live check covers the code that is released.
 | SPEC-0008 | R15 | T13 |
 | SPEC-0008 | R2 (literal paths) | T17 |
 | SPEC-0004 | R29 (maximum limit) | T18 |
+| SPEC-0008 | R17 | T20 |
 
 ## Definition of done
 

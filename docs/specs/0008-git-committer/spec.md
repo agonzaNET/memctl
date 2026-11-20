@@ -9,7 +9,9 @@ Accepted
 > delivered by stage plan 0004: R2 and R5 changed; R14 to R16 added; the scope
 > now covers changes made outside memctl. R2 amended again on 2026-11-20 after
 > the release audit: every git call reads paths literally, never as patterns
-> (stage plan 0004 T17).
+> (stage plan 0004 T17). R17 added on 2026-11-20 after the repeated live
+> check: a `WARN` at start names a missing git identity key (stage plan 0004
+> T20).
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -60,6 +62,8 @@ anything a tool did not change, and never push.
 - Commits in the repository that contains the root, on its current branch.
 - Log lines: `INFO` `committed` with `paths` (count) and `commit` (short hash);
   `WARN` at start when the root is not in a git work tree or `git` is missing;
+  `WARN` `incomplete git identity` at start when the repository lacks
+  `user.name` or `user.email` (R17);
   `ERROR` `commit failed` with the git exit status and the failure class.
 
 ## Behaviour & Requirements
@@ -135,6 +139,13 @@ anything a tool did not change, and never push.
   the `ERROR` line of R10. A person's edit made within the quiet window after a
   tool wrote the same path, and before that tool's commit, is a known limit:
   the two changes end up in one commit.
+- **R17** — At start, after R1 and only when the root is in a git work tree,
+  when `git config --get user.name` or `git config --get user.email` in the
+  root gives no value, `memctl mcp` MUST log one `WARN` line
+  `incomplete git identity` with `missing` (the keys without a value, comma
+  separated, `user.name` first) and `author` (the `--git-author` identity that
+  R14 uses instead for external changes). With both keys set it MUST log
+  nothing.
 
 ### Shutdown (ADR-0014)
 
@@ -151,6 +162,7 @@ anything a tool did not change, and never push.
 | Failure | Result |
 |---|---|
 | Root not in a git work tree, or `git` missing | `WARN` at start; writes work, nothing is committed (R1) |
+| Repository without `user.name` or `user.email` | `WARN` at start naming the key; external changes use `--git-author` (R14, R17) |
 | `index.lock` present | Up to 3 retries, then `ERROR` (R10) |
 | Hook fails, timeout, other git error | `ERROR` with the class; files stay uncommitted (R10) |
 | Bad `--git-author` | Usage error, status 2 (SPEC-0004 R1) |
@@ -188,6 +200,9 @@ anything a tool did not change, and never push.
 - [x] **R15** — A note edited, one added and one deleted while memctl was not
   running are committed as external changes after start; an untracked
   `x.txt` and a file under an ignored folder are not.
+- [ ] **R17** — A repository with `user.name` only gives one `WARN` with
+  `missing` `user.email` and the author; with neither, `user.name, user.email`;
+  with both, no line; a root outside git gives only the `WARN` of R1.
 - [x] **R16** — An editor change to a note, then `note_edit` on it within the
   quiet window: the external commit holds the editor change only, the tool
   commit holds the edit only; with the external commit failing, the edit is
