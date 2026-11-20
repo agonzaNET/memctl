@@ -119,6 +119,9 @@ func TestE2E_SPEC0008_R12_flushOnSIGTERM(t *testing.T) {
 
 func TestE2E_SPEC0008_R13_secondSignalExitsAtOnce(t *testing.T) {
 	root := gitRepo(t)
+	// A full identity, so the only WARN is the second signal's (R17).
+	gitIn(t, root, "config", "user.name", "P")
+	gitIn(t, root, "config", "user.email", "p@example.org")
 	real, _ := exec.LookPath("git")
 	dir := t.TempDir()
 	marker := filepath.Join(dir, "commit-started")

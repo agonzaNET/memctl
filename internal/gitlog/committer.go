@@ -109,7 +109,8 @@ type Committer struct {
 
 // New tests the root with git (SPEC-0008 R1) and returns a committer. When
 // the root is not in a git work tree, or git cannot be run, it logs one WARN
-// line and the committer drops every batch.
+// line and the committer drops every batch. In a repository without
+// user.name or user.email it logs one WARN line naming them (R17).
 func New(ctx context.Context, cfg Config) *Committer {
 	c := &Committer{
 		root:    cfg.Root,
@@ -131,6 +132,7 @@ func New(ctx context.Context, cfg Config) *Committer {
 		c.log.Warn("the notes root is not in a git work tree; tool changes are not committed")
 	default:
 		c.enabled = true
+		c.warnIdentity(ctx)
 	}
 	return c
 }
@@ -284,9 +286,7 @@ func externalMessage(paths []string) string {
 func (c *Committer) commitExternal(paths []string) error {
 	ctx := context.Background()
 	author := c.author
-	name, errN := runGit(ctx, c.root, c.timeout, nil, nil, "config", "--get", "user.name")
-	email, errE := runGit(ctx, c.root, c.timeout, nil, nil, "config", "--get", "user.email")
-	if n, e := strings.TrimSpace(string(name)), strings.TrimSpace(string(email)); errN == nil && errE == nil && n != "" && e != "" {
+	if n, e := c.repoIdentity(ctx); n != "" && e != "" {
 		author = Author{Name: n, Email: e}
 	}
 	return c.commitFiles(ctx, c.keepPaths(ctx, paths), externalMessage(paths), author)

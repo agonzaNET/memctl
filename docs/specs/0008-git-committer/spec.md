@@ -200,7 +200,7 @@ anything a tool did not change, and never push.
 - [x] **R15** — A note edited, one added and one deleted while memctl was not
   running are committed as external changes after start; an untracked
   `x.txt` and a file under an ignored folder are not.
-- [ ] **R17** — A repository with `user.name` only gives one `WARN` with
+- [x] **R17** — A repository with `user.name` only gives one `WARN` with
   `missing` `user.email` and the author; with neither, `user.name, user.email`;
   with both, no line; a root outside git gives only the `WARN` of R1.
 - [x] **R16** — An editor change to a note, then `note_edit` on it within the

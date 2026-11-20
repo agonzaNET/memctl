@@ -75,8 +75,9 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   (spec: SPEC-0008).
 - Notes changed outside memctl, in an editor or while memctl was not
   running, are committed on their own as `memory: external change <path>`,
-  with the repository's git identity when it has one, and never folded into a
-  tool's commit (spec: SPEC-0003, SPEC-0008).
+  with the repository's git identity when it has one (`user.name` and
+  `user.email`; a warning at start names a missing one), and never folded
+  into a tool's commit (spec: SPEC-0003, SPEC-0008).
 - `memctl mcp --git-author "Name <email>"` (or `MEMCTL_GIT_AUTHOR`) sets the
   author of those commits; the default is `memctl <memctl@localhost>`
   (spec: SPEC-0008).

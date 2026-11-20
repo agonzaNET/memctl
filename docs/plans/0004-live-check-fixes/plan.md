@@ -182,7 +182,7 @@ the repeated live check covers the code that is released.
   `[Unreleased]`; tests stop reading the deprecated `Logging` capability
   field and the S1011 loop.
   *No requirement changes.*
-- [ ] **T20 — Missing identity named.** From finding N1 of the repeated live
+- [x] **T20 — Missing identity named.** From finding N1 of the repeated live
   check: at start, one `WARN` `incomplete git identity` names a missing
   `user.name` or `user.email` and the `--git-author` identity used instead
   for external changes; README states the rule. Verified by its test and a

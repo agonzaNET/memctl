@@ -129,10 +129,13 @@ the files a tool changed are committed: your own staged changes to other
 files are left alone. A note you change in an editor, or while `memctl` is
 not running, is committed on its own as `memory: external change <path>`,
 with the repository's git identity when it has one, so your edits and the
-tools' edits stay apart in the history. One exception: an edit you make to a
-note in the few seconds between a tool's write to it and that write's commit
-shares one commit with it. Pending changes are committed before `memctl mcp`
-exits.
+tools' edits stay apart in the history. That identity needs both `user.name`
+and `user.email` (`git config` in the notes folder, or your global git
+config); when one is missing, `memctl mcp` logs a warning at start that names
+it, and your edits are committed with the `--git-author` identity instead.
+One exception: an edit you make to a note in the few seconds between a tool's
+write to it and that write's commit shares one commit with it. Pending
+changes are committed before `memctl mcp` exits.
 `memctl` never pushes, pulls or changes branches. A notes folder outside git
 works too, without commits.
 
