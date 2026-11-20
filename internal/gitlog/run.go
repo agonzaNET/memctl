@@ -40,8 +40,9 @@ func (e *gitError) Error() string {
 }
 
 // runGit runs "git -C <root> -c commit.gpgSign=false <sub> <args...>" with
-// GIT_TERMINAL_PROMPT=0, the C locale, extra environment and an optional
-// stdin, bounded by timeout (SPEC-0008 R2). It returns stdout. A git that
+// GIT_TERMINAL_PROMPT=0, GIT_LITERAL_PATHSPECS=1 except for check-ignore
+// (a note path is never a pattern), the C locale, extra environment and an optional stdin, bounded
+// by timeout (SPEC-0008 R2). It returns stdout. A git that
 // cannot be run gives ErrGitMissing.
 func runGit(ctx context.Context, root string, timeout time.Duration, env []string, stdin io.Reader, sub string, args ...string) ([]byte, error) {
 	if !allowedSubcommands[sub] || (sub == "config" && (len(args) == 0 || args[0] != "--get")) {
@@ -52,6 +53,9 @@ func runGit(ctx context.Context, root string, timeout time.Duration, env []strin
 	argv := append([]string{"-C", root, "-c", "commit.gpgSign=false", sub}, args...)
 	cmd := exec.CommandContext(ctx, "git", argv...)
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0", "LC_ALL=C", "LANGUAGE=C")
+	if sub != "check-ignore" { // it reads paths literally and refuses the setting
+		cmd.Env = append(cmd.Env, "GIT_LITERAL_PATHSPECS=1")
+	}
 	cmd.Env = append(cmd.Env, env...)
 	cmd.Stdin = stdin
 	var out, errb bytes.Buffer

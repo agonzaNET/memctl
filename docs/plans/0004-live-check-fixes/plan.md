@@ -164,8 +164,9 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 Added on 2026-11-20 from the release audit of commit `2ce451e`, before T16, so
 the repeated live check covers the code that is released.
 
-- [ ] **T17 — Literal paths.** `GIT_LITERAL_PATHSPECS=1` in the environment of
-  every git call, so `git add -A` and `git commit --only` never read a note
+- [x] **T17 — Literal paths.** `GIT_LITERAL_PATHSPECS=1` in the environment of
+  every git call but `check-ignore` (which refuses it and reads paths
+  literally anyway), so `git add -A` and `git commit --only` never read a note
   path such as `[draft] x.md` or `*.md` as a pattern and never stage a
   person's change to another file.
   *SPEC-0008 R2.*

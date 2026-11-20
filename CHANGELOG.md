@@ -68,7 +68,8 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   that link to the moved note in the same way (spec: SPEC-0007).
 - Every tool write is committed to git in the notes root, in the background:
   one commit per burst of writes (after 2 s of quiet, or 30 s at most), only
-  the files the tools changed, never pushed, with messages that name the
+  the files the tools changed (a file name such as `[draft] x.md` is never
+  read as a pattern), never pushed, with messages that name the
   paths (`memory: note_edit runbooks/x.md`). Pending writes are committed
   before `memctl mcp` exits. A root outside git works without commits
   (spec: SPEC-0008).

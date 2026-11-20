@@ -73,9 +73,10 @@ anything a tool did not change, and never push.
 - **R2** — The committer MUST only run `git` with these subcommands:
   `rev-parse`, `check-ignore`, `add`, `commit`, and for external changes
   `status` and `config --get`. Every call MUST use `-C <root>`,
-  a 30 s timeout, `GIT_TERMINAL_PROMPT=0`, `GIT_LITERAL_PATHSPECS=1` (a path
-  is never read as a pattern, so `[draft] x.md` or `*.md` names only that
-  file), and `-c commit.gpgSign=false`.
+  a 30 s timeout, `GIT_TERMINAL_PROMPT=0`, and `-c commit.gpgSign=false`.
+  Every call but `check-ignore` MUST use `GIT_LITERAL_PATHSPECS=1`, so a path
+  is never read as a pattern and `[draft] x.md` or `*.md` names only that
+  file; `check-ignore` reads its paths literally and refuses that setting.
 
 ### Queue and timing
 
@@ -160,7 +161,7 @@ anything a tool did not change, and never push.
   without `git`.
 - [x] **R2** — A fake `git` on `PATH` records only the allowed subcommands and
   options, `status` and `config --get` included.
-- [ ] **R2 (literal paths)** — Tool writes to `[draft] x.md` and `*.md` commit
+- [x] **R2 (literal paths)** — Tool writes to `[draft] x.md` and `*.md` commit
   only those files, and a person's unstaged change to `d x.md` stays unstaged.
 - [x] **R3, R4** — With a fake clock: one write commits after 2 s; writes every
   second commit at 30 s; tool calls return before the commit.
