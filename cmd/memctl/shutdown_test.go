@@ -178,3 +178,72 @@ func TestE2E_SPEC0008_R4_burstIsOneCommit(t *testing.T) {
 		t.Fatalf("shutdown added a commit: %q", got)
 	}
 }
+
+func (s *session) call(t *testing.T, tool string, args map[string]any) string {
+	t.Helper()
+	res, err := s.cs.CallTool(context.Background(), &mcp.CallToolParams{Name: tool, Arguments: args})
+	if err != nil || res.IsError {
+		t.Fatalf("%s: %v %+v", tool, err, res)
+	}
+	return res.Content[0].(*mcp.TextContent).Text
+}
+
+func gitIn(t *testing.T, root string, args ...string) string {
+	t.Helper()
+	cmd := exec.Command("git", append([]string{"-C", root}, args...)...)
+	cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=P", "GIT_AUTHOR_EMAIL=p@example.org", "GIT_COMMITTER_NAME=P", "GIT_COMMITTER_EMAIL=p@example.org")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %v: %v %s", args, err, out)
+	}
+	return string(out)
+}
+
+func TestE2E_SPEC0008_R12_R16_externalChange(t *testing.T) {
+	root := gitRepo(t)
+	if err := os.WriteFile(filepath.Join(root, "a.md"), []byte("---\ntitle: A\n---\nfirst\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gitIn(t, root, "add", "a.md")
+	gitIn(t, root, "commit", "-q", "-m", "baseline")
+	s := connect(t, root)
+	got := s.call(t, "note_read", map[string]any{"ref": "a.md"})
+	_ = got
+	// A person edits the note; the next call finds it, and an edit by the
+	// tool on the same note waits for the external commit.
+	if err := os.WriteFile(filepath.Join(root, "a.md"), []byte("---\ntitle: A\n---\nfirst\nperson line\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got = s.call(t, "note_read", map[string]any{"ref": "a.md"})
+	sha := got[strings.Index(got, "- sha256: ")+10:][:64]
+	s.call(t, "note_edit", map[string]any{"ref": "a.md", "expected_sha": sha, "op": "append", "text": "tool line"})
+	s.cs.Close()
+	if code := s.exit(t, 20*time.Second); code != 0 {
+		t.Fatalf("status %d; stderr %s", code, s.stderr.String())
+	}
+	if got := gitLog(t, root); got != "memory: note_edit a.md\nmemory: external change a.md\nbaseline\n" {
+		t.Fatalf("git log %q; stderr %s", got, s.stderr.String())
+	}
+	ext := gitIn(t, root, "show", "--format=", "HEAD~1")
+	tool := gitIn(t, root, "show", "--format=", "HEAD")
+	if !strings.Contains(ext, "+person line") || strings.Contains(ext, "tool line") {
+		t.Fatalf("external commit:\n%s", ext)
+	}
+	if !strings.Contains(tool, "+tool line") || strings.Contains(tool, "+person line") {
+		t.Fatalf("tool commit:\n%s", tool)
+	}
+
+	// An editor change found by a check, then stdin closed at once.
+	s = connect(t, root)
+	if err := os.WriteFile(filepath.Join(root, "a.md"), []byte("---\ntitle: A\n---\nlast edit\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	s.call(t, "list", map[string]any{})
+	s.cs.Close()
+	if code := s.exit(t, 20*time.Second); code != 0 {
+		t.Fatalf("status %d; stderr %s", code, s.stderr.String())
+	}
+	if got := gitLog(t, root); !strings.HasPrefix(got, "memory: external change a.md\nmemory: note_edit a.md\n") {
+		t.Fatalf("git log %q", got)
+	}
+}

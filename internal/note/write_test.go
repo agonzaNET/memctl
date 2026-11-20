@@ -19,8 +19,29 @@ import (
 
 // recCommitter records every change handed to it.
 type recCommitter struct {
-	mu  sync.Mutex
-	got []note.Change
+	mu       sync.Mutex
+	got      []note.Change
+	external [][]string
+	waited   []string
+}
+
+func (r *recCommitter) External(paths []string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.external = append(r.external, append([]string(nil), paths...))
+}
+
+func (r *recCommitter) WaitExternal(path string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.waited = append(r.waited, path)
+	return nil
+}
+
+func (r *recCommitter) externals() ([][]string, []string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return append([][]string(nil), r.external...), append([]string(nil), r.waited...)
 }
 
 func (r *recCommitter) Enqueue(c note.Change) {
