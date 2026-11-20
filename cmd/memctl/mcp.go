@@ -108,3 +108,6 @@ type gitCommitter struct{ c *gitlog.Committer }
 func (g gitCommitter) Enqueue(ch note.Change) {
 	g.c.Add(gitlog.Entry{Tool: ch.Tool, Title: ch.Title, Paths: ch.Paths})
 }
+
+func (g gitCommitter) External(paths []string)        { g.c.External(paths) }
+func (g gitCommitter) WaitExternal(path string) error { return g.c.WaitExternal(path) }

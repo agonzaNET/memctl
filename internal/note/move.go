@@ -165,6 +165,7 @@ func stem(rel string) string { return strings.TrimSuffix(path.Base(rel), ".md") 
 // unchanged since the freshness check (SPEC-0007 R3, R22). Missing folders
 // of the target are created (R6).
 func (s *Service) renameNote(rel, oldAbs, newAbs, prevSHA string) error {
+	s.waitExternal(rel)
 	if err := s.mkdirs(filepath.Dir(newAbs)); err != nil {
 		return err
 	}

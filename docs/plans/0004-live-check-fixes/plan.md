@@ -135,7 +135,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 - [x] **T11 — Path messages.** Queue entries carry paths and the old path of a
   move; one-entry, move and batch messages of R5.
   *SPEC-0008 R5.*
-- [ ] **T12 — External changes.** `status` and `config --get` in the runner;
+- [x] **T12 — External changes.** `status` and `config --get` in the runner;
   external queue apart from tool entries; message forms; repository identity
   or `--git-author`; committed before a tool batch due at the same moment;
   freshness check hands `Added`, `Changed`, `Removed` paths; a tool write to a

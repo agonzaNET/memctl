@@ -170,7 +170,7 @@ Also turn a note path given by a tool into a safe file path inside the root.
   modification time (set with `os.Chtimes`) right after a check is reread at
   the next check; a note whose modification time is well before its last read
   is not read again (an unreadable such note stays in the index).
-- [ ] **R18** — Between two checks, an edit, an added note and a deleted note
+- [x] **R18** — Between two checks, an edit, an added note and a deleted note
   reach a committer stub as three external paths; a touch without change and a
   tool write reach it as none.
 - [x] **R11** — Adding `drafts/` to `.gitignore` removes `drafts/*.md` on the

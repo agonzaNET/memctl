@@ -190,6 +190,13 @@ func (b both) Enqueue(c note.Change) {
 	b.git.Add(gitlog.Entry{Tool: c.Tool, Title: c.Title, Paths: c.Paths})
 }
 
+func (b both) External(paths []string) {
+	b.rec.External(paths)
+	b.git.External(paths)
+}
+
+func (b both) WaitExternal(path string) error { return b.git.WaitExternal(path) }
+
 // TestRobust_SPEC0007_R1_concurrentCalls runs tool writes and reads from
 // several goroutines while the git committer runs (run with -race). Every
 // change reaches git once the committer stops.

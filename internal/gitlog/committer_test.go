@@ -68,16 +68,20 @@ func TestCommitter_SPEC0008_R2_onlyAllowedCalls(t *testing.T) {
 	calls := fakeGit(t, "")
 	write(t, root, "a.md", "a\n")
 	write(t, root, "b.md", "b\n")
+	write(t, root, "c.md", "c\n")
 	h := startCommitter(t, root, defaultAuthor)
 	h.add(t, gitlog.Entry{Tool: "note_write", Title: "A", Paths: []string{"a.md"}})
 	h.add(t, gitlog.Entry{Tool: "note_write", Title: "B", Paths: []string{"b.md"}})
+	h.c.External([]string{"c.md"})
+	h.idle(t)
 	h.clock.Advance(2 * time.Second)
 	h.idle(t)
 	got := readCalls(t, calls)
 	if len(got) < 4 {
 		t.Fatalf("calls %v", got)
 	}
-	allowed := map[string]bool{"rev-parse": true, "check-ignore": true, "add": true, "commit": true}
+	allowed := map[string]bool{"rev-parse": true, "check-ignore": true, "add": true, "commit": true, "status": true, "config": true}
+	sawConfig := false
 	prefix := "prompt=0|-C " + root + " -c commit.gpgSign=false "
 	for _, c := range got {
 		if !strings.HasPrefix(c, prefix) {
@@ -87,9 +91,21 @@ func TestCommitter_SPEC0008_R2_onlyAllowedCalls(t *testing.T) {
 		if !allowed[sub] {
 			t.Fatalf("call %q uses %s", c, sub)
 		}
+		if sub == "config" {
+			sawConfig = true
+			if !strings.HasPrefix(strings.TrimPrefix(c, prefix), "config --get user.") {
+				t.Fatalf("config call %q", c)
+			}
+		}
 	}
-	if commits(t, root) != 2 {
-		t.Fatalf("want one tool commit, got %d commits", commits(t, root))
+	if !sawConfig {
+		t.Fatalf("no config --get call: %v", got)
+	}
+	if commits(t, root) != 3 {
+		t.Fatalf("want one external and one tool commit, got %d commits", commits(t, root))
+	}
+	if _, err := gitlog.RunGit(root, "config", "user.name", "x"); err == nil {
+		t.Fatal("git config without --get was allowed")
 	}
 }
 

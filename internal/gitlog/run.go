@@ -16,7 +16,7 @@ import (
 const GitTimeout = 30 * time.Second
 
 // allowedSubcommands are the only git subcommands memctl runs (SPEC-0008 R2).
-var allowedSubcommands = map[string]bool{"rev-parse": true, "check-ignore": true, "add": true, "commit": true}
+var allowedSubcommands = map[string]bool{"rev-parse": true, "check-ignore": true, "add": true, "commit": true, "status": true, "config": true}
 
 // Failure classes of a git call (SPEC-0008 R11).
 const (
@@ -44,7 +44,7 @@ func (e *gitError) Error() string {
 // stdin, bounded by timeout (SPEC-0008 R2). It returns stdout. A git that
 // cannot be run gives ErrGitMissing.
 func runGit(ctx context.Context, root string, timeout time.Duration, env []string, stdin io.Reader, sub string, args ...string) ([]byte, error) {
-	if !allowedSubcommands[sub] {
+	if !allowedSubcommands[sub] || (sub == "config" && (len(args) == 0 || args[0] != "--get")) {
 		return nil, fmt.Errorf("gitlog: git %s is not allowed", sub)
 	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)

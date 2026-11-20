@@ -95,6 +95,7 @@ func (s *Service) putFile(rel string, data []byte, prevSHA string) (index.Meta, 
 	if err != nil {
 		return index.Meta{}, err
 	}
+	s.waitExternal(rel)
 	dir := filepath.Dir(abs)
 	if err := s.mkdirs(dir); err != nil {
 		return index.Meta{}, err
@@ -159,6 +160,11 @@ func (s *Service) putFile(rel string, data []byte, prevSHA string) (index.Meta, 
 	return m, nil
 }
 
+// waitExternal lets a pending external change of rel be committed before a
+// tool writes rel; a failed commit is logged by the committer and the write
+// goes on (SPEC-0008 R16).
+func (s *Service) waitExternal(rel string) { _ = s.committer.WaitExternal(rel) }
+
 // removeFile deletes the note rel and its index entry (SPEC-0007 R4, R24),
 // after checking that the file still has hash prevSHA (R3). Empty folders
 // stay (R6). It must run inside mutate.
@@ -167,6 +173,7 @@ func (s *Service) removeFile(rel, prevSHA string) error {
 	if err != nil {
 		return &PathError{rel, "not a note path inside the notes root"}
 	}
+	s.waitExternal(rel)
 	if s.hooks.beforeRehash != nil {
 		s.hooks.beforeRehash(abs)
 	}

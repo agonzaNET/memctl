@@ -41,6 +41,7 @@ func TestCommitter_SPEC0008_R14_externalCommits(t *testing.T) {
 	}
 	h := startCommitter(t, root, defaultAuthor)
 	h.c.External([]string{"c.md", "a.md"})
+	h.idle(t)
 	h.c.External([]string{"b.md", "a.md"})
 	h.idle(t)
 	h.clock.Advance(2 * time.Second)

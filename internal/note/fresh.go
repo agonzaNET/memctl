@@ -3,6 +3,7 @@ package note
 import (
 	"errors"
 	"log/slog"
+	"sort"
 	"time"
 
 	"github.com/agonzaNET/memctl/internal/index"
@@ -15,7 +16,10 @@ func (s *Service) Call(fn func(idx *index.Index, st Stats) error) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	start := time.Now()
-	st := s.refresh(false)
+	st, external := s.refresh(false)
+	if len(external) > 0 {
+		s.committer.External(external) // SPEC-0003 R18
+	}
 	s.log.Debug("freshness check",
 		slog.Int("added", st.Added),
 		slog.Int("changed", st.Changed),
@@ -29,9 +33,11 @@ func (s *Service) Call(fn func(idx *index.Index, st Stats) error) error {
 // refresh makes the index equal to the notes on disk (SPEC-0003 R8, R10,
 // R13). A note whose size and modification time match its entry is not read;
 // one whose hash did not change only gets new meta. initial is true for the
-// startup load, which reports every skipped note.
-func (s *Service) refresh(initial bool) Stats {
+// startup load, which reports every skipped note. It returns, sorted, the
+// paths it found added, changed or removed (R18).
+func (s *Service) refresh(initial bool) (Stats, []string) {
 	var st Stats
+	var external []string
 	w := walk(s.root)
 	skipped := map[string]string{} // rel → reason
 	for _, rel := range w.unreadable {
@@ -66,18 +72,21 @@ func (s *Service) refresh(initial bool) Stats {
 		case !ok:
 			s.idx.Put(l.rel, l.note, l.meta)
 			st.Added++
+			external = append(external, l.rel)
 		case m.SHA256 == l.meta.SHA256:
 			s.idx.Put(l.rel, old, l.meta)
 			st.Unchanged++
 		default:
 			s.idx.Put(l.rel, l.note, l.meta)
 			st.Changed++
+			external = append(external, l.rel)
 		}
 	}
 	for _, p := range s.idx.Paths() {
 		if !keep[p] {
 			s.idx.Remove(p)
 			st.Removed++
+			external = append(external, p)
 		}
 	}
 
@@ -91,7 +100,8 @@ func (s *Service) refresh(initial bool) Stats {
 	s.reportSkipped(newly)
 	s.skipped = skipped
 	st.Skipped = len(skipped)
-	return st
+	sort.Strings(external)
+	return st, external
 }
 
 // reportSkipped logs one WARN line per reason with its count (SPEC-0003 R7).

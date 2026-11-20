@@ -42,14 +42,21 @@ type Change struct {
 	Paths       []string
 }
 
-// Committer receives every successful tool write. Enqueue must not block.
+// Committer receives every successful tool write, and the changes made
+// outside memctl. Enqueue and External must not block. WaitExternal returns
+// once a pending external change of path is committed, or at once when
+// there is none (SPEC-0008 R14, R16).
 type Committer interface {
 	Enqueue(Change)
+	External(paths []string)
+	WaitExternal(path string) error
 }
 
 type nopCommitter struct{}
 
-func (nopCommitter) Enqueue(Change) {}
+func (nopCommitter) Enqueue(Change)            {}
+func (nopCommitter) External([]string)         {}
+func (nopCommitter) WaitExternal(string) error { return nil }
 
 // Option configures a Service.
 type Option func(*Service)
@@ -78,7 +85,7 @@ func Open(root string, log *slog.Logger, opts ...Option) (*Service, Stats, error
 		o(s)
 	}
 	start := time.Now()
-	st := s.refresh(true)
+	st, _ := s.refresh(true)
 	log.Info("notes loaded",
 		slog.Int("notes", s.idx.Len()),
 		slog.Int("skipped", st.Skipped),

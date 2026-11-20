@@ -155,7 +155,7 @@ anything a tool did not change, and never push.
 
 - [x] **R1** — A root outside git, a subfolder of a repository, and a `PATH`
   without `git`.
-- [ ] **R2** — A fake `git` on `PATH` records only the allowed subcommands and
+- [x] **R2** — A fake `git` on `PATH` records only the allowed subcommands and
   options, `status` and `config --get` included.
 - [x] **R3, R4** — With a fake clock: one write commits after 2 s; writes every
   second commit at 30 s; tool calls return before the commit.
@@ -173,16 +173,16 @@ anything a tool did not change, and never push.
   held for 10 s: `ERROR` `index_locked`; log lines hold no title or path.
 - [x] **R12** — An end-to-end test writes a note and closes stdin at once; the
   commit exists when the process has exited.
-- [ ] **R12 (again)** — An editor change found by a check, then stdin closed at
+- [x] **R12 (again)** — An editor change found by a check, then stdin closed at
   once: the external commit exists when the process has exited.
-- [ ] **R14** — An editor change to a note, then a tool write to another note:
+- [x] **R14** — An editor change to a note, then a tool write to another note:
   two commits, the external one first, with the repository identity when
   `user.name` and `user.email` are set and `--git-author` when not; three
   external paths give one commit with the sorted body.
 - [ ] **R15** — A note edited, one added and one deleted while memctl was not
   running are committed as external changes after start; an untracked
   `x.txt` and a file under an ignored folder are not.
-- [ ] **R16** — An editor change to a note, then `note_edit` on it within the
+- [x] **R16** — An editor change to a note, then `note_edit` on it within the
   quiet window: the external commit holds the editor change only, the tool
   commit holds the edit only; with the external commit failing, the edit is
   written and committed after the `ERROR` line.

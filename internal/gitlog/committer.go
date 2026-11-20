@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -95,8 +96,11 @@ type Committer struct {
 
 	mu          sync.Mutex
 	batch       []Entry
+	external    map[string]struct{} // paths changed outside memctl (SPEC-0008 R14)
 	first, last time.Time
 	notify      chan struct{}
+
+	commitMu sync.Mutex // one commit at a time: the loop's and WaitExternal's
 
 	onIdle  func()              // test hook: the loop is about to wait
 	sleep   func(time.Duration) // between index.lock retries
@@ -134,18 +138,75 @@ func New(ctx context.Context, cfg Config) *Committer {
 // Add queues one tool write without blocking (SPEC-0008 R3).
 func (c *Committer) Add(e Entry) {
 	e.Paths = append([]string(nil), e.Paths...)
-	now := c.clock.Now()
 	c.mu.Lock()
-	if len(c.batch) == 0 {
+	c.touch()
+	c.batch = append(c.batch, e)
+	c.mu.Unlock()
+	c.wake()
+}
+
+// External queues paths changed outside memctl without blocking; they are
+// committed on their own, before the tool batch due at the same moment
+// (SPEC-0008 R14).
+func (c *Committer) External(paths []string) {
+	if len(paths) == 0 {
+		return
+	}
+	c.mu.Lock()
+	c.touch()
+	if c.external == nil {
+		c.external = map[string]struct{}{}
+	}
+	for _, p := range paths {
+		c.external[p] = struct{}{}
+	}
+	c.mu.Unlock()
+	c.wake()
+}
+
+// WaitExternal commits the pending external changes at once when path is
+// one of them, and returns when that commit returns; otherwise it returns
+// at once. A failed commit is logged and returned (SPEC-0008 R16).
+func (c *Committer) WaitExternal(path string) error {
+	c.mu.Lock()
+	_, pending := c.external[path]
+	var paths []string
+	if pending {
+		paths = takeSorted(c.external)
+		c.external = nil
+	}
+	c.mu.Unlock()
+	if !pending || !c.enabled {
+		return nil
+	}
+	c.commitMu.Lock()
+	defer c.commitMu.Unlock()
+	return c.commitExternal(paths)
+}
+
+// touch records the time of a new entry; c.mu must be held.
+func (c *Committer) touch() {
+	now := c.clock.Now()
+	if len(c.batch) == 0 && len(c.external) == 0 {
 		c.first = now
 	}
 	c.last = now
-	c.batch = append(c.batch, e)
-	c.mu.Unlock()
+}
+
+func (c *Committer) wake() {
 	select {
 	case c.notify <- struct{}{}:
 	default:
 	}
+}
+
+func takeSorted(set map[string]struct{}) []string {
+	out := make([]string, 0, len(set))
+	for p := range set {
+		out = append(out, p)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // Run commits batches until ctx is cancelled; then it commits the pending
@@ -154,7 +215,7 @@ func (c *Committer) Add(e Entry) {
 func (c *Committer) Run(ctx context.Context) {
 	for {
 		c.mu.Lock()
-		pending := len(c.batch) > 0
+		pending := len(c.batch) > 0 || len(c.external) > 0
 		deadline := c.last.Add(QuietWindow)
 		if max := c.first.Add(MaxDelay); max.Before(deadline) {
 			deadline = max
@@ -183,16 +244,52 @@ func (c *Committer) Run(ctx context.Context) {
 	}
 }
 
-// commitPending takes the queued batch and commits it.
+// commitPending takes the queued external changes and the queued batch and
+// commits them, the external changes first (SPEC-0008 R14).
 func (c *Committer) commitPending() {
 	c.mu.Lock()
 	batch := c.batch
-	c.batch = nil
+	external := takeSorted(c.external)
+	c.batch, c.external = nil, nil
 	c.mu.Unlock()
-	if len(batch) == 0 || !c.enabled {
+	if !c.enabled {
 		return
 	}
-	c.commit(batch)
+	c.commitMu.Lock()
+	defer c.commitMu.Unlock()
+	if len(external) > 0 {
+		_ = c.commitExternal(external)
+	}
+	if len(batch) > 0 {
+		c.commit(batch)
+	}
+}
+
+// externalMessage is the commit message of external changes (SPEC-0008
+// R14); paths are sorted.
+func externalMessage(paths []string) string {
+	if len(paths) == 1 {
+		return "memory: external change " + paths[0] + "\n"
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "memory: %d external changes\n\n", len(paths))
+	for _, p := range paths {
+		fmt.Fprintf(&b, "- %s\n", p)
+	}
+	return b.String()
+}
+
+// commitExternal commits external changes with the repository's identity,
+// or the configured author when the repository has none (SPEC-0008 R14).
+func (c *Committer) commitExternal(paths []string) error {
+	ctx := context.Background()
+	author := c.author
+	name, errN := runGit(ctx, c.root, c.timeout, nil, nil, "config", "--get", "user.name")
+	email, errE := runGit(ctx, c.root, c.timeout, nil, nil, "config", "--get", "user.email")
+	if n, e := strings.TrimSpace(string(name)), strings.TrimSpace(string(email)); errN == nil && errE == nil && n != "" && e != "" {
+		author = Author{Name: n, Email: e}
+	}
+	return c.commitFiles(ctx, c.keepPaths(ctx, paths), externalMessage(paths), author)
 }
 
 // message is the commit message of a batch: paths, not titles, and the old
@@ -225,9 +322,14 @@ func describeEntry(e Entry) string {
 // commit commits the paths of one batch, and only those (SPEC-0008 R6–R11).
 func (c *Committer) commit(batch []Entry) {
 	ctx := context.Background()
-	paths := c.commitPaths(ctx, batch)
+	_ = c.commitFiles(ctx, c.commitPaths(ctx, batch), message(batch), c.author)
+}
+
+// commitFiles stages and commits paths, and only those, as author, with
+// msg; a failure is logged and returned (SPEC-0008 R6–R11).
+func (c *Committer) commitFiles(ctx context.Context, paths []string, msg string, author Author) error {
 	if len(paths) == 0 {
-		return
+		return nil
 	}
 	fail := func(err error) {
 		var ge *gitError
@@ -241,13 +343,12 @@ func (c *Committer) commit(batch []Entry) {
 	add := append([]string{"-A", "--"}, paths...)
 	if _, err := c.retry(func() ([]byte, error) { return runGit(ctx, c.root, c.timeout, nil, nil, "add", add...) }); err != nil {
 		fail(err)
-		return
+		return err
 	}
 	env := []string{
-		"GIT_AUTHOR_NAME=" + c.author.Name, "GIT_AUTHOR_EMAIL=" + c.author.Email,
-		"GIT_COMMITTER_NAME=" + c.author.Name, "GIT_COMMITTER_EMAIL=" + c.author.Email,
+		"GIT_AUTHOR_NAME=" + author.Name, "GIT_AUTHOR_EMAIL=" + author.Email,
+		"GIT_COMMITTER_NAME=" + author.Name, "GIT_COMMITTER_EMAIL=" + author.Email,
 	}
-	msg := message(batch)
 	commit := append([]string{"--only", "--cleanup=whitespace", "-F", "-", "--"}, paths...)
 	_, err := c.retry(func() ([]byte, error) {
 		return runGit(ctx, c.root, c.timeout, env, strings.NewReader(msg), "commit", commit...)
@@ -255,13 +356,14 @@ func (c *Committer) commit(batch []Entry) {
 	if err != nil {
 		var ge *gitError
 		if errors.As(err, &ge) && nothingToCommit(ge.out) {
-			return // the files equal HEAD (SPEC-0008 R9)
+			return nil // the files equal HEAD (SPEC-0008 R9)
 		}
 		fail(err)
-		return
+		return err
 	}
 	short, _ := runGit(ctx, c.root, c.timeout, nil, nil, "rev-parse", "--short", "HEAD")
 	c.log.Info("committed", slog.Int("paths", len(paths)), slog.String("commit", strings.TrimSpace(string(short))))
+	return nil
 }
 
 // commitPaths returns the batch's paths in queue order without duplicates,
@@ -278,6 +380,12 @@ func (c *Committer) commitPaths(ctx context.Context, batch []Entry) []string {
 			}
 		}
 	}
+	return c.keepPaths(ctx, paths)
+}
+
+// keepPaths drops the paths git ignores, and the paths that exist neither
+// on disk nor in the index.
+func (c *Committer) keepPaths(ctx context.Context, paths []string) []string {
 	stdin := strings.NewReader(strings.Join(paths, "\x00") + "\x00")
 	out, err := runGit(ctx, c.root, c.timeout, nil, stdin, "check-ignore", "-z", "--stdin")
 	ignored := map[string]bool{}
