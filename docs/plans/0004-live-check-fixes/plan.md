@@ -85,7 +85,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
   parts outside compounds; `Result{Hits, Total}`; tags in hits. Update the
   hand-computed BM25F fixture values.
   *SPEC-0002 R7, R24, R25.*
-- [ ] **T2 — `search` output.** Hit line with tags; `showing the first <n>`
+- [x] **T2 — `search` output.** Hit line with tags; `showing the first <n>`
   first line and the closing hint when `Total` exceeds the hits; description
   says that an identifier matches whole. Golden files.
   *SPEC-0004 R19, R29.*

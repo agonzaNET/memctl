@@ -81,12 +81,21 @@ func (s *Server) search(in searchIn, log *callLog) (*mcp.CallToolResult, error) 
 			if h.Type != "" {
 				typ = " (" + h.Type + ")"
 			}
-			fmt.Fprintf(&b, "%d. **%s** — %s%s · score %.2f\n", i+1, h.Title, h.Path, typ, h.Score)
+			tags := ""
+			if len(h.Tags) > 0 {
+				tags = " · tags " + strings.Join(h.Tags, ", ")
+			}
+			fmt.Fprintf(&b, "%d. **%s** — %s%s%s · score %.2f\n", i+1, h.Title, h.Path, typ, tags, h.Score)
 			if h.Snippet != "" {
 				fmt.Fprintf(&b, "   > L%d: %s\n", h.SnippetLine, h.Snippet)
 			}
 		}
-		res = success(fmt.Sprintf("Found %d %s for %q.", len(hits), plural(len(hits), "note", "notes"), in.Query), b.String())
+		first := fmt.Sprintf("Found %d %s for %q.", len(hits), plural(len(hits), "note", "notes"), in.Query)
+		if found.Total > len(hits) {
+			first = fmt.Sprintf("Found %d notes for %q; showing the first %d.", found.Total, in.Query, len(hits))
+			fmt.Fprintf(&b, "\nMore notes match than are shown; pass a higher limit (up to 50) to see more, or narrow the search with type, tags or folder.")
+		}
+		res = success(first, b.String())
 		return nil
 	})
 	return res, err

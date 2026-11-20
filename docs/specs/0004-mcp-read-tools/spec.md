@@ -314,7 +314,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   (only the inside one listed), a section without links, nested heading, miss
   (`section_not_found` with the headings).
 - [x] **R20, R21** — Folder normalisation and rejection; log counts.
-- [ ] **R19, R29** — `search` golden output with tags, no hits, empty query; 25
+- [x] **R19, R29** — `search` golden output with tags, no hits, empty query; 25
   hits with the default limit give the `showing the first 10` line and the
   last line; 3 hits give the plain first line.
 - [ ] **R22, R23** — `context` golden output at depth 1 and 2 with the new first
