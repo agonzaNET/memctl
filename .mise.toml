@@ -9,4 +9,4 @@
 # from the system package manager — see docs/agents/environment.md.
 
 [tools]
-go = "1.26.8"
+go = "1.26.11"
