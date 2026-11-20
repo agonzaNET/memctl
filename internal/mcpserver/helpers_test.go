@@ -126,3 +126,20 @@ func (e *env) logLines(t *testing.T, msg string) []map[string]any {
 	}
 	return out
 }
+
+// toolDescription returns the description of a tool as a client lists it.
+func toolDescription(t *testing.T, name string) string {
+	t.Helper()
+	e := start(t, nil)
+	res, err := e.cs.ListTools(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tool := range res.Tools {
+		if tool.Name == name {
+			return tool.Description
+		}
+	}
+	t.Fatalf("no tool %s", name)
+	return ""
+}

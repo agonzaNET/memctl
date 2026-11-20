@@ -1,6 +1,7 @@
 package mcpserver_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -19,13 +20,13 @@ func TestSearch_SPEC0004_R19_render(t *testing.T) {
 	got := text(t, r)
 	want := `Found 2 notes for "firewall upgrade".
 
-1. **Upgrade PAN-OS** — runbooks/Upgrade PAN-OS.md (runbook) · score `
+1. **Upgrade PAN-OS** — runbooks/Upgrade PAN-OS.md (runbook) · tags firewall · score `
 	if r.IsError || !strings.HasPrefix(got, want) {
 		t.Fatalf("got:\n%s", got)
 	}
 	for _, s := range []string{
 		"   > L9: - [risk] Upgrade the passive firewall first\n",
-		"2. **PA-850** — hosts/PA-850.md (host) · score ",
+		"2. **PA-850** — hosts/PA-850.md (host) · tags firewall · score ",
 		"   > L6: The main firewall.",
 	} {
 		if !strings.Contains(got, s) {
@@ -44,6 +45,10 @@ func TestSearch_SPEC0004_R19_render(t *testing.T) {
 	r = e.call(t, "search", map[string]any{"query": "nothing"})
 	if !strings.Contains(text(t, r), "**Misc** — notes/misc.md · score") {
 		t.Fatalf("no type: %s", text(t, r))
+	}
+
+	if strings.Contains(got, "showing the first") || strings.Contains(got, "up to 50") {
+		t.Fatalf("all hits shown, yet the more line appears:\n%s", got)
 	}
 
 	r = e.call(t, "search", map[string]any{"query": "!!! ---"})
@@ -84,6 +89,38 @@ func TestSearch_SPEC0004_R9_schemaLimits(t *testing.T) {
 	} {
 		if r := e.call(t, "search", args); !r.IsError || strings.HasPrefix(text(t, r), "invalid_argument") {
 			t.Fatalf("args %v should be refused by the schema: %s", args, text(t, r))
+		}
+	}
+}
+
+func TestSearch_SPEC0004_R29_more(t *testing.T) {
+	files := map[string]string{}
+	for i := 0; i < 25; i++ {
+		files[fmt.Sprintf("n/n%02d.md", i)] = "---\ntitle: n\n---\nword\n"
+	}
+	e := start(t, files)
+	r := e.call(t, "search", map[string]any{"query": "word"})
+	got := text(t, r)
+	if !strings.HasPrefix(got, `Found 25 notes for "word"; showing the first 10.`) {
+		t.Fatalf("first line:\n%s", got)
+	}
+	lines := strings.Split(strings.TrimRight(got, "\n"), "\n")
+	last := lines[len(lines)-1]
+	for _, w := range []string{"limit", "50", "type", "tags", "folder"} {
+		if !strings.Contains(last, w) {
+			t.Fatalf("last line %q lacks %q", last, w)
+		}
+	}
+	if strings.Count(got, "**n**") != 10 {
+		t.Fatalf("want 10 hits:\n%s", got)
+	}
+}
+
+func TestSearch_SPEC0004_R19_descriptionNamesIdentifiers(t *testing.T) {
+	d := toolDescription(t, "search")
+	for _, w := range []string{"IT-104", "tags", "how many"} {
+		if !strings.Contains(d, w) {
+			t.Fatalf("description lacks %q:\n%s", w, d)
 		}
 	}
 }
