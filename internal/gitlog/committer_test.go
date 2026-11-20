@@ -58,7 +58,7 @@ func TestCommitter_SPEC0008_R1_subfolderOfRepository(t *testing.T) {
 	h.add(t, gitlog.Entry{Tool: "note_write", Title: "A", Paths: []string{"a.md"}})
 	h.clock.Advance(2 * time.Second)
 	h.idle(t)
-	if got := git(t, repo, "show", "--name-only", "--format=%s", "HEAD"); got != "memory: note_write notes/deep/a.md\n\nnotes/deep/a.md\n" {
+	if got := git(t, repo, "show", "--name-only", "--format=%s", "HEAD"); got != "memory: note_write a.md\n\nnotes/deep/a.md\n" { // the message path is relative to the notes root
 		t.Fatalf("commit %q", got)
 	}
 }

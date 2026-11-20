@@ -159,7 +159,7 @@ anything a tool did not change, and never push.
   options, `status` and `config --get` included.
 - [x] **R3, R4** — With a fake clock: one write commits after 2 s; writes every
   second commit at 30 s; tool calls return before the commit.
-- [ ] **R5** — Messages for one entry, a move, and three entries with a move
+- [x] **R5** — Messages for one entry, a move, and three entries with a move
   among them; paths, not titles.
 - [x] **R6** — With a person's staged change in another file, a tool commit
   contains only the tool's paths, and the person's change stays staged; a move

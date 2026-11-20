@@ -58,7 +58,8 @@ func ParseAuthor(s string) (Author, error) {
 }
 
 // Entry is one successful tool write: the tool, the note title and the
-// changed paths relative to the notes root (SPEC-0008 R3).
+// changed paths relative to the notes root, the old path first for a move
+// (SPEC-0008 R3).
 type Entry struct {
 	Tool, Title string
 	Paths       []string
@@ -194,24 +195,31 @@ func (c *Committer) commitPending() {
 	c.commit(batch)
 }
 
-// message is the commit message of a batch (SPEC-0008 R5).
+// message is the commit message of a batch: paths, not titles, and the old
+// and the new path of a move (SPEC-0008 R5).
 func message(entries []Entry) string {
-	oneLine := func(s string) string {
-		return strings.Join(strings.Fields(strings.NewReplacer("\r\n", " ", "\r", " ", "\n", " ").Replace(s)), " ")
-	}
 	if len(entries) == 1 {
-		return "memory: " + entries[0].Tool + " " + oneLine(entries[0].Title) + "\n"
+		return "memory: " + describeEntry(entries[0]) + "\n"
 	}
 	var b strings.Builder
 	fmt.Fprintf(&b, "memory: %d changes\n\n", len(entries))
 	for _, e := range entries {
-		p := ""
-		if len(e.Paths) > 0 {
-			p = e.Paths[len(e.Paths)-1]
-		}
-		fmt.Fprintf(&b, "- %s %s (%s)\n", e.Tool, oneLine(e.Title), p)
+		fmt.Fprintf(&b, "- %s\n", describeEntry(e))
 	}
 	return b.String()
+}
+
+// describeEntry is "<tool> <path>", or "note_move <old> → <new>" for a move
+// that changed the path.
+func describeEntry(e Entry) string {
+	switch {
+	case len(e.Paths) == 0:
+		return e.Tool
+	case e.Tool == "note_move" && len(e.Paths) == 2 && e.Paths[0] != e.Paths[1]:
+		return e.Tool + " " + e.Paths[0] + " → " + e.Paths[1]
+	default:
+		return e.Tool + " " + e.Paths[len(e.Paths)-1]
+	}
 }
 
 // commit commits the paths of one batch, and only those (SPEC-0008 R6–R11).

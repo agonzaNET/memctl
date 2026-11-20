@@ -55,7 +55,7 @@ none of the findings marked for this stage.
 
 Interface change between `note` and `gitlog`: `Committer` gains
 `External(paths []string)` and `WaitExternal(path string) error`;
-`Change` gains `OldPath` for a move. `note` still does not import `gitlog`.
+a move's old path is the first of `Change.Paths`, as before (no new field). `note` still does not import `gitlog`.
 
 ## Dependency order
 
@@ -132,7 +132,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ### Slice E — Git
 
-- [ ] **T11 — Path messages.** Queue entries carry paths and the old path of a
+- [x] **T11 — Path messages.** Queue entries carry paths and the old path of a
   move; one-entry, move and batch messages of R5.
   *SPEC-0008 R5.*
 - [ ] **T12 — External changes.** `status` and `config --get` in the runner;
