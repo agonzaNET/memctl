@@ -236,6 +236,33 @@ func TestCommitter_SPEC0008_R6_onlyToolPaths(t *testing.T) {
 	}
 }
 
+// Note paths that look like patterns name only that file (SPEC-0008 R2):
+// git add -A and git commit --only must not read them as globs, which would
+// stage a person's change to another note.
+func TestCommitter_SPEC0008_R2_literalPaths(t *testing.T) {
+	root := newRepo(t)
+	write(t, root, "d x.md", "d\n")
+	git(t, root, "add", ".")
+	git(t, root, "commit", "-q", "-m", "notes")
+	write(t, root, "d x.md", "person unstaged\n")
+
+	write(t, root, "[draft] x.md", "tool\n")
+	write(t, root, "*.md", "tool\n")
+	h := startCommitter(t, root, defaultAuthor)
+	h.add(t, gitlog.Entry{Tool: "note_write", Title: "[draft] x", Paths: []string{"[draft] x.md"}})
+	h.add(t, gitlog.Entry{Tool: "note_move", Title: "star", Paths: []string{"*.md"}})
+	h.clock.Advance(2 * time.Second)
+	h.idle(t)
+
+	got := git(t, root, "show", "--name-status", "--format=", "HEAD")
+	if want := "A\t*.md\nA\t[draft] x.md\n"; got != want {
+		t.Fatalf("commit holds:\n%s\nwant:\n%s\nlog %s", got, want, h.log.String())
+	}
+	if status := git(t, root, "status", "--porcelain"); status != " M \"d x.md\"\n" {
+		t.Fatalf("the person's change was touched:\n%q", status)
+	}
+}
+
 func TestCommitter_SPEC0008_R7_author(t *testing.T) {
 	for _, c := range []struct {
 		author gitlog.Author
