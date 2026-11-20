@@ -14,6 +14,7 @@ type contextIn struct {
 	Ref      string   `json:"ref"`
 	Depth    int      `json:"depth,omitempty"`
 	RelTypes []string `json:"rel_types,omitempty"`
+	Edges    string   `json:"edges,omitempty"`
 }
 
 type listIn struct {
@@ -40,7 +41,7 @@ func (s *Server) registerGraph() {
 	}, handle(s, "list", s.list))
 }
 
-// context implements the context tool (SPEC-0004 R22, R23).
+// context implements the context tool (SPEC-0004 R22, R23, R31).
 func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error) {
 	depth := in.Depth
 	if depth == 0 {
@@ -54,7 +55,11 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 			return err
 		}
 		p := ref.Path
-		g, err := idx.Walk(p, depth, in.RelTypes, index.EdgesAll)
+		scope, heading := index.EdgesAll, "Edges:"
+		if in.Edges == "start" {
+			scope, heading = index.EdgesStart, "Edges of the start note:"
+		}
+		g, err := idx.Walk(p, depth, in.RelTypes, scope)
 		if errors.Is(err, index.ErrBadDepth) {
 			return errorf(CodeInvalidArgument, "The depth must be 1, 2 or 3; fix it and call again.")
 		}
@@ -79,7 +84,7 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 		for _, n := range g.Nodes {
 			fmt.Fprintf(&b, "- %d · %s — %s\n", n.Distance, n.Path, n.Title)
 		}
-		b.WriteString("\nEdges:")
+		b.WriteString("\n" + heading)
 		if len(g.Edges) == 0 {
 			b.WriteString(" none.")
 		}
