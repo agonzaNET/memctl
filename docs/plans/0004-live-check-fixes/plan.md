@@ -92,7 +92,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ### Slice B — Graph and refs
 
-- [ ] **T3 — Edges among listed notes.** After the walk, collect every resolved
+- [x] **T3 — Edges among listed notes.** After the walk, collect every resolved
   edge whose ends are both listed (with `relTypes`), drop duplicates by
   source, type and target at the first line, keep the start's dangling and
   ambiguous edges, order as before.

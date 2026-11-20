@@ -248,7 +248,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   backlinks at depth 1 to 3, `relTypes` filter, dangling and ambiguous edges of
   the start listed but not followed, 250 connected notes truncated at 200,
   unknown start.
-- [ ] **R17** — On the graph fixture at depth 2: an edge between two notes at
+- [x] **R17** — On the graph fixture at depth 2: an edge between two notes at
   distance 2 is listed; with `relTypes`, an edge of another type between two
   listed notes is not; a note that links to the same target twice gives one
   edge at the first line, while a `links_to` and a relation to the same target

@@ -3,7 +3,6 @@ package index
 import (
 	"errors"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/agonzaNET/memctl/internal/parse"
@@ -72,24 +71,10 @@ func (x *Index) Walk(start string, depth int, relTypes []string) (Graph, error) 
 	var g Graph
 	dist := map[string]int{start: 0}
 	g.Nodes = append(g.Nodes, Node{Path: start, Title: x.notes[start].note.Title})
-	seenEdge := map[string]bool{}
-	addEdge := func(e Edge) {
-		key := e.Source + "\x00" + strconv.Itoa(e.Line) + "\x00" + e.Type + "\x00" + e.Target
-		if !seenEdge[key] {
-			seenEdge[key] = true
-			g.Edges = append(g.Edges, e)
-		}
-	}
-	// The start's unresolved edges are listed, never followed (R17).
-	for _, e := range out[start] {
-		if e.Resolution.Status != Resolved && allowed(e.Type) {
-			addEdge(e)
-		}
-	}
 	frontier := []string{start}
 	for d := 0; d < depth && len(frontier) > 0 && !g.Truncated; d++ {
 		var next []string
-		visit := func(e Edge, other string) {
+		visit := func(other string) {
 			if g.Truncated {
 				return
 			}
@@ -102,21 +87,49 @@ func (x *Index) Walk(start string, depth int, relTypes []string) (Graph, error) 
 				g.Nodes = append(g.Nodes, Node{Path: other, Title: x.notes[other].note.Title, Distance: d + 1})
 				next = append(next, other)
 			}
-			addEdge(e)
 		}
 		for _, p := range frontier {
 			for _, e := range out[p] {
 				if e.Resolution.Status == Resolved && e.Resolution.Path != p && allowed(e.Type) {
-					visit(e, e.Resolution.Path)
+					visit(e.Resolution.Path)
 				}
 			}
 			for _, e := range in[p] {
 				if allowed(e.Type) {
-					visit(e, e.Source)
+					visit(e.Source)
 				}
 			}
 		}
 		frontier = next
+	}
+
+	// Every edge between two listed notes, not only the edges the walk
+	// followed, once per source, type and target, at its first line; plus
+	// the start's unresolved edges, which are listed, never followed (R17).
+	seen := map[string]bool{}
+	add := func(e Edge, target string) {
+		key := e.Source + "\x00" + e.Type + "\x00" + target
+		if !seen[key] {
+			seen[key] = true
+			g.Edges = append(g.Edges, e)
+		}
+	}
+	for _, n := range g.Nodes {
+		es := append([]Edge(nil), out[n.Path]...)
+		sort.SliceStable(es, func(i, j int) bool { return es[i].Line < es[j].Line })
+		for _, e := range es {
+			if !allowed(e.Type) {
+				continue
+			}
+			switch {
+			case e.Resolution.Status == Resolved:
+				if _, listed := dist[e.Resolution.Path]; listed && e.Resolution.Path != n.Path {
+					add(e, e.Resolution.Path)
+				}
+			case n.Path == start:
+				add(e, "\x01"+e.Target)
+			}
+		}
 	}
 	sort.SliceStable(g.Nodes, func(i, j int) bool {
 		a, b := g.Nodes[i], g.Nodes[j]
