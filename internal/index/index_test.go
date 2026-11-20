@@ -133,3 +133,34 @@ func TestIndex_SPEC0002_R1_titled(t *testing.T) {
 		t.Fatalf("Paths = %v", got)
 	}
 }
+
+func TestResolve_SPEC0002_R23_stepAndAlso(t *testing.T) {
+	x := fixture()
+	put(x, "x/onlystem.md", "---\ntitle: Q\n---\n")
+	put(x, "alpha.md", "---\ntitle: Root\n---\n")
+	put(x, "notes/alpha.md", "---\ntitle: First\n---\n")
+	put(x, "archive/alpha.md", "---\ntitle: Alpha\n---\n")
+	cases := []struct {
+		target string
+		status index.Status
+		step   index.Step
+		also   []string
+	}{
+		{"network/intpxy", index.Resolved, index.StepPath, nil},
+		{"Internal proxy", index.Resolved, index.StepTitle, nil},
+		{"main fw", index.Resolved, index.StepAlias, nil},
+		{"old/place", index.Resolved, index.StepAlias, nil},
+		{"onlystem", index.Resolved, index.StepStem, nil},
+		{"firewall", index.Resolved, index.StepTitle, nil},
+		// The path wins; the title and the stems name two other notes.
+		{"alpha", index.Resolved, index.StepPath, []string{"archive/alpha.md", "notes/alpha.md"}},
+		{"Shared", index.Ambiguous, "", nil},
+		{"nothing", index.Dangling, "", nil},
+	}
+	for _, c := range cases {
+		r := x.Resolve(c.target)
+		if r.Status != c.status || r.Step != c.step || !reflect.DeepEqual(r.Also, c.also) {
+			t.Errorf("Resolve(%q) = %+v, want %s %s %v", c.target, r, c.status, c.step, c.also)
+		}
+	}
+}

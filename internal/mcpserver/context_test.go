@@ -24,7 +24,7 @@ func graphFiles() map[string]string {
 func TestContext_SPEC0004_R22_render(t *testing.T) {
 	e := start(t, graphFiles())
 	got := text(t, e.call(t, "context", map[string]any{"ref": "s"}))
-	want := `Found 3 notes within 1 hop of "Start".
+	want := `Found 3 notes within 1 hop of "Start", plus the note itself.
 
 Notes:
 - 0 · s.md — Start
@@ -43,7 +43,7 @@ Edges:
 	}
 
 	got = text(t, e.call(t, "context", map[string]any{"ref": "s.md", "depth": 2, "rel_types": []string{"depends_on", "runs_on"}}))
-	if !strings.HasPrefix(got, `Found 2 notes within 2 hops of "Start".`) || !strings.Contains(got, "- 2 · c.md — C") || strings.Contains(got, "links_to") {
+	if !strings.HasPrefix(got, `Found 2 notes within 2 hops of "Start", plus the note itself.`) || !strings.Contains(got, "- 2 · c.md — C") || strings.Contains(got, "links_to") {
 		t.Fatalf("depth 2 with rel_types:\n%s", got)
 	}
 
@@ -140,5 +140,69 @@ func TestServer_SPEC0004_R5_fourTools(t *testing.T) {
 	sort.Strings(want)
 	if !reflect.DeepEqual(names, want) {
 		t.Fatalf("tools %v, want %v", names, want)
+	}
+}
+
+func TestContext_SPEC0004_R22_descriptionNamesEdgeRule(t *testing.T) {
+	if d := toolDescription(t, "context"); !strings.Contains(d, "every connection between the listed notes") {
+		t.Fatalf("description:\n%s", d)
+	}
+}
+
+func resolutionFiles() map[string]string {
+	return map[string]string{
+		"notes/alpha.md":   "---\ntitle: First\n---\nx\n",
+		"archive/alpha.md": "---\ntitle: Alpha\n---\nx\n",
+		"x/b.md":           "---\ntitle: Bee\naliases: [bee-alias]\n---\nx\n",
+	}
+}
+
+func TestRead_SPEC0004_R27_resolution(t *testing.T) {
+	e := start(t, resolutionFiles())
+	cases := []struct {
+		ref        string
+		want, none []string
+	}{
+		{"Bee", []string{"\n- resolved by: title \"Bee\"\n"}, []string{"other notes"}},
+		{"bee-alias", []string{"\n- resolved by: alias \"bee-alias\"\n"}, nil},
+		{"notes/alpha", nil, []string{"resolved by", "other notes"}},
+		{"alpha", []string{"\n- resolved by: title \"alpha\"\n", "\n- other notes with this name: notes/alpha.md\n"}, nil},
+	}
+	for _, c := range cases {
+		got := text(t, e.call(t, "note_read", map[string]any{"ref": c.ref}))
+		for _, w := range c.want {
+			if !strings.Contains(got, w) {
+				t.Errorf("%s: missing %q in:\n%s", c.ref, w, got)
+			}
+		}
+		for _, w := range c.none {
+			if strings.Contains(got, w) {
+				t.Errorf("%s: unexpected %q in:\n%s", c.ref, w, got)
+			}
+		}
+		if strings.Contains(got, "resolved by") && strings.Index(got, "resolved by") < strings.Index(got, "- sha256: ") {
+			t.Errorf("%s: resolution item must follow sha256:\n%s", c.ref, got)
+		}
+	}
+
+	f := resolutionFiles()
+	f["alpha.md"] = "---\ntitle: Root\n---\nx\n"
+	e = start(t, f)
+	got := text(t, e.call(t, "note_read", map[string]any{"ref": "alpha"}))
+	if !strings.Contains(got, "\n- other notes with this name: archive/alpha.md, notes/alpha.md\n") || strings.Contains(got, "resolved by") {
+		t.Fatalf("path ref with other names:\n%s", got)
+	}
+}
+
+func TestContext_SPEC0004_R27_resolution(t *testing.T) {
+	e := start(t, resolutionFiles())
+	got := text(t, e.call(t, "context", map[string]any{"ref": "alpha"}))
+	want := "Found no notes within 1 hop of \"Alpha\", plus the note itself.\n\nResolved by title \"alpha\".\nOther notes with this name: notes/alpha.md.\n\nNotes:\n"
+	if !strings.HasPrefix(got, want) {
+		t.Fatalf("got:\n%s", got)
+	}
+	got = text(t, e.call(t, "context", map[string]any{"ref": "notes/alpha"}))
+	if strings.Contains(got, "Resolved by") || strings.Contains(got, "Other notes") {
+		t.Fatalf("path ref:\n%s", got)
 	}
 }
