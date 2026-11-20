@@ -64,9 +64,13 @@ func TestEdit_SPEC0007_R15_staleSha(t *testing.T) {
 
 func TestEdit_SPEC0007_R16_append(t *testing.T) {
 	cases := []struct{ in, text, want string }{
-		{fm + "body", "more\n\n\n", fmNew + "body\nmore\n"},
-		{fm + "body\n", "more", fmNew + "body\nmore\n"},
-		{fm, "first line", fmNew + "first line\n"},
+		{fm + "body", "more\n\n\n", fmNew + "body\n\nmore\n"},
+		{fm + "body\n", "more", fmNew + "body\n\nmore\n"},
+		{fm + "body\n\n\n\n", "more", fmNew + "body\n\nmore\n"},
+		{fm + "body\n   \n", "more", fmNew + "body\n\nmore\n"},
+		{fm + "body\n", "\n\n  \n  more", fmNew + "body\n\n  more\n"},
+		{fm + "line with a break  \n", "more", fmNew + "line with a break  \n\nmore\n"},
+		{fm, "first line", fmNew + "\nfirst line\n"},
 	}
 	for _, c := range cases {
 		root := tree(t, map[string]string{"a.md": c.in})
@@ -89,16 +93,32 @@ func TestEdit_SPEC0007_R16_append(t *testing.T) {
 	}
 }
 
+func TestEdit_SPEC0007_R16_appendEmptyFile(t *testing.T) {
+	root := tree(t, map[string]string{"a.md": ""})
+	s := openWith(t, root, fixedClock)
+	if _, err := s.Edit(resolvePath("a.md"), note.EditOp{ExpectedSHA: shaOf(t, root, "a.md"), Op: "append", Text: "\nfirst\n"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := readFile(t, root, "a.md"); got != "first\n" {
+		t.Fatalf("got %q", got)
+	}
+}
+
 func TestEdit_SPEC0007_R17_replaceSection(t *testing.T) {
 	body := "# A\nx\n## B\ny\n\n### B1\nz\n# C\nw\n"
-	cases := []struct{ section, text, want string }{
-		{"B", "new\n\n", "# A\nx\n## B\nnew\n\n# C\nw\n"},
-		{"  b ", "new", "# A\nx\n## B\nnew\n\n# C\nw\n"},
-		{"A", "only", "# A\nonly\n\n# C\nw\n"},
-		{"C", "last", "# A\nx\n## B\ny\n\n### B1\nz\n# C\nlast\n"},
-		{"B1", "", "# A\nx\n## B\ny\n\n### B1\n\n# C\nw\n"},
+	spaced := "# A\n\nx\n# C\nw\n"
+	cases := []struct{ body, section, text, want string }{
+		{body, "B", "new\n\n", "# A\nx\n## B\n\nnew\n\n# C\nw\n"},
+		{body, "  b ", "new", "# A\nx\n## B\n\nnew\n\n# C\nw\n"},
+		{body, "B", "\n\n  new\n\n", "# A\nx\n## B\n\n  new\n\n# C\nw\n"},
+		{body, "A", "only", "# A\n\nonly\n\n# C\nw\n"},
+		{body, "C", "last", "# A\nx\n## B\ny\n\n### B1\nz\n# C\n\nlast\n"},
+		{body, "B1", "", "# A\nx\n## B\ny\n\n### B1\n\n# C\nw\n"},
+		{body, "C", "", "# A\nx\n## B\ny\n\n### B1\nz\n# C\n\n"},
+		{spaced, "A", "y", "# A\n\ny\n\n# C\nw\n"},
 	}
 	for _, c := range cases {
+		body := c.body
 		root := tree(t, map[string]string{"a.md": fm + body})
 		s := openWith(t, root, fixedClock)
 		if _, err := s.Edit(resolvePath("a.md"), note.EditOp{ExpectedSHA: shaOf(t, root, "a.md"), Op: "replace_section", Section: c.section, Text: c.text}); err != nil {

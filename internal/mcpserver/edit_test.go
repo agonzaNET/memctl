@@ -125,3 +125,17 @@ func TestEdit_SPEC0007_R25_R27_annotationsAndLog(t *testing.T) {
 		t.Fatalf("log holds argument text: %s", s)
 	}
 }
+
+func TestEdit_SPEC0007_R16_R17_text(t *testing.T) {
+	d := toolDescription(t, "note_edit")
+	if !strings.Contains(d, "new paragraph") {
+		t.Fatalf("description:\n%s", d)
+	}
+	e := start(t, map[string]string{"a.md": "---\ntitle: A\n---\n## Steps\nx\n"})
+	got := text(t, e.call(t, "note_read", map[string]any{"ref": "a"}))
+	sha := got[strings.Index(got, "- sha256: ")+10:][:64]
+	r := e.call(t, "note_edit", map[string]any{"ref": "a", "expected_sha": sha, "op": "replace_section", "section": "Missing", "text": "x"})
+	if !r.IsError || !strings.HasPrefix(text(t, r), "section_not_found: ") || !strings.Contains(text(t, r), "Steps") || !strings.Contains(text(t, r), "append") {
+		t.Fatalf("got %s", text(t, r))
+	}
+}
