@@ -264,3 +264,37 @@ func contains(list []string, s string) bool {
 	}
 	return false
 }
+
+func TestWalk_SPEC0002_R30_via(t *testing.T) {
+	x := index.New()
+	put(x, "s.md", "---\ntitle: S\n---\n[[a0]] [[a1]] [[b1]]\n")
+	put(x, "a0.md", "---\ntitle: A0\n---\n\n## Relations\n- depends_on [[z]]\n")
+	put(x, "a1.md", "---\ntitle: A1\n---\nx\n")
+	put(x, "b1.md", "---\ntitle: B1\n---\n[[z]]\n")
+	put(x, "z.md", "---\ntitle: Z\n---\n[[a1]] [[y]]\n")
+	put(x, "y.md", "---\ntitle: Y\n---\ny\n")
+
+	via := func(g index.Graph) map[string]string {
+		m := map[string]string{}
+		for _, n := range g.Nodes {
+			m[n.Path] = n.Via
+		}
+		return m
+	}
+	for _, scope := range []index.EdgeScope{index.EdgesAll, index.EdgesStart} {
+		g, err := x.Walk("s.md", 3, nil, scope)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := map[string]string{"s.md": "", "a0.md": "", "a1.md": "", "b1.md": "", "z.md": "a0.md", "y.md": "z.md"}
+		if got := via(g); !reflect.DeepEqual(got, want) {
+			t.Fatalf("scope %d: via %v, want %v", scope, got, want)
+		}
+	}
+	// Only links_to is followed: the relation of a0 does not count, and
+	// z → a1, an edge from z, makes a1 the smallest.
+	g, _ := x.Walk("s.md", 2, []string{"links_to"}, index.EdgesAll)
+	if got := via(g)["z.md"]; got != "a1.md" {
+		t.Fatalf("via with relTypes %q, want a1.md", got)
+	}
+}

@@ -248,7 +248,7 @@ Notes:
 - 1 · a.md — A
 - 1 · b.md — B
 - 1 · in.md — In
-- 2 · c.md — C
+- 2 · c.md — C (via a.md)
 
 Edges of the start note:
 - in.md —see_also→ s.md
@@ -262,7 +262,7 @@ Edges of the start note:
 
 	def := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2}))
 	all := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2, "edges": "all"}))
-	if def != all || !strings.Contains(all, "\nEdges:\n") || !strings.Contains(all, "- a.md —runs_on→ c.md") {
+	if def != all || !strings.Contains(all, "\nEdges:\n") || !strings.Contains(all, "- a.md —runs_on→ c.md") || strings.Contains(all, "(via ") {
 		t.Fatalf("default and all differ or miss an edge:\n%s\n\n%s", def, all)
 	}
 	if r := e.call(t, "context", map[string]any{"ref": "s", "edges": "other"}); !r.IsError || strings.HasPrefix(text(t, r), "invalid_argument") {
@@ -301,8 +301,10 @@ func TestContext_SPEC0004_R31_schemaAndDescription(t *testing.T) {
 		"every connection between the listed notes",
 		"unless edges is start",
 		"edges start to get the same notes with only the start note's connections",
+		"names the note it was reached through",
 		"edges all, the default",
 		"dozens of notes and hundreds of connections",
+		"depth 1 lists fewer notes, and edges start fewer connections",
 	} {
 		if !strings.Contains(d, s) {
 			t.Fatalf("description lacks %q:\n%s", s, d)
