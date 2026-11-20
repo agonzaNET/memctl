@@ -235,9 +235,11 @@ func TestRead_SPEC0004_R28_nearNames(t *testing.T) {
 	if !r.IsError || text(t, r) != want {
 		t.Fatalf("got %q", text(t, r))
 	}
+	// search finds no notes; since R32 it names the near name as a word,
+	// never the note.
 	r = e.call(t, "search", map[string]any{"query": "cisco"})
-	if r.IsError || text(t, r) != `Found no notes for "cisco".` {
-		t.Fatalf("search must not use near names: %q", text(t, r))
+	if got := text(t, r); r.IsError || !strings.HasPrefix(got, `Found no notes for "cisco".`) || strings.Contains(got, "edge router") {
+		t.Fatalf("search must not use near names: %q", got)
 	}
 	if strings.Contains(e.log.String(), "cisco") {
 		t.Fatalf("ref in log: %s", e.log.String())

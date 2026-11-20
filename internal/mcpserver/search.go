@@ -52,7 +52,7 @@ func plural(n int, one, many string) string {
 	return many
 }
 
-// search implements the search tool (SPEC-0004 R19–R21).
+// search implements the search tool (SPEC-0004 R19–R21, R32).
 func (s *Server) search(in searchIn, log *callLog) (*mcp.CallToolResult, error) {
 	folder, err := normFolder(in.Folder)
 	if err != nil {
@@ -72,7 +72,7 @@ func (s *Server) search(in searchIn, log *callLog) (*mcp.CallToolResult, error) 
 		hits := found.Hits
 		log.set("results", len(hits))
 		if len(hits) == 0 {
-			res = success(fmt.Sprintf("Found no notes for %q.", in.Query), "")
+			res = success(fmt.Sprintf("Found no notes for %q.", in.Query), nearHint(idx, in, folder))
 			return nil
 		}
 		var b strings.Builder
@@ -111,4 +111,24 @@ func uniqWords(q string) map[string]bool {
 		m[t] = true
 	}
 	return m
+}
+
+// maxNearWords caps the words named by the hint of a search without hits.
+const maxNearWords = 5
+
+// nearHint returns, for a search without hits, the line that names the words
+// in matching notes that are a query word followed by digits, or "" when
+// there are none (SPEC-0004 R32).
+func nearHint(idx *index.Index, in searchIn, folder string) string {
+	found, err := idx.Search(index.Query{Text: in.Query, Type: in.Type, Tags: in.Tags, Folder: folder, Limit: in.Limit, NearNames: true})
+	if err != nil || len(found.Near) == 0 {
+		return ""
+	}
+	words := found.Near
+	more := ""
+	if len(words) > maxNearWords {
+		more = fmt.Sprintf(", and %d more", len(words)-maxNearWords)
+		words = words[:maxNearWords]
+	}
+	return "Some notes hold a query word followed by digits: " + strings.Join(words, ", ") + more + "; search for one of these words."
 }

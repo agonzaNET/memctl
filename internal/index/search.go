@@ -25,11 +25,13 @@ type Query struct {
 	NearNames bool
 }
 
-// Result is the answer to a search: the hits up to the limit, and the
-// number of hits before the limit was applied (SPEC-0002 R25).
+// Result is the answer to a search: the hits up to the limit, the number
+// of hits before the limit was applied (SPEC-0002 R25), and with
+// Query.NearNames the near names found in those hits (R29).
 type Result struct {
 	Hits  []Hit
 	Total int
+	Near  []string
 }
 
 // Hit is one search result.
@@ -276,8 +278,10 @@ func (x *Index) Search(q Query) (Result, error) {
 	if len(terms) == 0 {
 		return Result{}, ErrEmptyQuery
 	}
+	var near []string
 	if q.NearNames {
-		terms = uniq(append(terms, x.nearNames(terms)...))
+		near = x.nearNames(terms)
+		terms = uniq(append(terms, near...))
 	}
 	limit := q.Limit
 	if limit <= 0 {
@@ -330,6 +334,15 @@ func (x *Index) Search(q Query) (Result, error) {
 		return hits[i].Path < hits[j].Path
 	})
 	total := len(hits)
+	var nearFound []string
+	for _, tok := range near {
+		for _, h := range hits {
+			if x.terms[h.Path].tf[tok] != nil {
+				nearFound = append(nearFound, tok)
+				break
+			}
+		}
+	}
 	if len(hits) > limit {
 		hits = hits[:limit]
 	}
@@ -340,7 +353,7 @@ func (x *Index) Search(q Query) (Result, error) {
 	for i := range hits {
 		hits[i].Snippet, hits[i].SnippetLine = snippet(x.notes[hits[i].Path].note, termSet)
 	}
-	return Result{Hits: hits, Total: total}, nil
+	return Result{Hits: hits, Total: total, Near: nearFound}, nil
 }
 
 func uniq(in []string) []string {
