@@ -47,9 +47,11 @@ func assertRefused(t *testing.T, r result, want string) {
 	if r.code != 1 || r.stdout != "" {
 		t.Fatalf("code %d stdout %q, want 1 and empty; stderr %s", r.code, r.stdout, r.stderr)
 	}
+	// stderr is a pipe, not a terminal: the message is in the ERROR line
+	// only, so a client's log holds it once (SPEC-0006 R5).
 	plain, logs := splitStderr(t, r.stderr)
-	if len(plain) != 1 || plain[0] != want {
-		t.Fatalf("message %q, want %q", plain, want)
+	if len(plain) != 0 {
+		t.Fatalf("plain lines %q on a pipe", plain)
 	}
 	errs := errorLines(logs)
 	if len(errs) != 1 || errs[0]["msg"] != want {
@@ -58,6 +60,16 @@ func assertRefused(t *testing.T, r result, want string) {
 	if byMsg(logs, "notes loaded") != nil || byMsg(logs, "started") != nil {
 		t.Fatalf("refused process loaded the notes: %v", logs)
 	}
+}
+
+// label is the root as a refusal names it: as given, with the resolved root
+// in parentheses when it differs (SPEC-0006 R5).
+func label(t *testing.T, given string) string {
+	t.Helper()
+	if r := resolved(t, given); r != given {
+		return given + " (" + r + ")"
+	}
+	return given
 }
 
 func resolved(t *testing.T, p string) string {
@@ -110,21 +122,29 @@ func TestCLI_SPEC0006_R1_lockHeldBeforeLoad(t *testing.T) {
 	if strings.Contains(stderrAtLock, "notes loaded") || strings.Contains(stderrAtLock, `"started"`) {
 		t.Fatalf("lock taken after the load: %s", stderrAtLock)
 	}
-	assertRefused(t, during, "root "+resolved(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
+	assertRefused(t, during, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
 }
 
 func TestCLI_SPEC0006_R3_R4_R5_secondProcessRefused(t *testing.T) {
 	root := notesRoot(t)
 	first, _, _ := startServer(t, root)
 	r := runBin(t, binVersioned, nil, "mcp", "--root", root)
-	assertRefused(t, r, "root "+resolved(t, root)+" is in use by memctl (pid "+strconv.Itoa(first.Process.Pid)+")")
+	assertRefused(t, r, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(first.Process.Pid)+")")
+
+	// A root given through a symlink names the given path and the resolved one.
+	link := filepath.Join(t.TempDir(), "link")
+	if err := os.Symlink(root, link); err != nil {
+		t.Fatal(err)
+	}
+	r = runBin(t, binVersioned, nil, "mcp", "--root", link)
+	assertRefused(t, r, "root "+link+" ("+resolved(t, root)+") is in use by memctl (pid "+strconv.Itoa(first.Process.Pid)+")")
 
 	// An empty lock file: the message names no PID.
 	if err := os.WriteFile(filepath.Join(root, ".memory", "memctl.lock"), nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
 	r = runBin(t, binVersioned, nil, "mcp", "--root", root)
-	assertRefused(t, r, "root "+resolved(t, root)+" is in use by another memctl process")
+	assertRefused(t, r, "root "+label(t, root)+" is in use by another memctl process")
 }
 
 func TestCLI_SPEC0006_R6_readOnlyRoot(t *testing.T) {
