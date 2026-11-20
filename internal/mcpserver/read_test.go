@@ -3,6 +3,7 @@ package mcpserver_test
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -176,5 +177,28 @@ func TestRead_SPEC0004_R15_linksList(t *testing.T) {
 	want = "Links:\n- links_to → hosts/x.md (stale: linked as old/fw, an old path)\n- links_to → nowhere: dangling"
 	if !strings.HasSuffix(got, want) {
 		t.Fatalf("stale and dangling:\n%s", got)
+	}
+}
+
+func TestRead_SPEC0004_R28_suggestions(t *testing.T) {
+	files := map[string]string{
+		"misc/other.md": "---\ntitle: Other\n---\nnothing\n",
+	}
+	for i := 0; i < 5; i++ {
+		files[fmt.Sprintf("runbooks/r%d.md", i)] = "---\ntitle: R\n---\nswitch upgrade\n"
+	}
+	e := start(t, files)
+	r := e.call(t, "note_read", map[string]any{"ref": "Upgrade the secret switch"})
+	want := `not_found: No note matches "Upgrade the secret switch"; closest by search: runbooks/r0.md, runbooks/r1.md, runbooks/r2.md; pass one of these paths, or use search.`
+	if !r.IsError || text(t, r) != want {
+		t.Fatalf("got %q", text(t, r))
+	}
+	r = e.call(t, "context", map[string]any{"ref": "zzz qqq"})
+	want = `not_found: No note matches "zzz qqq"; use search to find the note, then pass its path.`
+	if !r.IsError || text(t, r) != want {
+		t.Fatalf("got %q", text(t, r))
+	}
+	if strings.Contains(e.log.String(), "secret") {
+		t.Fatalf("ref in log: %s", e.log.String())
 	}
 }
