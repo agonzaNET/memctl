@@ -62,15 +62,17 @@ func snippet(n parse.Note, terms map[string]bool) (string, int) {
 }
 
 // window cuts a line longer than snippetRunes to that many runes, centred on
-// its first matched token or from its start when it has none, trims spaces
-// at a cut edge and marks each cut side with "…" (SPEC-0002 R27).
+// its first matched token or from its start when it has none, drops a
+// partial word at a cut edge, trims spaces there and marks each cut side
+// with "…" (SPEC-0002 R27).
 func window(s string, terms map[string]bool) string {
 	r := []rune(s)
 	if len(r) <= snippetRunes {
 		return s
 	}
 	from := 0
-	if start, n, ok := firstMatch(s, terms); ok {
+	start, n, ok := firstMatch(s, terms)
+	if ok {
 		from = start
 		if n < snippetRunes {
 			from = start - (snippetRunes-n)/2
@@ -78,6 +80,7 @@ func window(s string, terms map[string]bool) string {
 	}
 	from = max(0, min(from, len(r)-snippetRunes))
 	to := from + snippetRunes
+	from, to = wordCuts(r, from, to, start, start+n, ok)
 	out := string(r[from:to])
 	if from > 0 {
 		out = "…" + strings.TrimLeftFunc(out, unicode.IsSpace)
@@ -86,6 +89,38 @@ func window(s string, terms map[string]bool) string {
 		out = strings.TrimRightFunc(out, unicode.IsSpace) + "…"
 	}
 	return out
+}
+
+// wordCuts moves a cut edge that splits a word inward to the nearest
+// whitespace, dropping the partial word, unless that removes part of the
+// token [tokStart, tokEnd) (when hasTok) or leaves only whitespace
+// (SPEC-0002 R27).
+func wordCuts(r []rune, from, to, tokStart, tokEnd int, hasTok bool) (int, int) {
+	keeps := func(f, t int) bool {
+		if hasTok && (f > tokStart || t < tokEnd) {
+			return false
+		}
+		return strings.TrimSpace(string(r[f:t])) != ""
+	}
+	if from > 0 && !unicode.IsSpace(r[from-1]) && !unicode.IsSpace(r[from]) {
+		i := from
+		for i < to && !unicode.IsSpace(r[i]) {
+			i++
+		}
+		if i < to && keeps(i, to) {
+			from = i
+		}
+	}
+	if to < len(r) && !unicode.IsSpace(r[to-1]) && !unicode.IsSpace(r[to]) {
+		j := to
+		for j > from && !unicode.IsSpace(r[j-1]) {
+			j--
+		}
+		if j > from && keeps(from, j) {
+			to = j
+		}
+	}
+	return from, to
 }
 
 // firstMatch returns the rune offset and rune length of the first token of
