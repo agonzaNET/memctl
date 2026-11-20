@@ -146,3 +146,18 @@ func TestSearch_SPEC0004_R19_descriptionNamesIdentifiers(t *testing.T) {
 		}
 	}
 }
+
+func TestSearch_SPEC0004_R19_longLineSnippet(t *testing.T) {
+	line := strings.Repeat("x", 249) + " needle " + strings.Repeat("y", 243)
+	e := start(t, map[string]string{
+		"long.md": "---\ntitle: Long\n---\n" + line + "\n",
+	})
+	r := e.call(t, "search", map[string]any{"query": "needle"})
+	want := "   > L4: …" + strings.Repeat("x", 96) + " needle " + strings.Repeat("y", 96) + "…"
+	if r.IsError || !strings.HasSuffix(text(t, r), want) {
+		t.Fatalf("got:\n%s", text(t, r))
+	}
+	if d := toolDescription(t, "search"); !strings.Contains(d, "a long line is cut around the first matching word") {
+		t.Fatalf("description: %s", d)
+	}
+}
