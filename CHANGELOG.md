@@ -13,9 +13,12 @@ file, and ADR-0007 for why it exists.
 <!--
 Add entries as changes land, under the heading that applies:
 Added · Changed · Deprecated · Removed · Fixed · Security
-On the first release, rename this section to `## [X.Y.Z] - YYYY-MM-DD` and open a
-fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
+At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
+`## [Unreleased]` above it and move this comment up. See
+docs/agents/changelog.md.
 -->
+
+## [0.1.0] - 2026-11-20
 
 ### Added
 
@@ -82,4 +85,5 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   author of those commits; the default is `memctl <memctl@localhost>`
   (spec: SPEC-0008).
 
-[Unreleased]: https://github.com/agonzaNET/memctl/commits/main
+[Unreleased]: https://github.com/agonzaNET/memctl/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/agonzaNET/memctl/releases/tag/v0.1.0
