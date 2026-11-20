@@ -59,7 +59,7 @@ creates or moves tags. This plan adds:
   `memctl check`, building from source.
 - [x] **T5 — Docs.** `CLAUDE.md` layout, `environment.md` release steps,
   CHANGELOG entry.
-- [ ] **T6 — Exit check.** Locally: `make dist`, unpack the archive for the
+- [x] **T6 — Exit check.** Locally: `make dist`, unpack the archive for the
   machine, run it end to end on a fresh git notes root (write, read, edit,
   move, delete over stdio; commits; `memctl check`). Then by the maintainer,
   after M2's live check: rename `[Unreleased]` to `[0.1.0] - <date>` in a
