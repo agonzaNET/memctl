@@ -5,11 +5,15 @@ Stage: the fixes of findings N2 to N4 of the repeated live check of
 ([`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md)),
 which the maintainer chose to make in v0.2.0. Specs, amended on 2026-11-20 and
 Accepted: SPEC-0002 (R14, R27–R29) and SPEC-0004 (R19, R22, R28, R31). No
-spec is deferred.
+spec is deferred. Slice E, added on 2026-11-20, fixes findings V1 to V4 of
+the live check of T8
+([`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md)),
+from the third amendment of both specs (SPEC-0002 R27, R29, R30; SPEC-0004
+R22, R31, R32).
 
 Exit: every amended or added requirement has a passing test that names it,
 and a short live check by the maintainer on a copy of a real notes root shows
-the three changes; then v0.2.0 is released.
+the three changes and the fixes of slice E; then v0.2.0 is released.
 
 ## Slices
 
@@ -18,7 +22,9 @@ the three changes; then v0.2.0 is released.
 | A — Snippet around the match (N2) | T1–T2 | A `search` hit on a long line shows the matched term, with `…` on each cut side |
 | B — `context` edge scope (N3) | T3–T4 | `context` with `edges` `start` lists the same notes with only the start note's edges; the description states the size |
 | C — Near names in suggestions (N4) | T5–T6 | An unknown ref `cisco` suggests a note that holds `cisco1`; `search` is unchanged |
-| D — Close and release | T7–T9 | Benchmarks, CHANGELOG and README; live check; specs `Implemented`; v0.2.0 tagged |
+| D — Close | T7–T8 | Benchmarks, CHANGELOG and README; live check, findings V1 to V4 |
+| E — Live-check findings (V1–V4) | T10–T14 | Snippets cut at words; `via` names and edge counts in `context`; a `search` without hits names near names; checked again; specs `Implemented` |
+| F — Release | T9 | v0.2.0 tagged and released |
 
 ## File map
 
@@ -35,14 +41,21 @@ the three changes; then v0.2.0 is released.
 | `internal/mcpserver/*_test.go`, `testdata/` | modify | Tests named `SPEC0004_R19`, `R22`, `R28`, `R31`; golden files |
 | `CHANGELOG.md` | modify (T7) | `[Unreleased]`: `Added` for `edges`, `Changed` for snippets and suggestions |
 | `README.md` | modify (T7) | Tool table rows of `search` and `context` |
-| `docs/design/YYYY-MM-DD-v0.2.0-live-check.md`, `docs/design/README.md` | create, modify (T8) | Verification record of the live check |
-| Specs and `docs/specs/README.md` | modify (T8) | Acceptance boxes; `Implemented` |
+| `docs/design/2026-11-20-v0.2.0-live-check.md`, `docs/design/README.md` | create, modify (T8, T14) | Verification record of the live check and of the check again |
+| `internal/index/snippet.go` | modify (T10) | Partial words dropped at a cut edge (SPEC-0002 R27) |
+| `internal/index/graph.go` | modify (T11) | `Node.Via` (SPEC-0002 R30) |
+| `internal/mcpserver/context.go` | modify (T11, T13) | `(via <path>)` with `edges` `start`; the count in the edge headings (SPEC-0004 R22, R31) |
+| `internal/index/nearnames.go`, `search.go` | modify (T12) | `Result.Near` (SPEC-0002 R29) |
+| `internal/mcpserver/search.go` | modify (T12) | The hint of a search without hits (SPEC-0004 R32) |
+| `internal/mcpserver/tools.go` | modify (T11, T12) | `context` description (`via`, depth 1 lists fewer notes); `search` description (the hint) |
+| Specs and `docs/specs/README.md` | modify (T14) | Acceptance boxes; `Implemented` |
 | `CHANGELOG.md`, `docs/design/YYYY-MM-DD-v0.2.0-release.md` | modify, create (T9) | Release section and release record (ADR-0012) |
 
 Interface changes inside `internal/index`:
 `Walk(start string, depth int, relTypes []string, scope EdgeScope)`, with
-`EdgesAll` the zero value; `Query` gains `NearNames bool`. Only
-`internal/mcpserver` and the index's own tests call them.
+`EdgesAll` the zero value; `Query` gains `NearNames bool`; slice E adds
+`Result.Near []string` and `Node.Via string`. Only `internal/mcpserver` and
+the index's own tests call them.
 
 ## Dependency order
 
@@ -50,10 +63,12 @@ Interface changes inside `internal/index`:
 T1 → T2                       (slice A)
 T3 → T4                       (slice B)
 T5 → T6                       (slice C)
-all → T7 → T8 → T9            (slice D)
+all → T7 → T8                 (slice D)
+T8 → T10, T11, T12, T13       (slice E; independent of each other)
+T10–T13 → T14 → T9            (slice E, then F)
 ```
 
-Slices A, B and C are independent of each other.
+Slices A, B and C are independent of each other; so are T10 to T13.
 
 ## Tasks
 
@@ -114,7 +129,7 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
   names in `not_found` suggestions. README tool table: `search` snippets,
   `context` `edges`.
   *SPEC-0002 R22 (check only).*
-- [ ] **T8 — Live check and close.** `make build GOOS=darwin GOARCH=arm64`
+- [x] **T8 — Live check.** `make build GOOS=darwin GOARCH=arm64`
   for the maintainer's Mac. The maintainer runs, with Claude Desktop on a copy
   of the real notes root:
   1. `search` for a word that sits after the first 200 characters of a long
@@ -128,9 +143,46 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
      does not find it.
 
   Write `docs/design/<date>-v0.2.0-live-check.md` and list it in
-  `docs/design/README.md`; tick every acceptance box; set SPEC-0002 and
-  SPEC-0004 to `Implemented` with their index rows; tick this plan. Commit
+  `docs/design/README.md`. *Done on 2026-11-20: every check passed; findings
+  V1 to V4 were fixed in slice E rather than released as they were, so the
+  close moved to T14.*
+
+### Slice E — Live-check findings (V1–V4)
+
+- [ ] **T10 — Snippet cut at words (V1).** At a cut edge between two
+  non-whitespace runes, move the edge inward to the nearest whitespace,
+  unless that removes part of the centred token or empties the window; then
+  trim and add `…`. Update the R27 table for word-structured lines and add
+  the cases of the R14, R27 acceptance box; update the long-line `search`
+  test of R19.
+  *SPEC-0002 R27; SPEC-0004 R19.*
+- [ ] **T11 — `via` names (V2).** `Node.Via` for distance 2 and more: the
+  smallest path among the notes one hop nearer that share a followed edge,
+  set during the walk and the same in both scopes. With `edges` `start`,
+  `(via <path>)` on those `Notes` lines; `context` description: the `via`
+  names, depth 1 lists fewer notes and `start` fewer connections.
+  *SPEC-0002 R30; SPEC-0004 R31.*
+- [ ] **T12 — Near names after a search without hits (V3).** `Result.Near`
+  from the near-name tokens of every hit before the limit; `search` with no
+  hits searches again with `NearNames` and the same arguments and adds the
+  line of R32 (five words at most, `, and <k> more`); description names it;
+  nothing logged.
+  *SPEC-0002 R29; SPEC-0004 R32.*
+- [ ] **T13 — Edge counts (V4).** `Edges (<m>):`,
+  `Edges of the start note (<m>):`; `none.` unchanged; golden files.
+  *SPEC-0004 R22, R31.*
+- [ ] **T14 — Changelog, check again and close.** `CHANGELOG.md`
+  `[Unreleased]` entries describe the behaviour as it now is; README tool
+  table if needed. `make build GOOS=darwin GOARCH=arm64`; the maintainer
+  checks V1 to V4 with a scripted prompt (snippets cut at words, `via` and
+  counts in `context` at depth 2, a `search` without hits for a near name).
+  Add the result to the live-check record; tick every acceptance box; set
+  SPEC-0002 and SPEC-0004 to `Implemented` with their index rows; tick this
+  plan. Commit
   `docs: repeated live-check fixes implemented (spec: SPEC-0002, SPEC-0004)`.
+
+### Slice F — Release
+
 - [ ] **T9 — Release 0.2.0.** The steps of `docs/agents/environment.md`
   "Releasing": rename `[Unreleased]` to `[0.2.0] - <date>`, open a fresh
   `[Unreleased]` with the comment, update the link references (compare
@@ -153,6 +205,14 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
 | SPEC-0004 | R22, R31 | T4 |
 | SPEC-0004 | R28 | T6 |
 | SPEC-0004 | Live check (v0.2.0) | T8 |
+| SPEC-0002 | R27 (word cuts) | T10 |
+| SPEC-0002 | R30 | T11 |
+| SPEC-0002 | R29 (`Near`) | T12 |
+| SPEC-0004 | R19 (word cuts) | T10 |
+| SPEC-0004 | R31 (`via`) | T11 |
+| SPEC-0004 | R32 | T12 |
+| SPEC-0004 | R22, R31 (counts) | T13 |
+| SPEC-0004 | Live check (v0.2.0, again) | T14 |
 
 ## Definition of done
 
@@ -161,7 +221,8 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
 - Every amended or added requirement has at least one passing test whose name
   carries it; every acceptance box of SPEC-0002 and SPEC-0004 is ticked; both
   specs and their index rows say `Implemented`.
-- The live check is recorded under `docs/design/` and listed in its README.
+- The live check and the check of slice E are recorded under `docs/design/`
+  and listed in its README.
 - `CHANGELOG.md` holds the `[0.2.0]` section, and the release record is
   written.
 

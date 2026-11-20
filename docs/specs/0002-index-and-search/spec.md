@@ -12,6 +12,10 @@ Accepted
 > check ([`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md)),
 > for v0.2.0: R14 changed; R27 to R29 added; `Query.NearNames` and the edge
 > scope of `Walk` added. Until they are implemented, the code matches v0.1.0.
+>
+> Amended a third time on 2026-11-20 for findings V1 to V3 of the v0.2.0 live
+> check ([`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md)):
+> R27 and R29 changed; R30 added; `Result.Near` and `Node.Via` added.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -69,10 +73,11 @@ never written to disk (design D14).
 - `Resolution{Status, Path, Candidates, Stale, Step, Also}` with `Status` one of
   `resolved`, `ambiguous`, `dangling`, and `Step` one of `path`, `title`,
   `alias`, `stem`.
-- `Result{Hits, Total}` for a search, with
+- `Result{Hits, Total, Near}` for a search, with
   `[]Hit{Path, Title, Type, Tags, Score, Snippet, SnippetLine}`.
 - `Graph{Nodes, Edges, Truncated}` for a walk: nodes with their distance from
-  the start, edges with source, type, target and the resolution of the target.
+  the start and the note they were reached through (`Via`), edges with source,
+  type, target and the resolution of the target.
 - `[]Entry{Path, Title, Type, Tags, Updated, ModTime}` for a listing.
 - `[]LinkReport{Source, Line, Kind, Type, Target, Resolution}` for `Links()`.
 - `Get(path)` returns the stored note and meta; `Titled(title)` returns every
@@ -138,8 +143,11 @@ never written to disk (design D14).
   that is that term followed by one or more digits (`unicode.IsDigit`) and
   nothing else: `cisco` matches `cisco1` and `cisco12`, not `ciscoasa`; `eu`
   matches `eu1`. Each such token MUST count as one more distinct query term in
-  R9, R10, R14 and R27. Only the suggestions of a `not_found` error set it
-  (SPEC-0004 R28).
+  R9, R10, R14 and R27. `Result.Near` MUST then list, sorted and once each,
+  every such token that occurs in at least one hit before `Limit` is applied;
+  without `NearNames` it MUST be empty. Only the suggestions of a `not_found`
+  error (SPEC-0004 R28) and the hint of a `search` without hits (SPEC-0004
+  R32) set it.
 - **R8** — Five fields MUST be indexed per note: `title`, `aliases` (all aliases
   joined), `tags` (all tags joined), `observations` (all observation texts
   joined) and `body` (the body without the lines recorded as observations,
@@ -177,10 +185,14 @@ never written to disk (design D14).
   minus ⌊(200 − its length in runes) / 2⌋, or at its first rune when it is 200
   runes or longer, and is then clamped to the range 0 to (line length − 200).
   When the line holds no query term (a hit on the title or aliases only, R14),
-  the window MUST start at the line's first rune. Spaces at a cut edge MUST be
-  trimmed, and `…` MUST be added on each side where text was cut. A line of 200
-  runes or fewer MUST be returned whole. Which line is chosen (R14) does not
-  change.
+  the window MUST start at the line's first rune. A cut edge that falls
+  between two runes that are not whitespace (`unicode.IsSpace`) splits a word:
+  that edge MUST move inward to the nearest whitespace rune, dropping the
+  partial word, unless this would remove part of the centred token or leave
+  the window empty, in which case the cut stays where it is. Whitespace at a
+  cut edge MUST then be trimmed, and `…` MUST be added on each side where text
+  was cut. A line of 200 runes or fewer MUST be returned whole. Which line is
+  chosen (R14) does not change.
 
 ### Graph (design D9)
 
@@ -209,6 +221,12 @@ never written to disk (design D14).
   ambiguous ones included, and the edges from listed notes to it. The scope
   MUST NOT change which notes are reached, their distances or `Truncated`, and
   `relTypes` applies in both scopes.
+- **R30** — Each node at distance 2 or more MUST carry in `Via` the path of
+  the listed note at the distance one less with which it shares an edge the
+  walk follows (R16: resolved, of an allowed type, not a self-link, in either
+  direction), the smallest such path when there are several. Nodes at
+  distance 0 and 1 MUST leave `Via` empty. `Via` MUST NOT depend on the edge
+  scope (R28).
 - **R18** — The walk MUST stop adding notes at 200 and set `Truncated`.
 - **R19** — `Walk` on a path that is not in the index MUST return
   `index.ErrNotFound`.
@@ -298,8 +316,11 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   the end (`…` at the start only); a compound query term (`it-104`) and a part
   inside a compound (`104`) centre on that token; the first of two matched
   terms wins; a title-only hit with a long first body line is cut at the end;
-  spaces at a cut edge are trimmed; a multi-byte rune (`ä`) counts as one.
-- [ ] **R28** — On the graph fixture at depth 2, `EdgesStart` gives the same
+  spaces at a cut edge are trimmed; a multi-byte rune (`ä`) counts as one; a
+  cut inside a word drops the partial word on either side; a cut that would
+  drop part of the centred token (the token at the end of a 150-rune word
+  without whitespace) or empty the window (one word of 300 runes) stays.
+- [x] **R28** — On the graph fixture at depth 2, `EdgesStart` gives the same
   nodes and `Truncated` as `EdgesAll`, and only the edges whose source or
   target is the start, its dangling and ambiguous edges and its backlinks
   included; with `relTypes`, both filters apply.
@@ -308,7 +329,16 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   `cisco12` notes and not `ciscoasa`, `eu` finds `eu1`, a one-letter `c` and
   the compound `cisco-core` find none of them, and `cisco1` does not find
   `cisco12`; without it, `cisco` finds none of them; a note with both `cisco`
-  and `cisco1` ranks above a note with `cisco1` only.
+  and `cisco1` ranks above a note with `cisco1` only. With `NearNames`,
+  `Near` for `cisco` is `cisco1`, `cisco12`; a near name only in notes that a
+  filter excludes is not in `Near`; with `Limit` 1, `Near` still lists the
+  near names of every hit; without `NearNames`, `Near` is empty.
+- [ ] **R30** — On a fixture where a note at distance 2 is reached from two
+  notes at distance 1, `Via` is the one with the smaller path, whether the
+  edge runs to or from it; nodes at distance 0 and 1 have an empty `Via`; at
+  depth 3, a node at distance 3 names a node at distance 2; `Via` is the same
+  with `EdgesAll` and `EdgesStart`; with `relTypes`, an edge of another type
+  does not make a note the `Via`.
 
 ## References
 
@@ -319,5 +349,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).
 - Repeated live check of 2026-11-20, findings N2 to N4:
   [`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md).
+- Live check of the v0.2.0 changes, findings V1 to V3:
+  [`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md).
 - SPEC-0001 (note parser); SPEC-0003 (notes root and freshness check),
   SPEC-0004 (MCP read tools), SPEC-0005 (`memctl check`) — planned.
