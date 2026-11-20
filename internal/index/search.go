@@ -13,13 +13,16 @@ import (
 // ErrEmptyQuery is returned for a query with no word (SPEC-0002 R13).
 var ErrEmptyQuery = errors.New("index: the query has no word")
 
-// Query is a search request (SPEC-0002 R10–R12).
+// Query is a search request (SPEC-0002 R10–R12). NearNames lets a word of
+// letters also match itself followed by digits (R29); only the not_found
+// suggestions set it.
 type Query struct {
-	Text   string
-	Type   string
-	Tags   []string
-	Folder string
-	Limit  int
+	Text      string
+	Type      string
+	Tags      []string
+	Folder    string
+	Limit     int
+	NearNames bool
 }
 
 // Result is the answer to a search: the hits up to the limit, and the
@@ -267,11 +270,14 @@ func inFolder(p, folder string) bool {
 	return folder == "" || strings.HasPrefix(p, folder+"/")
 }
 
-// Search ranks the notes for q with BM25F (SPEC-0002 R7–R14, R24, R25).
+// Search ranks the notes for q with BM25F (SPEC-0002 R7–R14, R24, R25, R29).
 func (x *Index) Search(q Query) (Result, error) {
 	terms := QueryTerms(q.Text)
 	if len(terms) == 0 {
 		return Result{}, ErrEmptyQuery
+	}
+	if q.NearNames {
+		terms = uniq(append(terms, x.nearNames(terms)...))
 	}
 	limit := q.Limit
 	if limit <= 0 {
