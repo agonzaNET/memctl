@@ -2,7 +2,13 @@
 
 ## Status
 
-Implemented
+Accepted
+
+> Amended on 2026-11-20 for the findings of the live check
+> ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
+> delivered by stage plan 0004: R16, R17, R23 and R24 changed; R29 added; the
+> code `section_not_found` used by `note_edit`. Until the stage is implemented,
+> the code matches the version of 2026-11-19.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -68,8 +74,9 @@ ADR-0015 results. The first lines:
 - `Moved "<title>" from <old path> to <new path>.`
 - `Deleted "<title>" at <path>.`
 
-followed by `sha256: <hex>` of the new file (not for a delete), and the notices
-of the requirements below. Each successful write hands its changed paths, the
+followed by `sha256: <hex>` of the new file (not for a delete), the
+`Unresolved links` list of R29 when it applies, and the notices of the
+requirements below. Each successful write hands its changed paths, the
 tool name and the note title to the committer (SPEC-0008).
 
 ## Behaviour & Requirements
@@ -142,13 +149,21 @@ tool name and the note title to the committer (SPEC-0008).
   check; otherwise the tool MUST give `conflict` with the current `sha256` and the
   current file content in a fence (as SPEC-0004 R15), so the agent can retry
   without another read.
-- **R16** — `append` MUST add `text` at the end of the file, after a newline if the
-  file does not end in one, and end the file in exactly one newline.
+- **R16** — `append` MUST add `text` as a new paragraph: the file's trailing
+  blank lines and line breaks are dropped, then one blank line, then `text`
+  without its leading blank lines, and the file MUST end in exactly one
+  newline. A file that is empty, or holds only frontmatter, gets no extra blank
+  line before the text beyond the one after the frontmatter. The description
+  MUST say that `append` starts a new paragraph, and that `find_replace` or
+  `replace_section` extends an existing paragraph or list.
 - **R17** — `replace_section` MUST keep the heading line found as in SPEC-0004
   R16, and replace every line after it up to the next heading of the same or a
-  higher level (or the end of the file) with `text`, which MUST end in one
-  newline and be followed by a blank line when another heading follows. No
-  matching heading MUST give `not_found` with the note's headings.
+  higher level (or the end of the file) with one blank line and then `text`
+  without its leading and trailing blank lines, ending in one newline and
+  followed by a blank line when another heading follows. An empty `text` leaves
+  the heading followed by one blank line. No matching heading MUST give
+  `section_not_found` with the note's headings and the advice to add the
+  section with `append`, starting `text` with the heading line.
 - **R18** — `find_replace` MUST replace `find` with `replace` in the whole file,
   frontmatter included, when `find` occurs exactly once. Zero occurrences MUST
   give `no_match`; more than one MUST give `not_unique` with the count and the
@@ -174,15 +189,26 @@ tool name and the note title to the committer (SPEC-0008).
   old title when the title changed, each only when not already in `aliases`
   (design D24); `updated` set to now.
 - **R23** — The move MUST NOT change any other note. The result MUST give the
-  number of notes that link to the old path or old title, and say that those
-  links keep working through `aliases` and that `memctl check` lists them as
+  number of notes that link to the old path or old title and name up to 10 of
+  their paths, sorted (`and <k> more` for the rest), and say that those links
+  keep working through `aliases` and that `memctl check` lists them as
   stale.
 
 ### `note_delete`
 
 - **R24** — `note_delete` MUST remove the file and its index entry. The result
-  MUST give the number of notes whose links to it are now dangling, and say that
-  git history keeps the file.
+  MUST give the number of notes whose links to it are now dangling and name up
+  to 10 of their paths, sorted (`and <k> more` for the rest), and say that git
+  history keeps the file.
+
+### Links in a written note
+
+- **R29** — After `note_write` and `note_edit`, the result MUST list the
+  written note's relations and links whose target is `dangling` or `ambiguous`
+  under `Unresolved links:`, in the format of the `Links` list of SPEC-0004 R15
+  (with the candidates of an ambiguous one), so the agent can fix them at once.
+  The list MUST be absent when every relation and link resolves. The log line
+  MUST add the count `unresolved`.
 
 ### Tools
 
@@ -209,6 +235,7 @@ Codes added to the fixed list of SPEC-0004:
 | `conflict` | `expected_sha` differs, or the file changed during the write | `note_edit` (all writes for R3) |
 | `no_match` | `find` does not occur | `note_edit` |
 | `not_unique` | `find` occurs more than once | `note_edit` |
+| `section_not_found` | `section` matches no heading (code of SPEC-0004) | `note_edit` |
 
 `invalid_argument`, `not_found`, `ambiguous` and `internal_error` keep their
 meaning. A failed file operation is `internal_error` and states that the note
@@ -234,12 +261,26 @@ is unchanged.
 - [x] **R12, R13, R14** — `note_write` golden file; body with frontmatter; shared
   title notice.
 - [x] **R15** — Stale `expected_sha` returns the current content and sha.
-- [x] **R16, R17, R18, R19** — Each `op`, including a missing section, zero and
-  two matches, an edit inside the frontmatter, and a no-op edit.
+- [x] **R18, R19** — `find_replace` with zero and two matches, an edit inside
+  the frontmatter, and a no-op edit.
+- [ ] **R16** — Golden tests: `append` to a file ending in no newline, one
+  newline and three blank lines; text with leading blank lines; a file with
+  only frontmatter; an empty file. The description names the paragraph rule.
+- [ ] **R17** — Golden tests: `replace_section` of a heading followed by a
+  blank line and of one followed directly by text, text with leading and
+  trailing blank lines, empty text, the last section of the file; a missing
+  section gives `section_not_found` with the headings and the `append` advice.
 - [x] **R20, R21, R22, R23** — Move by path, by title, by both, onto itself, onto
   an existing note; aliases after two moves; links to the old path still resolve
   (SPEC-0002 R5 `Stale`).
-- [x] **R24** — Delete reports the linkers; a second delete gives `not_found`.
+- [x] **R24** — A second delete gives `not_found`.
+- [ ] **R23, R24** — Move and delete with 3 linkers name all three; with 12,
+  name 10 and `and 2 more`.
+- [ ] **R29** — `note_write` with a dangling and an ambiguous link lists both;
+  with resolved links only, no list; `note_edit` that adds a dangling link
+  lists it; the log line carries `unresolved`.
+- [ ] **Live check (again)** — The exit check of stage plan 0004 repeats the
+  write checks of the live check of 2026-11-20 on a scratch root.
 - [x] **R25, R26, R27** — Tool list annotations; `check-docs.sh` check 5 passes;
   captured log lines carry the counts and no argument value.
 - [x] **Live check** — In a Claude Code session on a scratch root, create, edit,
@@ -252,3 +293,5 @@ is unchanged.
 - Design: D5, D16, D23, D24, "MCP tools", "Tool writes" in
   [`../../design/solution-design.md`](../../design/solution-design.md).
 - SPEC-0001 to SPEC-0006; SPEC-0008 (git committer) — planned.
+- Live check of 2026-11-20, findings L1, L12, L13, L16, L17:
+  [`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md).
