@@ -74,7 +74,7 @@ func BenchmarkWalk(b *testing.B) {
 	paths := x.Paths()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if _, err := x.Walk(paths[i%len(paths)], 3, nil); err != nil {
+		if _, err := x.Walk(paths[i%len(paths)], 3, nil, index.EdgesAll); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -90,7 +90,7 @@ func BenchmarkWalkCold(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		x.Put(paths[0], n, index.Meta{})
-		if _, err := x.Walk(paths[i%len(paths)], 3, nil); err != nil {
+		if _, err := x.Walk(paths[i%len(paths)], 3, nil, index.EdgesAll); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -104,7 +104,7 @@ func TestPerf_SPEC0002_R22_benchmarksRun(t *testing.T) {
 	if _, err := x.Search(index.Query{Text: "w1 w2"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := x.Walk(x.Paths()[0], 3, nil); err != nil {
+	if _, err := x.Walk(x.Paths()[0], 3, nil, index.EdgesAll); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -66,8 +66,8 @@ func compare(t *testing.T, round int, a, b *index.Index) {
 		}
 	}
 	for _, p := range b.Paths() {
-		ga, _ := a.Walk(p, 2, nil)
-		gb, _ := b.Walk(p, 2, nil)
+		ga, _ := a.Walk(p, 2, nil, index.EdgesAll)
+		gb, _ := b.Walk(p, 2, nil, index.EdgesAll)
 		if !reflect.DeepEqual(ga, gb) {
 			t.Fatalf("round %d: Walk(%s) differs", round, p)
 		}

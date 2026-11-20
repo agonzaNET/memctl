@@ -46,7 +46,7 @@ func edges(g index.Graph) []string {
 
 func TestWalk_SPEC0002_R15_R16_R17_depths(t *testing.T) {
 	x := graphFixture()
-	g, err := x.Walk("s.md", 0, nil)
+	g, err := x.Walk("s.md", 0, nil, index.EdgesAll)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,12 +65,12 @@ func TestWalk_SPEC0002_R15_R16_R17_depths(t *testing.T) {
 		t.Fatalf("depth 1 edges %v", edges(g))
 	}
 
-	g, _ = x.Walk("s.md", 3, nil)
+	g, _ = x.Walk("s.md", 3, nil, index.EdgesAll)
 	if !reflect.DeepEqual(nodes(g), []nd{{"s.md", 0}, {"a.md", 1}, {"b.md", 1}, {"in.md", 1}, {"c.md", 2}, {"d.md", 3}}) {
 		t.Fatalf("depth 3 nodes %v", nodes(g))
 	}
 
-	g, _ = x.Walk("s.md", 2, []string{"depends_on", "runs_on"})
+	g, _ = x.Walk("s.md", 2, []string{"depends_on", "runs_on"}, index.EdgesAll)
 	if !reflect.DeepEqual(nodes(g), []nd{{"s.md", 0}, {"a.md", 1}, {"c.md", 2}}) {
 		t.Fatalf("relTypes nodes %v", nodes(g))
 	}
@@ -86,7 +86,7 @@ func TestWalk_SPEC0002_R17_edgesAmongListed(t *testing.T) {
 	put(x, "b.md", "---\ntitle: B\n---\n[[d]]\n")
 	put(x, "c.md", "---\ntitle: C\n---\nsee [[d]]\nagain [[d]]\n\n## Relations\n- depends_on [[d]]\n")
 	put(x, "d.md", "---\ntitle: D\n---\n")
-	g, err := x.Walk("s.md", 2, nil)
+	g, err := x.Walk("s.md", 2, nil, index.EdgesAll)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestWalk_SPEC0002_R17_edgesAmongListed(t *testing.T) {
 	if !reflect.DeepEqual(edges(g), want) {
 		t.Fatalf("edges %v", edges(g))
 	}
-	g, _ = x.Walk("s.md", 2, []string{"links_to"})
+	g, _ = x.Walk("s.md", 2, []string{"links_to"}, index.EdgesAll)
 	for _, e := range edges(g) {
 		if e == "c.md:8 depends_on d resolved" {
 			t.Fatalf("relTypes let another type through: %v", edges(g))
@@ -118,11 +118,11 @@ func TestWalk_SPEC0002_R17_edgesAmongListed(t *testing.T) {
 func TestWalk_SPEC0002_R16_R19_errors(t *testing.T) {
 	x := graphFixture()
 	for _, d := range []int{-1, 4} {
-		if _, err := x.Walk("s.md", d, nil); !errors.Is(err, index.ErrBadDepth) {
+		if _, err := x.Walk("s.md", d, nil, index.EdgesAll); !errors.Is(err, index.ErrBadDepth) {
 			t.Fatalf("depth %d: %v", d, err)
 		}
 	}
-	if _, err := x.Walk("missing.md", 1, nil); !errors.Is(err, index.ErrNotFound) {
+	if _, err := x.Walk("missing.md", 1, nil, index.EdgesAll); !errors.Is(err, index.ErrNotFound) {
 		t.Fatalf("missing: %v", err)
 	}
 }
@@ -135,7 +135,7 @@ func TestWalk_SPEC0002_R18_truncated(t *testing.T) {
 		put(x, fmt.Sprintf("n%03d.md", i), "x\n")
 	}
 	put(x, "hub.md", src)
-	g, err := x.Walk("hub.md", 1, nil)
+	g, err := x.Walk("hub.md", 1, nil, index.EdgesAll)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,4 +200,67 @@ func TestList_SPEC0002_R26_modTime(t *testing.T) {
 	if len(es) != 1 || !es[0].ModTime.Equal(mt) || !es[0].Updated.IsZero() {
 		t.Fatalf("entries %+v", es)
 	}
+}
+
+func TestWalk_SPEC0002_R28_edgeScope(t *testing.T) {
+	x := graphFixture()
+	all, err := x.Walk("s.md", 2, nil, index.EdgesAll)
+	if err != nil {
+		t.Fatal(err)
+	}
+	start, err := x.Walk("s.md", 2, nil, index.EdgesStart)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(nodes(start), nodes(all)) || start.Truncated != all.Truncated {
+		t.Fatalf("scope changed the notes: %v vs %v", nodes(start), nodes(all))
+	}
+	var want []string
+	for _, e := range all.Edges {
+		if e.Source == "s.md" || (e.Resolution.Status == index.Resolved && e.Resolution.Path == "s.md") {
+			want = append(want, fmt.Sprintf("%s:%d %s %s %s", e.Source, e.Line, e.Type, e.Target, e.Resolution.Status))
+		}
+	}
+	if !reflect.DeepEqual(edges(start), want) {
+		t.Fatalf("start edges %v, want %v", edges(start), want)
+	}
+	for _, must := range []string{
+		"s.md:4 links_to nowhere dangling",
+		"s.md:4 links_to dup ambiguous",
+		"in.md:6 see_also s resolved",
+		"s.md:7 depends_on a resolved",
+	} {
+		if !contains(edges(start), must) {
+			t.Fatalf("missing %q in %v", must, edges(start))
+		}
+	}
+	if contains(edges(start), "a.md:6 runs_on c resolved") || len(edges(start)) >= len(edges(all)) {
+		t.Fatalf("edges not of the start: %v", edges(start))
+	}
+
+	g, _ := x.Walk("s.md", 2, []string{"depends_on", "runs_on"}, index.EdgesStart)
+	if !reflect.DeepEqual(edges(g), []string{"s.md:7 depends_on a resolved"}) {
+		t.Fatalf("relTypes with EdgesStart: %v", edges(g))
+	}
+
+	hub := index.New()
+	src := "---\ntitle: hub\n---\n"
+	for i := 0; i < 250; i++ {
+		src += fmt.Sprintf("[[n%03d]]\n", i)
+		put(hub, fmt.Sprintf("n%03d.md", i), "x\n")
+	}
+	put(hub, "hub.md", src)
+	g, _ = hub.Walk("hub.md", 1, nil, index.EdgesStart)
+	if len(g.Nodes) != 200 || !g.Truncated {
+		t.Fatalf("truncation with EdgesStart: %d %v", len(g.Nodes), g.Truncated)
+	}
+}
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
