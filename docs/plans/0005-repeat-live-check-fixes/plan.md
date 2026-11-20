@@ -64,7 +64,7 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
 
 ### Slice A — Snippet around the match (N2)
 
-- [ ] **T1 — Snippet window.** Move the snippet code to `snippet.go` without a
+- [x] **T1 — Snippet window.** Move the snippet code to `snippet.go` without a
   behaviour change (its own commit, existing tests green). Then: find the
   first token of the chosen line equal to a query term (earliest rune, then
   longest), by rune offsets of the trimmed line; window of 200 runes
@@ -72,19 +72,19 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
   rune 0; trim spaces at a cut edge; `…` on each cut side; lines of 200 runes
   or fewer whole. The table of the R14, R27 acceptance box.
   *SPEC-0002 R14, R27.*
-- [ ] **T2 — `search` output.** Golden file with a hit on a long line (`…` on
+- [x] **T2 — `search` output.** Golden file with a hit on a long line (`…` on
   both sides); the description says that a long line is cut around the first
   matching word.
   *SPEC-0004 R19.*
 
 ### Slice B — `context` edge scope (N3)
 
-- [ ] **T3 — Walk edge scope.** `EdgeScope` with `EdgesAll` (zero value) and
+- [x] **T3 — Walk edge scope.** `EdgeScope` with `EdgesAll` (zero value) and
   `EdgesStart`; with `EdgesStart`, keep only the collected edges whose source
   or target is the start; nodes, distances and `Truncated` unchanged;
   `relTypes` in both scopes. Update the callers to pass `EdgesAll`.
   *SPEC-0002 R28.*
-- [ ] **T4 — `edges` input.** Schema property `edges` with `enum`
+- [x] **T4 — `edges` input.** Schema property `edges` with `enum`
   `["all", "start"]` and default `all`; map to the scope; heading
   `Edges of the start note:`; description: both values, the same notes with
   only the start note's connections, the size sentence for depth 2 or 3, and
@@ -94,20 +94,20 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
 
 ### Slice C — Near names in suggestions (N4)
 
-- [ ] **T5 — `NearNames`.** For each query term of one part, all letters, at
+- [x] **T5 — `NearNames`.** For each query term of one part, all letters, at
   least two runes: add every indexed token that is the term followed by one or
   more digits as one more query term (scoring, hit test, snippet). A scan of
   the postings' keys is enough: it runs only for a `not_found` error. The
   fixture of the R29 acceptance box.
   *SPEC-0002 R29.*
-- [ ] **T6 — Suggestions use near names.** `notFound` sets `NearNames`;
+- [x] **T6 — Suggestions use near names.** `notFound` sets `NearNames`;
   `search` does not. Test: unknown ref `cisco` lists the `cisco1` note;
   `search` for `cisco` on the same root finds no notes; no ref text logged.
   *SPEC-0004 R28.*
 
 ### Slice D — Close and release
 
-- [ ] **T7 — Benchmarks, changelog, README.** Rerun `BenchmarkSearch`,
+- [x] **T7 — Benchmarks, changelog, README.** Rerun `BenchmarkSearch`,
   `BenchmarkWalk` and `BenchmarkWalkCold` with the commands of stage plan 0004
   and record them below. `CHANGELOG.md` `[Unreleased]`: `Added` — the
   `context` input `edges`; `Changed` — snippets centred on the match, near
@@ -167,4 +167,19 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
 
 ## Verification notes
 
-Benchmark results are added here by T7.
+Benchmark results (SPEC-0002 R22) after T1–T6, on the same development VM
+(linux/arm64) and with the same commands as stage plan 0004
+(`go test -run '^$' -bench . -benchtime 5x`, 10x for the walks), 5,000
+synthetic notes:
+
+| Benchmark | Target | Stage plan 0004 | Now |
+|---|---|---|---|
+| Build index (`BenchmarkBuild`) | < 2 s | 0.59 s | 0.62 s |
+| Search (`BenchmarkSearch`) | < 20 ms | 1.5 ms | 1.6 ms |
+| Walk depth 3, index unchanged (`BenchmarkWalk`) | < 20 ms | 12.5 ms | 10.6 ms |
+| Walk depth 3, first walk after a change (`BenchmarkWalkCold`) | < 20 ms | 105 ms — missed | 100 ms — missed |
+
+No change beyond the noise of the VM: the snippet window works on the shown
+hits only, the edge scope filters edges already collected, and near names
+run only for a `not_found` error. The first walk after a change still misses
+its target, as before.

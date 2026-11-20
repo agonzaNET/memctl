@@ -18,6 +18,22 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+### Added
+
+- `context` takes `edges`: `start` lists the same notes with only the
+  connections to and from the start note, so a walk at depth 2 or 3 stays
+  small; `all`, the default, lists every connection between the notes as
+  before (spec: SPEC-0002, SPEC-0004).
+
+### Changed
+
+- A `search` hit on a line longer than 200 characters shows the part of the
+  line around the first matching word, with `…` on each side that was cut,
+  instead of the first 200 characters (spec: SPEC-0002, SPEC-0004).
+- The suggestions for an unknown ref include near names: a word such as
+  `cisco` also finds notes that hold `cisco1` or `cisco12`. `search` results
+  do not change (spec: SPEC-0002, SPEC-0004).
+
 ### Security
 
 - Built with `golang.org/x/sys` v0.50.0, which fixes GO-2026-5024; memctl
