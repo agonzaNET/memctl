@@ -247,3 +247,34 @@ func TestE2E_SPEC0008_R12_R16_externalChange(t *testing.T) {
 		t.Fatalf("git log %q", got)
 	}
 }
+
+func TestE2E_SPEC0008_R15_startupScan(t *testing.T) {
+	root := gitRepo(t)
+	files := map[string]string{".gitignore": "ignored/\n", "a.md": "a\n", "c.md": "c\n"}
+	for p, c := range files {
+		if err := os.WriteFile(filepath.Join(root, p), []byte(c), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	gitIn(t, root, "add", ".")
+	gitIn(t, root, "commit", "-q", "-m", "baseline")
+	// While memctl is not running:
+	os.WriteFile(filepath.Join(root, "a.md"), []byte("edited\n"), 0o644)
+	os.WriteFile(filepath.Join(root, "b.md"), []byte("new\n"), 0o644)
+	os.Remove(filepath.Join(root, "c.md"))
+	os.WriteFile(filepath.Join(root, "x.txt"), []byte("x\n"), 0o644)
+	os.MkdirAll(filepath.Join(root, "ignored"), 0o755)
+	os.WriteFile(filepath.Join(root, "ignored", "d.md"), []byte("d\n"), 0o644)
+
+	s := connect(t, root)
+	s.cs.Close()
+	if code := s.exit(t, 20*time.Second); code != 0 {
+		t.Fatalf("status %d; stderr %s", code, s.stderr.String())
+	}
+	if got := gitIn(t, root, "log", "-1", "--format=%B"); got != "memory: 3 external changes\n\n- a.md\n- b.md\n- c.md\n\n" {
+		t.Fatalf("message %q; stderr %s", got, s.stderr.String())
+	}
+	if left := gitIn(t, root, "status", "--porcelain", "--untracked-files=all"); left != "?? x.txt\n" {
+		t.Fatalf("left %q", left)
+	}
+}
