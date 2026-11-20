@@ -59,9 +59,10 @@ func resolveRefFull(idx *index.Index, ref string) (index.Resolution, error) {
 }
 
 // notFound is the not_found error of an unknown ref, with up to three
-// paths that a search for the ref's words finds (SPEC-0004 R28).
+// paths that a search for the ref's words finds, near names included
+// (SPEC-0004 R28).
 func notFound(idx *index.Index, ref string) error {
-	found, err := idx.Search(index.Query{Text: ref, Limit: 3})
+	found, err := idx.Search(index.Query{Text: ref, Limit: 3, NearNames: true})
 	if err != nil || len(found.Hits) == 0 {
 		return errorf(CodeNotFound, "No note matches %q; use search to find the note, then pass its path.", ref)
 	}
