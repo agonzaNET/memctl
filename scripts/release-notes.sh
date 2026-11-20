@@ -6,7 +6,8 @@
 #
 # Prints the body of the "## [X.Y.Z] - YYYY-MM-DD" section, without its
 # heading, up to the next "## " heading or the link references at the end,
-# with leading and trailing blank lines removed. Exits 1 when the section is
+# without HTML comment lines (<!-- … -->, also over several lines), with
+# leading and trailing blank lines removed. Exits 1 when the section is
 # missing or empty, so a release cannot ship without notes (ADR-0007, stage
 # plan 0003). Used by the release workflow.
 
@@ -22,6 +23,8 @@ fi
 
 body=$(awk -v heading="## [$version] - " '
 	index($0, heading) == 1 { found = 1; next }
+	found && incomment { if (/-->/) incomment = 0; next }
+	found && /^[[:space:]]*<!--/ { if (!/-->/) incomment = 1; next }
 	found && (/^## / || /^\[[^]]+\]: /) { exit }
 	found { print }
 ' "$changelog" | sed -e '/./,$!d' | awk '

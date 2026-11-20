@@ -173,7 +173,7 @@ the repeated live check covers the code that is released.
 - [x] **T18 — Hint at the maximum limit.** The closing line of a truncated
   `search` names a higher `limit` only when the call's `limit` is below 50.
   *SPEC-0004 R29.*
-- [ ] **T19 — Audit nits.** `memctl check` usage names `MEMCTL_ROOT`;
+- [x] **T19 — Audit nits.** `memctl check` usage names `MEMCTL_ROOT`;
   `CLAUDE.md` layout without "planned"; README says BM25F;
   `release-notes.sh` drops HTML comments from the notes, with a test case; the
   release steps in `changelog.md` keep the comment under the new

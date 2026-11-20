@@ -82,8 +82,9 @@ the GitHub Actions workflow `.github/workflows/release.yml` (ADR-0012, stage
 plan 0003). Nothing builds on push or tag; the maintainer releases:
 
 1. In a commit on `main`, rename `## [Unreleased]` in `CHANGELOG.md` to
-   `## [X.Y.Z] - YYYY-MM-DD`, open a new empty `## [Unreleased]` above it, and
-   update the link references (ADR-0007, ADR-0008).
+   `## [X.Y.Z] - YYYY-MM-DD`, open a new empty `## [Unreleased]` above it
+   (move the HTML maintenance comment up with it), and update the link
+   references (ADR-0007, ADR-0008).
 2. Optionally, `make dist VERSION=X.Y.Z` builds the same archives locally.
 3. Tag the commit `vX.Y.Z` and push `main` and the tag.
 4. Start the workflow (Actions → release → Run workflow, or

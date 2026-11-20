@@ -22,9 +22,18 @@ func TestServer_SPEC0004_R5_infoInstructionsCapabilities(t *testing.T) {
 			t.Fatalf("instructions miss %q: %q", want, init.Instructions)
 		}
 	}
-	c := init.Capabilities
-	if c.Tools == nil || c.Logging != nil || c.Prompts != nil || c.Resources != nil {
-		t.Fatalf("capabilities %+v", c)
+	// Only tools: the capabilities as sent, so the test does not read the
+	// SDK's deprecated logging field.
+	raw, err := json.Marshal(init.Capabilities)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var caps map[string]any
+	if err := json.Unmarshal(raw, &caps); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := caps["tools"]; !ok || len(caps) != 1 {
+		t.Fatalf("capabilities %s", raw)
 	}
 }
 

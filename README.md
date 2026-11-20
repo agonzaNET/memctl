@@ -76,7 +76,7 @@ A flag wins over its environment variable.
 
 | Tool | What it does |
 |---|---|
-| `search` | Full-text search (BM25), with type, tag and folder filters; identifiers such as `IT-104` or `10.50.4.15` match whole |
+| `search` | Full-text search (BM25F), with type, tag and folder filters; identifiers such as `IT-104` or `10.50.4.15` match whole |
 | `note_read` | A note, or one section of it, with its links and its `sha256` |
 | `context` | The notes linked to and from a note, up to three hops, with every link between them |
 | `list` | Notes by folder, type or tag, with tags and a date |

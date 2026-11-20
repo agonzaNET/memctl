@@ -20,6 +20,7 @@ const usageText = `usage:
                       default "memctl <memctl@localhost>"
   memctl check [--root DIR]
         Report problems in the notes under DIR; exits 1 when there are errors.
+        --root        notes root (or MEMCTL_ROOT); required
   memctl version
         Print the version.
 `

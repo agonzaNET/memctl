@@ -10,6 +10,8 @@
 #   empty section           a heading with no entries                     → 1
 #   prefix of a version     "0.1" is a prefix of 0.1.0 and 0.1.01         → 1
 #   unreleased only         "## [Unreleased]" is never a version          → 1
+#   HTML comment            comment lines are dropped from the body       → 0
+#   comment only            a section holding only a comment is empty     → 1
 #
 # Run directly: scripts/release-notes.test.sh (exits 0 on success, 1 on failure).
 
@@ -36,6 +38,21 @@ Intro text.
 ### Added
 
 - Something new.
+
+## [0.2.2] - 2027-03-01
+
+<!-- Only a maintenance note. -->
+
+## [0.2.1] - 2027-02-01
+
+<!--
+Add entries as changes land, under the heading that applies.
+On a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`.
+-->
+
+### Fixed
+
+- A later fix.
 
 ## [0.2.0] - 2027-01-10
 
@@ -94,6 +111,10 @@ expect "missing version" 0.3.0 1
 expect "empty section" 0.1.01 1
 expect "prefix of a version" 0.1 1
 expect "unreleased only" Unreleased 1
+expect "HTML comment" 0.2.1 0 "### Fixed
+
+- A later fix."
+expect "comment only" 0.2.2 1
 
 echo
 echo "$tests_run run, $tests_failed failed"

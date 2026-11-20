@@ -68,13 +68,13 @@ and keep it in sync with the change.
 
 ```
 memctl/
-├── cmd/memctl/                 # entry point: subcommands mcp and check, flags, logger, shutdown (planned, M1)
+├── cmd/memctl/                 # entry point: subcommands mcp and check, flags, logger, shutdown
 ├── internal/
-│   ├── mcpserver/              # MCP over stdio: tools, descriptions, result shape, tool-call log (planned, M1)
-│   ├── note/                   # note service: CRUD, freshness check, instance lock, atomic writes (planned, M1/M2)
-│   ├── parse/                  # line-based Markdown parser + yaml.v3 frontmatter (planned, M1)
-│   ├── index/                  # in-memory index: BM25F, names, backlinks, graph walk (planned, M1)
-│   ├── gitlog/                 # git committer: queue, quiet window, final flush (planned, M2)
+│   ├── mcpserver/              # MCP over stdio: tools, descriptions, result shape, tool-call log
+│   ├── note/                   # note service: CRUD, freshness check, instance lock, atomic writes
+│   ├── parse/                  # line-based Markdown parser + yaml.v3 frontmatter
+│   ├── index/                  # in-memory index: BM25F, names, backlinks, graph walk
+│   ├── gitlog/                 # git committer: queue, quiet window, external changes, final flush
 │   └── arch/                   # module-wide tests: one importer per third-party module (ADR-0010)
 ├── scripts/                    # check-docs.sh, release-notes.sh, release-build.sh and their tests
 ├── .github/workflows/          # release.yml: the manual release workflow (ADR-0012)

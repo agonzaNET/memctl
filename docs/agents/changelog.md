@@ -67,7 +67,9 @@ Use the standard set; each entry goes under exactly one:
 When cutting a release:
 
 1. Rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` (today's date).
-2. Open a fresh, empty `## [Unreleased]` above it.
+2. Open a fresh, empty `## [Unreleased]` above it, and move the HTML
+   maintenance comment up under it. (`scripts/release-notes.sh` drops comment
+   lines from the release notes anyway.)
 3. Choose `X.Y.Z` by Semantic Versioning against the entries being released:
    - **MAJOR** — any breaking change.
    - **MINOR** — backwards-compatible new behaviour (an `Added`, or a compatible

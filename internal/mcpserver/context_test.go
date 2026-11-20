@@ -143,9 +143,7 @@ func TestServer_SPEC0004_R5_fourTools(t *testing.T) {
 	sort.Strings(names)
 	// The four read tools of SPEC-0004 and the four write tools of SPEC-0007.
 	want := []string{"context", "list", "note_read", "search"}
-	for _, w := range []string{"note_write", "note_edit", "note_move", "note_delete"} {
-		want = append(want, w)
-	}
+	want = append(want, "note_write", "note_edit", "note_move", "note_delete")
 	sort.Strings(want)
 	if !reflect.DeepEqual(names, want) {
 		t.Fatalf("tools %v, want %v", names, want)
