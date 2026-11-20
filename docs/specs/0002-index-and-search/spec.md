@@ -261,7 +261,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   `Put` with.
 - [x] **R22** — `BenchmarkBuild`, `BenchmarkSearch`, `BenchmarkWalk` exist and
   their results on the development machine are recorded in the stage plan.
-- [ ] **R22 (again)** — The benchmarks are rerun with compound tokens and the
+- [x] **R22 (again)** — The benchmarks are rerun with compound tokens and the
   edges among listed notes, and the results are recorded in stage plan 0004.
 
 ## References

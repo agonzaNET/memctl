@@ -156,7 +156,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ### Slice G — Close
 
-- [ ] **T15 — Benchmarks and changelog.** Rerun `BenchmarkBuild`,
+- [x] **T15 — Benchmarks and changelog.** Rerun `BenchmarkBuild`,
   `BenchmarkSearch`, `BenchmarkWalk` and record them below; rewrite the
   `[Unreleased]` entries the stage changed; README where tool output or git
   behaviour is described.
@@ -204,4 +204,21 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ## Verification notes
 
-(Benchmarks of T15.)
+Benchmark results (SPEC-0002 R22, SPEC-0003 R16) after T1–T14, on the same
+development VM (linux/arm64) and with the same commands as stage plan 0001
+(`go test -run '^$' -bench . -benchtime 5x`, 10x for the walks), 5,000
+synthetic notes:
+
+| Benchmark | Target | Stage plan 0001 | Now |
+|---|---|---|---|
+| Build index (`BenchmarkBuild`) | < 2 s | 0.47 s | 0.59 s |
+| Search (`BenchmarkSearch`) | < 20 ms | 1.2 ms | 1.5 ms |
+| Walk depth 3, index unchanged (`BenchmarkWalk`) | < 20 ms | 8.1 ms | 12.5 ms |
+| Walk depth 3, first walk after a change (`BenchmarkWalkCold`) | < 20 ms | 81 ms — missed | 105 ms — missed |
+| Startup load (`BenchmarkOpen`) | < 2 s | 0.45 s | 0.55 s |
+| Freshness check, no change (`BenchmarkCheck`) | < 30 ms | 9.2 ms | 9.5 ms |
+
+Compound tokens add about a quarter to the build time; the walk now also
+collects the edges between its notes. Every target met before is still met;
+the first walk after a change still misses its target, as in stage plan 0001,
+and stays a finding for the design's scale risk.

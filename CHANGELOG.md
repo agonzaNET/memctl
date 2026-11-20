@@ -21,9 +21,19 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
 
 - `memctl mcp --root DIR` serves a folder of Markdown notes to an MCP client
   over stdio, with four read-only tools: `note_read` (a note with its resolved
-  links, or one section), `search` (BM25F full-text ranking with type, tag and
-  folder filters), `context` (relations, links and backlinks up to three hops)
-  and `list` (notes by folder, type or tag) (spec: SPEC-0004).
+  links, or one section with only its own links), `search` (BM25F full-text
+  ranking with type, tag and folder filters, tags in each hit, and the total
+  when more notes match than shown), `context` (relations, links and
+  backlinks up to three hops, with every connection between the notes it
+  lists) and `list` (notes by folder, type or tag, with tags and a date for
+  every note). A ref says when it matched a title, alias or file name rather
+  than a path, and names other notes with that name; an unknown ref gets up
+  to three suggestions; a missing section has its own error,
+  `section_not_found` (spec: SPEC-0002, SPEC-0004).
+- `search` indexes identifiers such as `IT-104`, `10.50.4.15` or
+  `11.1.16-h2` whole as well as in parts: searching an identifier finds only
+  the notes that contain all of it, and searching one part (`104`) still
+  finds it inside identifiers (spec: SPEC-0002).
 - `memctl check --root DIR` reports parse problems, unsupported Markdown,
   dangling, ambiguous and stale links, skipped files and a missing git
   repository; it exits 1 when there are errors (spec: SPEC-0005).
@@ -34,13 +44,16 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
   (ADR-0012).
 - `memctl mcp` serves a notes root from one process only: a second
   `memctl mcp` on the same root stops at once with
-  `root <path> is in use by memctl (pid <N>)`. memctl keeps its own files in
+  `root <path> is in use by memctl (pid <N>)`, naming the root as given and
+  the resolved root when they differ. memctl keeps its own files in
   `<root>/.memory/`, which git ignores (spec: SPEC-0006).
 - `note_write` creates a note from a title, a body, and optional type and
   tags, in a file named after the title; it refuses to overwrite an existing
-  note (spec: SPEC-0007).
-- `note_edit` changes a note by appending text, replacing one section, or
-  replacing one exact piece of text, and sets `updated`. It takes the
+  note. The result lists the note's links that match no note or several
+  notes (spec: SPEC-0007).
+- `note_edit` changes a note by appending a paragraph, replacing one section,
+  or replacing one exact piece of text, sets `updated`, and lists the note's
+  unresolved links. It takes the
   `sha256` from `note_read` and returns `conflict` with the current content
   when the note changed since that read, so an edit made in an editor is
   never overwritten (spec: SPEC-0007).
@@ -50,13 +63,19 @@ fresh `## [Unreleased]` above it. See docs/agents/changelog.md.
 - `memctl mcp` picks up edits made in any editor at the next tool call,
   also a second save of the same size within one file-system timestamp tick:
   a note saved within 2 s of its last read is hashed again (spec: SPEC-0003).
-- `note_delete` removes a note; the result counts the links that now point
-  nowhere, and git history keeps the file (spec: SPEC-0007).
+- `note_delete` removes a note; the result names the notes whose links now
+  point nowhere, and git history keeps the file. `note_move` names the notes
+  that link to the moved note in the same way (spec: SPEC-0007).
 - Every tool write is committed to git in the notes root, in the background:
   one commit per burst of writes (after 2 s of quiet, or 30 s at most), only
-  the files the tools changed, never pushed. Pending writes are committed
+  the files the tools changed, never pushed, with messages that name the
+  paths (`memory: note_edit runbooks/x.md`). Pending writes are committed
   before `memctl mcp` exits. A root outside git works without commits
   (spec: SPEC-0008).
+- Notes changed outside memctl, in an editor or while memctl was not
+  running, are committed on their own as `memory: external change <path>`,
+  with the repository's git identity when it has one, and never folded into a
+  tool's commit (spec: SPEC-0003, SPEC-0008).
 - `memctl mcp --git-author "Name <email>"` (or `MEMCTL_GIT_AUTHOR`) sets the
   author of those commits; the default is `memctl <memctl@localhost>`
   (spec: SPEC-0008).
