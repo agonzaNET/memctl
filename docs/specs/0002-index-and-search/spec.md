@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -11,7 +11,7 @@ Accepted
 > Amended again on 2026-11-20 for findings N2 to N4 of the repeated live
 > check ([`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md)),
 > for v0.2.0: R14 changed; R27 to R29 added; `Query.NearNames` and the edge
-> scope of `Walk` added. Until they are implemented, the code matches v0.1.0.
+> scope of `Walk` added.
 >
 > Amended a third time on 2026-11-20 for findings V1 to V3 of the v0.2.0 live
 > check ([`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md)):
@@ -310,7 +310,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   their results on the development machine are recorded in the stage plan.
 - [x] **R22 (again)** — The benchmarks are rerun with compound tokens and the
   edges among listed notes, and the results are recorded in stage plan 0004.
-- [ ] **R14, R27** — Snippet table: a line of 200 runes is returned whole; a
+- [x] **R14, R27** — Snippet table: a line of 200 runes is returned whole; a
   500-rune line with the matched term near the start (`…` at the end only),
   in the middle (`…` on both sides, the term at the window's centre) and near
   the end (`…` at the start only); a compound query term (`it-104`) and a part
@@ -324,7 +324,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   nodes and `Truncated` as `EdgesAll`, and only the edges whose source or
   target is the start, its dangling and ambiguous edges and its backlinks
   included; with `relTypes`, both filters apply.
-- [ ] **R29** — On a fixture with notes holding `cisco1`, `cisco12`,
+- [x] **R29** — On a fixture with notes holding `cisco1`, `cisco12`,
   `ciscoasa` and `eu1`: with `NearNames`, `cisco` finds the `cisco1` and
   `cisco12` notes and not `ciscoasa`, `eu` finds `eu1`, a one-letter `c` and
   the compound `cisco-core` find none of them, and `cisco1` does not find
@@ -333,7 +333,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   `Near` for `cisco` is `cisco1`, `cisco12`; a near name only in notes that a
   filter excludes is not in `Near`; with `Limit` 1, `Near` still lists the
   near names of every hit; without `NearNames`, `Near` is empty.
-- [ ] **R30** — On a fixture where a note at distance 2 is reached from two
+- [x] **R30** — On a fixture where a note at distance 2 is reached from two
   notes at distance 1, `Via` is the one with the smaller path, whether the
   edge runs to or from it; nodes at distance 0 and 1 have an empty `Via`; at
   depth 3, a node at distance 3 names a node at distance 2; `Via` is the same

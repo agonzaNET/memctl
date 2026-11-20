@@ -171,7 +171,7 @@ SPEC-NNNN)`), implement, `make verify`, commit (`feat(<pkg>): …` or
 - [x] **T13 — Edge counts (V4).** `Edges (<m>):`,
   `Edges of the start note (<m>):`; `none.` unchanged; golden files.
   *SPEC-0004 R22, R31.*
-- [ ] **T14 — Changelog, check again and close.** `CHANGELOG.md`
+- [x] **T14 — Changelog, check again and close.** `CHANGELOG.md`
   `[Unreleased]` entries describe the behaviour as it now is; README tool
   table if needed. `make build GOOS=darwin GOARCH=arm64`; the maintainer
   checks V1 to V4 with a scripted prompt (snippets cut at words, `via` and

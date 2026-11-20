@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -14,7 +14,7 @@ Accepted
 > Amended again on 2026-11-20 for findings N2 to N4 of the repeated live
 > check ([`2026-11-20-live-check-repeat.md`](../../design/2026-11-20-live-check-repeat.md)),
 > for v0.2.0: R19, R22 and R28 changed; R31 and the `context` input `edges`
-> added. Until they are implemented, the code matches v0.1.0.
+> added.
 >
 > Amended a third time on 2026-11-20 for findings V1 to V4 of the v0.2.0 live
 > check ([`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md)):
@@ -370,10 +370,10 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R24, R30** — `list` golden output with tags, a note with `updated` and
   one without (`file changed`), 501 notes give 500 lines and the total; the
   description names both dates.
-- [ ] **R19 (snippet)** — `search` golden output with a hit on a long line
+- [x] **R19 (snippet)** — `search` golden output with a hit on a long line
   shows the snippet with `…` on both sides, as `index.Search` returns it; the
   description says that a long line is cut around the first matching word.
-- [ ] **R22, R31** — `context` golden output at depth 2 with `edges` `start`:
+- [x] **R22, R31** — `context` golden output at depth 2 with `edges` `start`:
   the same first line and notes as with `all`, the
   `Edges of the start note (5):` heading, only the start note's edges, and
   `(via <path>)` on each note at distance 2; with `all`, the heading
@@ -382,7 +382,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   SDK; the tool list shows the enum and the default; the description names
   both values, the `via` names with their first-by-path rule, and the size
   sentence.
-- [ ] **R32** — On a root with notes holding `cisco1`, `cisco12`, and six
+- [x] **R32** — On a root with notes holding `cisco1`, `cisco12`, and six
   notes holding `fw1` to `fw6`: `search` for `cisco` gives
   `Found no notes for "cisco".` and the line naming `cisco1, cisco12`;
   `search` for `fw` names five words and `, and 1 more`; a `type` filter that
@@ -397,10 +397,11 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   near name, with the built binary on a copy of a real notes root. Recorded as
   a verification record under `docs/design/`.
   *(Findings V1 to V4: [`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md).)*
-- [ ] **Live check (v0.2.0, again)** — The maintainer checks the fixes of V1
+- [x] **Live check (v0.2.0, again)** — The maintainer checks the fixes of V1
   to V4 with the built binary on a copy of a real notes root: snippets cut at
   word boundaries, `via` names and edge counts in `context`, and the hint of a
   `search` without hits. Added to the same verification record.
+  *(Check again: [`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md#check-again-after-slice-e).)*
 - [x] **Live check (again)** — The exit check of stage plan 0004 repeats the
   read checks of the live check of 2026-11-20 on a copy of a real notes root.
 - [x] **Live check** — `claude mcp add` with the built binary on a copy of a real
