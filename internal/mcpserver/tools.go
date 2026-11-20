@@ -81,7 +81,7 @@ var schemaContext = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
-const descList = `List notes by folder, type or tag, sorted by path, with each note's title, type and last update date.
+const descList = `List notes by folder, type or tag, sorted by path, with each note's title, type, tags and a date: "updated" with the date in the note's updated field, or "file changed" with the date the file last changed when the note has no updated field.
 Use it to see what exists in a folder or of a type. Use search to find notes by their content.
 Without arguments it lists every note. It shows at most 500 notes and says when there are more; narrow the list with folder, type or tag. An empty list is not an error.
 Read-only and safe to repeat.

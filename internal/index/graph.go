@@ -183,6 +183,8 @@ type Entry struct {
 	Type    string
 	Tags    []string
 	Updated time.Time
+	// ModTime is the file's modification time (SPEC-0002 R26).
+	ModTime time.Time
 }
 
 // List returns the notes that pass f, sorted by path (SPEC-0002 R20).
@@ -193,11 +195,12 @@ func (x *Index) List(f Filter) []Entry {
 	}
 	var out []Entry
 	for _, p := range x.Paths() {
-		n := x.notes[p].note
+		e := x.notes[p]
+		n := e.note
 		if !matches(p, n, q) {
 			continue
 		}
-		out = append(out, Entry{Path: p, Title: n.Title, Type: n.Type, Tags: n.Tags, Updated: n.Updated})
+		out = append(out, Entry{Path: p, Title: n.Title, Type: n.Type, Tags: n.Tags, Updated: n.Updated, ModTime: e.meta.ModTime})
 	}
 	return out
 }

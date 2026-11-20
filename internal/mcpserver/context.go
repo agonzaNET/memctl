@@ -101,7 +101,7 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 	return res, err
 }
 
-// list implements the list tool (SPEC-0004 R24, R25).
+// list implements the list tool (SPEC-0004 R24, R25, R30).
 func (s *Server) list(in listIn, log *callLog) (*mcp.CallToolResult, error) {
 	folder, err := normFolder(in.Folder)
 	if err != nil {
@@ -125,8 +125,14 @@ func (s *Server) list(in listIn, log *callLog) (*mcp.CallToolResult, error) {
 			if e.Type != "" {
 				fmt.Fprintf(&b, " (%s)", e.Type)
 			}
-			if !e.Updated.IsZero() {
+			if len(e.Tags) > 0 {
+				fmt.Fprintf(&b, " · tags %s", strings.Join(e.Tags, ", "))
+			}
+			switch {
+			case !e.Updated.IsZero():
 				fmt.Fprintf(&b, " · updated %s", e.Updated.Format("2006-01-02"))
+			case !e.ModTime.IsZero():
+				fmt.Fprintf(&b, " · file changed %s", e.ModTime.Local().Format("2006-01-02"))
 			}
 			b.WriteString("\n")
 		}

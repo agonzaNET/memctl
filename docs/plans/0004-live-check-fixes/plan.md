@@ -111,7 +111,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
   section's lines; `section_not_found` with the headings in `note_read`; new
   code in `result.go` and the code test.
   *SPEC-0004 R16; error table.*
-- [ ] **T7 — List lines.** `ModTime` in entries; lines with tags and
+- [x] **T7 — List lines.** `ModTime` in entries; lines with tags and
   `updated` or `file changed`; description names both dates.
   *SPEC-0002 R26; SPEC-0004 R24, R30.*
 

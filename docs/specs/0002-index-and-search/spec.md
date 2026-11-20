@@ -257,7 +257,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
 - [x] **R23** — Table test: path, title, alias and stem resolutions give their
   `Step`; a path ref whose text is also another note's title gives that note in
   `Also`; ambiguous and dangling results leave both empty.
-- [ ] **R26** — A listed note without `updated` carries the `ModTime` it was
+- [x] **R26** — A listed note without `updated` carries the `ModTime` it was
   `Put` with.
 - [x] **R22** — `BenchmarkBuild`, `BenchmarkSearch`, `BenchmarkWalk` exist and
   their results on the development machine are recorded in the stage plan.

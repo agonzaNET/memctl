@@ -321,7 +321,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   line and an edge between two notes at depth 2, `rel_types`, truncation line;
   the description names the edge rule.
 - [x] **R25** — `list` log counts.
-- [ ] **R24, R30** — `list` golden output with tags, a note with `updated` and
+- [x] **R24, R30** — `list` golden output with tags, a note with `updated` and
   one without (`file changed`), 501 notes give 500 lines and the total; the
   description names both dates.
 - [ ] **Live check (again)** — The exit check of stage plan 0004 repeats the
