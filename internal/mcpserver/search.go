@@ -93,7 +93,11 @@ func (s *Server) search(in searchIn, log *callLog) (*mcp.CallToolResult, error) 
 		first := fmt.Sprintf("Found %d %s for %q.", len(hits), plural(len(hits), "note", "notes"), in.Query)
 		if found.Total > len(hits) {
 			first = fmt.Sprintf("Found %d notes for %q; showing the first %d.", found.Total, in.Query, len(hits))
-			fmt.Fprintf(&b, "\nMore notes match than are shown; pass a higher limit (up to 50) to see more, or narrow the search with type, tags or folder.")
+			if len(hits) < index.MaxLimit {
+				fmt.Fprintf(&b, "\nMore notes match than are shown; pass a higher limit (up to %d) to see more, or narrow the search with type, tags or folder.", index.MaxLimit)
+			} else {
+				b.WriteString("\nMore notes match than can be shown; narrow the search with type, tags or folder, or use more specific words.")
+			}
 		}
 		res = success(first, b.String())
 		return nil

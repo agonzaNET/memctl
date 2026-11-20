@@ -319,7 +319,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R19, R29** — `search` golden output with tags, no hits, empty query; 25
   hits with the default limit give the `showing the first 10` line and the
   last line; 3 hits give the plain first line.
-- [ ] **R29 (maximum limit)** — With `limit` 50 and more matches, the last
+- [x] **R29 (maximum limit)** — With `limit` 50 and more matches, the last
   line names the filters and no higher `limit`.
 - [x] **R22, R23** — `context` golden output at depth 1 and 2 with the new first
   line and an edge between two notes at depth 2, `rel_types`, truncation line;

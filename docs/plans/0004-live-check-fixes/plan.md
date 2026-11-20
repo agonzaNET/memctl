@@ -170,7 +170,7 @@ the repeated live check covers the code that is released.
   path such as `[draft] x.md` or `*.md` as a pattern and never stage a
   person's change to another file.
   *SPEC-0008 R2.*
-- [ ] **T18 — Hint at the maximum limit.** The closing line of a truncated
+- [x] **T18 — Hint at the maximum limit.** The closing line of a truncated
   `search` names a higher `limit` only when the call's `limit` is below 50.
   *SPEC-0004 R29.*
 - [ ] **T19 — Audit nits.** `memctl check` usage names `MEMCTL_ROOT`;
