@@ -18,6 +18,12 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+### Security
+
+- Built with `golang.org/x/sys` v0.50.0, which fixes GO-2026-5024; memctl
+  does not call the affected code, and `govulncheck` now reports no
+  vulnerability at all.
+
 ## [0.1.0] - 2026-11-20
 
 ### Added
