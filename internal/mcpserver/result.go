@@ -22,11 +22,14 @@ const (
 	CodeConflict  Code = "conflict"
 	CodeNoMatch   Code = "no_match"
 	CodeNotUnique Code = "not_unique"
+
+	// Added for a missing section (SPEC-0004, SPEC-0007).
+	CodeSectionNotFound Code = "section_not_found"
 )
 
 // Codes lists every code a tool may emit.
 var Codes = []Code{CodeInvalidArgument, CodeNotFound, CodeAmbiguous, CodeInternalError,
-	CodeExists, CodeConflict, CodeNoMatch, CodeNotUnique}
+	CodeExists, CodeConflict, CodeNoMatch, CodeNotUnique, CodeSectionNotFound}
 
 // toolError is an error a tool returns to the agent as "<code>: <message>".
 type toolError struct {

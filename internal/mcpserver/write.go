@@ -43,7 +43,7 @@ func writeError(err error) error {
 	case errors.As(err, &conflict):
 		return errorf(CodeConflict, "The note changed since you read it, so nothing was changed. Its current sha256 and content follow; decide again on that content and retry with that sha256 as expected_sha.\n\nsha256: %s\n\n%s", conflict.SHA256, fenced(conflict.Content))
 	case errors.As(err, &section):
-		return noHeading(section.Section, section.Headings, "use append or find_replace instead")
+		return noHeading(section.Section, section.Headings, "use append or find_replace instead", "pass one of them as section")
 	case errors.Is(err, note.ErrNoMatch):
 		return errorf(CodeNoMatch, "The find text does not occur in the note; read the note again and pass text that it contains exactly.")
 	case errors.As(err, &many):

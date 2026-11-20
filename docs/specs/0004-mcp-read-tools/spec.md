@@ -310,7 +310,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R15, R17, R18** — `note_read` of the design's example note equals a
   golden file; a note containing a run of four backticks gets a five-backtick
   fence.
-- [ ] **R16** — `section` hit with a link inside and one outside the section
+- [x] **R16** — `section` hit with a link inside and one outside the section
   (only the inside one listed), a section without links, nested heading, miss
   (`section_not_found` with the headings).
 - [x] **R20, R21** — Folder normalisation and rejection; log counts.

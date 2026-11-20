@@ -108,7 +108,7 @@ func TestResult_SPEC0004_R10_R11_shape(t *testing.T) {
 
 func TestResult_SPEC0004_R11_fixedCodeList(t *testing.T) {
 	// SPEC-0004's codes, then those SPEC-0007 adds.
-	want := []string{"invalid_argument", "not_found", "ambiguous", "internal_error", "exists", "conflict", "no_match", "not_unique"}
+	want := []string{"invalid_argument", "not_found", "ambiguous", "internal_error", "exists", "conflict", "no_match", "not_unique", "section_not_found"}
 	if len(mcpserver.Codes) != len(want) {
 		t.Fatalf("codes %v", mcpserver.Codes)
 	}

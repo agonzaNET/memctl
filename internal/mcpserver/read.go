@@ -44,13 +44,17 @@ func (s *Server) noteRead(in noteReadIn, log *callLog) (*mcp.CallToolResult, err
 		}
 		content := string(data)
 		first := fmt.Sprintf("Read %q at %s.", n.Title, p)
+		inRange := func(int) bool { return true }
+		linksHead := "Links"
 		if in.Section != "" {
-			h, part, err := section(n, content, in.Section)
+			h, part, from, end, err := section(n, content, in.Section)
 			if err != nil {
 				return err
 			}
 			content = part
 			first = fmt.Sprintf("Read section %q of %q at %s.", h, n.Title, p)
+			inRange = func(line int) bool { return line >= from && (end == 0 || line < end) }
+			linksHead = "Links in this section"
 		}
 
 		var meta strings.Builder
@@ -71,16 +75,16 @@ func (s *Server) noteRead(in noteReadIn, log *callLog) (*mcp.CallToolResult, err
 		item("resolved by", step)
 		item("other notes with this name", others)
 
-		links := linkLines(idx, n)
+		links := linkLines(idx, n, inRange)
 		var body strings.Builder
 		body.WriteString(meta.String())
 		body.WriteString("\n")
 		body.WriteString(fenced(content))
 		body.WriteString("\n\n")
 		if len(links) == 0 {
-			body.WriteString("Links: none.")
+			body.WriteString(linksHead + ": none.")
 		} else {
-			body.WriteString("Links:\n" + strings.Join(links, "\n"))
+			body.WriteString(linksHead + ":\n" + strings.Join(links, "\n"))
 		}
 
 		log.set("bytes", len(content))
@@ -98,14 +102,21 @@ func formatTime(t time.Time) string {
 	return t.Format(time.RFC3339)
 }
 
-// linkLines renders every relation and link of a note, in file order, with
-// its resolution (SPEC-0004 R15).
-func linkLines(idx *index.Index, n parse.Note) []string {
+// linkLines renders the relations and links of a note on the lines that
+// keep says to keep, in file order, with their resolution (SPEC-0004 R15,
+// R16).
+func linkLines(idx *index.Index, n parse.Note, keep func(line int) bool) []string {
 	var items []lineItem
 	for _, r := range n.Relations {
+		if !keep(r.Line) {
+			continue
+		}
 		items = append(items, lineItem{r.Line, fmt.Sprintf("- %s → %s", r.Type, describe(r.Target, idx.Resolve(r.Target)))})
 	}
 	for _, l := range n.Links {
+		if !keep(l.Line) {
+			continue
+		}
 		items = append(items, lineItem{l.Line, fmt.Sprintf("- links_to → %s", describe(l.Target, idx.Resolve(l.Target)))})
 	}
 	return sortItems(items)
@@ -125,17 +136,18 @@ func sortItems(items []lineItem) []string {
 	return out
 }
 
-// section returns the text of the first heading that matches name and the
-// lines from it to the next heading of the same or a higher level
+// section returns the text of the first heading that matches name, the
+// lines from it to the next heading of the same or a higher level, and the
+// section's first line and the line after it (0 at the end of the file)
 // (SPEC-0004 R16).
-func section(n parse.Note, content, name string) (string, string, error) {
+func section(n parse.Note, content, name string) (string, string, int, int, error) {
 	h, end, ok := parse.FindSection(n, name)
 	if !ok {
 		var names []string
 		for _, h := range n.Headings {
 			names = append(names, h.Text)
 		}
-		return "", "", noHeading(name, names, "read it without section")
+		return "", "", 0, 0, noHeading(name, names, "read it without section", "pass one of them as section, or read the note without section")
 	}
 	lines := strings.SplitAfter(content, "\n")
 	from := h.Line - 1
@@ -149,12 +161,13 @@ func section(n parse.Note, content, name string) (string, string, error) {
 	if to < from {
 		to = from
 	}
-	return h.Text, strings.Join(lines[from:to], ""), nil
+	return h.Text, strings.Join(lines[from:to], ""), h.Line, end, nil
 }
 
-// noHeading is the not_found error for a missing section: it lists up to 20
-// of the note's headings, or says what to do when it has none.
-func noHeading(name string, headings []string, without string) error {
+// noHeading is the section_not_found error for a missing section: it lists
+// up to 20 of the note's headings with the advice in with, or gives the
+// advice in without when the note has none.
+func noHeading(name string, headings []string, without, with string) error {
 	var names []string
 	for i, h := range headings {
 		if i == 20 {
@@ -164,7 +177,7 @@ func noHeading(name string, headings []string, without string) error {
 		names = append(names, h)
 	}
 	if len(names) == 0 {
-		return errorf(CodeNotFound, "The note has no heading %q, and no headings at all; %s.", name, without)
+		return errorf(CodeSectionNotFound, "The note has no heading %q, and no headings at all; %s.", name, without)
 	}
-	return errorf(CodeNotFound, "The note has no heading %q; its headings are: %s.", name, strings.Join(names, ", "))
+	return errorf(CodeSectionNotFound, "The note has no heading %q; its headings are: %s; %s.", name, strings.Join(names, ", "), with)
 }

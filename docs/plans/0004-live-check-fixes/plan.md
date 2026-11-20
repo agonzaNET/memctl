@@ -107,7 +107,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ### Slice C — Read and list output
 
-- [ ] **T6 — Section reads.** `Links in this section:` with the links on the
+- [x] **T6 — Section reads.** `Links in this section:` with the links on the
   section's lines; `section_not_found` with the headings in `note_read`; new
   code in `result.go` and the code test.
   *SPEC-0004 R16; error table.*
