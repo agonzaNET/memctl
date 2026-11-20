@@ -18,6 +18,8 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+## [0.2.0] - 2026-11-20
+
 ### Added
 
 - `context` takes `edges`: `start` lists the same notes with only the
@@ -115,5 +117,6 @@ docs/agents/changelog.md.
   author of those commits; the default is `memctl <memctl@localhost>`
   (spec: SPEC-0008).
 
-[Unreleased]: https://github.com/agonzaNET/memctl/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/agonzaNET/memctl/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/agonzaNET/memctl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/agonzaNET/memctl/releases/tag/v0.1.0
