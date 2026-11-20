@@ -18,6 +18,7 @@ specs and the ADRs. List each record in this README.
 - [2026-11-19 — M1 check on the development VM](2026-11-19-m1-vm-check.md)
 - [2026-11-19 — M3 release build checked locally](2026-11-19-m3-local-release-build.md)
 - [2026-11-20 — Live check of M1 and M2 with Claude Desktop](2026-11-20-live-check.md)
+- [2026-11-20 — Live check repeated after stage plan 0004](2026-11-20-live-check-repeat.md)
 
 ## Where it sits in the doc hierarchy
 

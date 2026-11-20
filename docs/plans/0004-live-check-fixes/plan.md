@@ -196,7 +196,7 @@ the repeated live check covers the code that is released.
   `[Unreleased]` entries the stage changed; README where tool output or git
   behaviour is described.
   *SPEC-0002 R22.*
-- [ ] **T16 — Live check and close.** `make build`; the maintainer repeats the
+- [x] **T16 — Live check and close.** `make build`; the maintainer repeats the
   live check of 2026-11-20 with the same scripted prompt, extended by an
   editor change between two tool writes and a note edited while memctl is
   stopped. Write the verification record under `docs/design/` and list it in

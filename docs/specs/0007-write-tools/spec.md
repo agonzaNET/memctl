@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -278,7 +278,7 @@ is unchanged.
 - [x] **R29** — `note_write` with a dangling and an ambiguous link lists both;
   with resolved links only, no list; `note_edit` that adds a dangling link
   lists it; the log line carries `unresolved`.
-- [ ] **Live check (again)** — The exit check of stage plan 0004 repeats the
+- [x] **Live check (again)** — The exit check of stage plan 0004 repeats the
   write checks of the live check of 2026-11-20 on a scratch root.
 - [x] **R25, R26, R27** — Tool list annotations; `check-docs.sh` check 5 passes;
   captured log lines carry the counts and no argument value.

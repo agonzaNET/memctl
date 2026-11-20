@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 > Amended on 2026-11-20 for findings L10 and L11 of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -207,7 +207,7 @@ anything a tool did not change, and never push.
   quiet window: the external commit holds the editor change only, the tool
   commit holds the edit only; with the external commit failing, the edit is
   written and committed after the `ERROR` line.
-- [ ] **Live check (again)** — The exit check of stage plan 0004 repeats the git
+- [x] **Live check (again)** — The exit check of stage plan 0004 repeats the git
   checks of the live check of 2026-11-20, with an editor change between two
   tool writes.
 - [x] **R13** — A second SIGTERM during a slow fake commit exits at once with

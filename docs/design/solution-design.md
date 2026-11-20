@@ -187,6 +187,16 @@ Three milestones, about 1.5–2 weeks in total with Claude Code, each ending in 
 3. **M3 — Release.** Released only after the findings of the M1/M2 live check are fixed (stage plan 0004). A manually triggered release workflow in GitHub Actions (`workflow_dispatch`, input: an existing `vX.Y.Z` tag), README with client setup. Exit: a release binary runs end to end on a fresh notes root.
 4. **v2 — Semantic search.** `Embedder` backed by TEI over HTTP, hybrid BM25 + cosine ranking.
 
+## Backlog for 0.x
+
+Small changes to v1 behaviour, found in the repeated live check of 2026-11-20
+([`2026-11-20-live-check-repeat.md`](2026-11-20-live-check-repeat.md)). Each
+needs a spec amendment before code.
+
+- **Snippet around the match:** centre a `search` snippet on the first matched term, with an ellipsis on each cut side, so a long line still shows why the note matched (N2).
+- **Smaller `context` results:** an option to list only the start note's edges, or to filter edges by type, and the expected size in the description (N3).
+- **Near names in suggestions:** let a word match as the prefix of a letters-and-digits identifier (`cisco` → `cisco1`) in `not_found` suggestions only, not in `search` ranking (N4).
+
 ## Backlog after v2
 
 None of these change v1 code; each is a later, independent addition.

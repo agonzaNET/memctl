@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -328,7 +328,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R24, R30** — `list` golden output with tags, a note with `updated` and
   one without (`file changed`), 501 notes give 500 lines and the total; the
   description names both dates.
-- [ ] **Live check (again)** — The exit check of stage plan 0004 repeats the
+- [x] **Live check (again)** — The exit check of stage plan 0004 repeats the
   read checks of the live check of 2026-11-20 on a copy of a real notes root.
 - [x] **Live check** — `claude mcp add` with the built binary on a copy of a real
   notes root: the four tools answer, and an edit in an editor shows up on the

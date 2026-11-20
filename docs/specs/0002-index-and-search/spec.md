@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
