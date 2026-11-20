@@ -18,7 +18,8 @@ Accepted
 >
 > Amended a third time on 2026-11-20 for findings V1 to V4 of the v0.2.0 live
 > check ([`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md)):
-> R22 and R31 changed; R32 added.
+> R22 and R31 changed; R32 added. R31 amended again on 2026-11-20 after the
+> re-check (W2): the description says which note `via` names.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -282,7 +283,8 @@ for a note without one, the file's modification date.
   and the notes listed do not change. The tool description MUST name both
   values, say that `start` returns the same notes with only the start note's
   connections and names for each note further than one hop the note it was
-  reached through, and say that depth 2 or 3 can return dozens of notes and
+  reached through (one of them, the first by path, when several reach it),
+  and say that depth 2 or 3 can return dozens of notes and
   hundreds of connections, that depth 1 lists fewer notes and `edges`
   `start` fewer connections.
 - **R32** — When `search` finds no notes, it MUST call `index.Search` again
@@ -378,7 +380,8 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   `Edges (6):` and no `via`; a walk without edges reads `Edges: none.`; no
   `edges` gives the output of `edges` `all`; `edges` `other` is refused by the
   SDK; the tool list shows the enum and the default; the description names
-  both values, the `via` names and the size sentence.
+  both values, the `via` names with their first-by-path rule, and the size
+  sentence.
 - [ ] **R32** — On a root with notes holding `cisco1`, `cisco12`, and six
   notes holding `fw1` to `fw6`: `search` for `cisco` gives
   `Found no notes for "cisco".` and the line naming `cisco1, cisco12`;

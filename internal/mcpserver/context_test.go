@@ -302,6 +302,7 @@ func TestContext_SPEC0004_R31_schemaAndDescription(t *testing.T) {
 		"unless edges is start",
 		"edges start to get the same notes with only the start note's connections",
 		"names the note it was reached through",
+		"the first by path when several notes reach it",
 		"edges all, the default",
 		"dozens of notes and hundreds of connections",
 		"depth 1 lists fewer notes, and edges start fewer connections",
