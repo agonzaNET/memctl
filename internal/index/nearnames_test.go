@@ -10,12 +10,12 @@ import (
 
 func TestSearch_SPEC0002_R29_nearNames(t *testing.T) {
 	x := index.New()
-	put(x, "a.md", "---\ntitle: A\n---\nrouter cisco1\n")
-	put(x, "b.md", "---\ntitle: B\n---\nrouter cisco12\n")
-	put(x, "c.md", "---\ntitle: C\n---\nrouter ciscoasa\n")
-	put(x, "d.md", "---\ntitle: D\n---\nsite eu1\n")
-	put(x, "e.md", "---\ntitle: E\n---\ncell c1\n")
-	put(x, "h.md", "---\ntitle: H\n---\nbox cisco1a\n")
+	put(x, "a.md", "---\ntitle: Alpha\n---\nrouter cisco1\n")
+	put(x, "b.md", "---\ntitle: Bravo\n---\nrouter cisco12\n")
+	put(x, "c.md", "---\ntitle: Charlie\n---\nrouter ciscoasa\n")
+	put(x, "d.md", "---\ntitle: Delta\n---\nsite eu1\n")
+	put(x, "e.md", "---\ntitle: Echo\n---\ncell c1\n")
+	put(x, "h.md", "---\ntitle: Hotel\n---\nbox cisco1a\n")
 
 	find := func(text string, near bool) []string {
 		t.Helper()
