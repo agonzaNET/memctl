@@ -17,11 +17,13 @@ var (
 // MaxWalkNotes caps a walk (SPEC-0002 R18).
 const MaxWalkNotes = 200
 
-// Node is a note reached by a walk.
+// Node is a note reached by a walk. Via is the note one hop nearer that it
+// was reached through, from distance 2 on (SPEC-0002 R30).
 type Node struct {
 	Path     string
 	Title    string
 	Distance int
+	Via      string
 }
 
 // Edge is a relation or body link (type "links_to") from Source at Line to
@@ -51,8 +53,9 @@ const (
 	EdgesStart
 )
 
-// Walk walks relations, body links and backlinks from start and lists the
-// edges of scope (SPEC-0002 R15–R19, R28).
+// Walk walks relations, body links and backlinks from start, names the note
+// each farther note was reached through, and lists the edges of scope
+// (SPEC-0002 R15–R19, R28, R30).
 func (x *Index) Walk(start string, depth int, relTypes []string, scope EdgeScope) (Graph, error) {
 	if depth == 0 {
 		depth = 1
@@ -80,33 +83,43 @@ func (x *Index) Walk(start string, depth int, relTypes []string, scope EdgeScope
 
 	var g Graph
 	dist := map[string]int{start: 0}
+	via := map[string]string{}
 	g.Nodes = append(g.Nodes, Node{Path: start, Title: x.notes[start].note.Title})
 	frontier := []string{start}
 	for d := 0; d < depth && len(frontier) > 0 && !g.Truncated; d++ {
 		var next []string
-		visit := func(other string) {
+		// visit reaches other from p; of several notes at distance d that
+		// reach it, the smallest path is its Via (R30).
+		visit := func(other, p string) {
+			if dd, ok := dist[other]; ok {
+				if dd == d+1 && d >= 1 && p < via[other] {
+					via[other] = p
+				}
+				return
+			}
 			if g.Truncated {
 				return
 			}
-			if _, ok := dist[other]; !ok {
-				if len(g.Nodes) >= MaxWalkNotes {
-					g.Truncated = true
-					return
-				}
-				dist[other] = d + 1
-				g.Nodes = append(g.Nodes, Node{Path: other, Title: x.notes[other].note.Title, Distance: d + 1})
-				next = append(next, other)
+			if len(g.Nodes) >= MaxWalkNotes {
+				g.Truncated = true
+				return
 			}
+			dist[other] = d + 1
+			if d >= 1 {
+				via[other] = p
+			}
+			g.Nodes = append(g.Nodes, Node{Path: other, Title: x.notes[other].note.Title, Distance: d + 1})
+			next = append(next, other)
 		}
 		for _, p := range frontier {
 			for _, e := range out[p] {
 				if e.Resolution.Status == Resolved && e.Resolution.Path != p && allowed(e.Type) {
-					visit(e.Resolution.Path)
+					visit(e.Resolution.Path, p)
 				}
 			}
 			for _, e := range in[p] {
 				if allowed(e.Type) {
-					visit(e.Source)
+					visit(e.Source, p)
 				}
 			}
 		}
@@ -143,6 +156,9 @@ func (x *Index) Walk(start string, depth int, relTypes []string, scope EdgeScope
 				add(e, "\x01"+e.Target)
 			}
 		}
+	}
+	for i := range g.Nodes {
+		g.Nodes[i].Via = via[g.Nodes[i].Path]
 	}
 	sort.SliceStable(g.Nodes, func(i, j int) bool {
 		a, b := g.Nodes[i], g.Nodes[j]

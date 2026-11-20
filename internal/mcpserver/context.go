@@ -82,7 +82,11 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 		}
 		b.WriteString("Notes:\n")
 		for _, n := range g.Nodes {
-			fmt.Fprintf(&b, "- %d · %s — %s\n", n.Distance, n.Path, n.Title)
+			fmt.Fprintf(&b, "- %d · %s — %s", n.Distance, n.Path, n.Title)
+			if scope == index.EdgesStart && n.Via != "" {
+				fmt.Fprintf(&b, " (via %s)", n.Via)
+			}
+			b.WriteString("\n")
 		}
 		b.WriteString("\n" + heading)
 		if len(g.Edges) == 0 {
