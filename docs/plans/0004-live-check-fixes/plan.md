@@ -149,7 +149,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
 
 ### Slice F — Lock message
 
-- [ ] **T14 — Lock refusal.** `HeldError` carries the given and the resolved
+- [x] **T14 — Lock refusal.** `HeldError` carries the given and the resolved
   root; the `ERROR` line holds the message; the plain line only when stderr is
   a character device.
   *SPEC-0006 R5.*

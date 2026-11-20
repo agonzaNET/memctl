@@ -99,7 +99,7 @@ process on the same root stops at once and says which process holds it.
   unchanged; `git status` in the root shows nothing from `.memory/`.
 - [x] **R3, R4** — Two processes on one root: the second exits with status 1;
   the lock file holds the first one's PID.
-- [ ] **R5** — The second process's stderr, captured through a pipe, holds the
+- [x] **R5** — The second process's stderr, captured through a pipe, holds the
   message once, in the `ERROR` line, with the first one's PID; with an empty
   lock file, the message without a PID; a root given through a symlink shows
   the given path and the resolved one in parentheses; a root given as resolved

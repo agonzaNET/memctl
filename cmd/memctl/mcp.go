@@ -42,7 +42,12 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if err != nil {
 		var held *note.HeldError
 		if errors.As(err, &held) {
-			fmt.Fprintln(stderr, held.Error())
+			// The message once in a client's log; a person at a terminal
+			// also gets it as a plain line (SPEC-0006 R5).
+			held.Given = cfg.root
+			if isTerminal(stderr) {
+				fmt.Fprintln(stderr, held.Error())
+			}
 			log.Error(held.Error())
 		} else {
 			log.Error("cannot take the instance lock", slog.String("err", err.Error()))
@@ -104,6 +109,16 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 
 	log.Info("stopped")
 	return exitOK
+}
+
+// isTerminal reports whether w is a character device, such as a terminal.
+func isTerminal(w io.Writer) bool {
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	fi, err := f.Stat()
+	return err == nil && fi.Mode()&os.ModeCharDevice != 0
 }
 
 // nopWriteCloser keeps the server from closing stdout.

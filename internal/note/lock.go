@@ -17,17 +17,24 @@ import (
 type Lock struct{ f *os.File }
 
 // HeldError reports that another process holds the lock of Root. PID is 0
-// when the holder's PID cannot be read.
+// when the holder's PID cannot be read. Given is the root as the user gave
+// it; when set and different from Root, the message names both
+// (SPEC-0006 R5).
 type HeldError struct {
-	Root string
-	PID  int
+	Root  string
+	Given string
+	PID   int
 }
 
 func (e *HeldError) Error() string {
-	if e.PID <= 0 {
-		return "root " + e.Root + " is in use by another memctl process"
+	root := e.Root
+	if e.Given != "" && e.Given != e.Root {
+		root = e.Given + " (" + e.Root + ")"
 	}
-	return "root " + e.Root + " is in use by memctl (pid " + strconv.Itoa(e.PID) + ")"
+	if e.PID <= 0 {
+		return "root " + root + " is in use by another memctl process"
+	}
+	return "root " + root + " is in use by memctl (pid " + strconv.Itoa(e.PID) + ")"
 }
 
 // MemoryDir is the folder of memctl's own files in a notes root.
