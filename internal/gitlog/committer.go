@@ -340,10 +340,22 @@ func (c *Committer) commitFiles(ctx context.Context, paths []string, msg string,
 		c.log.Error("commit failed", slog.Int("status", status), slog.String("class", class), slog.Int("paths", len(paths)))
 	}
 
-	add := append([]string{"-A", "--"}, paths...)
-	if _, err := c.retry(func() ([]byte, error) { return runGit(ctx, c.root, c.timeout, nil, nil, "add", add...) }); err != nil {
-		fail(err)
-		return err
+	// git add refuses a path that is neither on disk nor in the index (a note
+	// a person renamed with git mv); commit --only still records its removal.
+	var stage []string
+	for _, p := range paths {
+		if _, err := os.Lstat(filepath.Join(c.root, filepath.FromSlash(p))); err == nil {
+			stage = append(stage, p)
+		} else if _, err := runGit(ctx, c.root, c.timeout, nil, nil, "rev-parse", "-q", "--verify", ":./"+p); err == nil {
+			stage = append(stage, p)
+		}
+	}
+	if len(stage) > 0 {
+		add := append([]string{"-A", "--"}, stage...)
+		if _, err := c.retry(func() ([]byte, error) { return runGit(ctx, c.root, c.timeout, nil, nil, "add", add...) }); err != nil {
+			fail(err)
+			return err
+		}
 	}
 	env := []string{
 		"GIT_AUTHOR_NAME=" + author.Name, "GIT_AUTHOR_EMAIL=" + author.Email,
@@ -384,7 +396,7 @@ func (c *Committer) commitPaths(ctx context.Context, batch []Entry) []string {
 }
 
 // keepPaths drops the paths git ignores, and the paths that exist neither
-// on disk nor in the index.
+// on disk nor in the index nor in HEAD.
 func (c *Committer) keepPaths(ctx context.Context, paths []string) []string {
 	stdin := strings.NewReader(strings.Join(paths, "\x00") + "\x00")
 	out, err := runGit(ctx, c.root, c.timeout, nil, stdin, "check-ignore", "-z", "--stdin")
@@ -403,7 +415,9 @@ func (c *Committer) keepPaths(ctx context.Context, paths []string) []string {
 			continue
 		}
 		if _, err := os.Lstat(filepath.Join(c.root, filepath.FromSlash(p))); errors.Is(err, fs.ErrNotExist) {
-			if _, err := runGit(ctx, c.root, c.timeout, nil, nil, "rev-parse", "-q", "--verify", ":./"+p); err != nil {
+			_, inIndex := runGit(ctx, c.root, c.timeout, nil, nil, "rev-parse", "-q", "--verify", ":./"+p)
+			_, inHead := runGit(ctx, c.root, c.timeout, nil, nil, "rev-parse", "-q", "--verify", "HEAD:./"+p)
+			if inIndex != nil && inHead != nil {
 				continue
 			}
 		}

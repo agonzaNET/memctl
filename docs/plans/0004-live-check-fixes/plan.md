@@ -142,7 +142,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
   path with a pending external change waits for that commit; shutdown flushes
   both queues.
   *SPEC-0003 R18; SPEC-0008 R2, R12, R14, R16.*
-- [ ] **T13 — Start-up scan.** `git status --porcelain=v1 -z
+- [x] **T13 — Start-up scan.** `git status --porcelain=v1 -z
   --untracked-files=all` after the repository test; queue the note paths and
   deleted `.md` paths as external changes.
   *SPEC-0008 R15.*

@@ -179,7 +179,7 @@ anything a tool did not change, and never push.
   two commits, the external one first, with the repository identity when
   `user.name` and `user.email` are set and `--git-author` when not; three
   external paths give one commit with the sorted body.
-- [ ] **R15** — A note edited, one added and one deleted while memctl was not
+- [x] **R15** — A note edited, one added and one deleted while memctl was not
   running are committed as external changes after start; an untracked
   `x.txt` and a file under an ignored folder are not.
 - [x] **R16** — An editor change to a note, then `note_edit` on it within the

@@ -70,6 +70,15 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		log.Error("cannot open the notes root", slog.String("err", err.Error()))
 		return exitError
 	}
+	// Notes changed while memctl was not running are committed as external
+	// changes (SPEC-0008 R15). No tool call runs yet, so the index is read
+	// without the service mutex.
+	if err := committer.Scan(ctx, func(rel string) bool {
+		_, _, ok := svc.Index().Get(rel)
+		return ok
+	}); err != nil {
+		log.Warn("cannot list the uncommitted notes; they are committed when they next change")
+	}
 	log.Info("started",
 		slog.String("version", version),
 		slog.String("log_level", cfg.logLevel),
