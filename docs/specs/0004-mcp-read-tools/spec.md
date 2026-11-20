@@ -301,7 +301,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R13** — `check-docs.sh` passes with the markers present; a description
   naming a spec number fails it.
 - [x] **R14** — A ref by path, by title, by alias, ambiguous and unknown.
-- [ ] **R27** — `note_read` and `context` by title and by alias show the step;
+- [x] **R27** — `note_read` and `context` by title and by alias show the step;
   a path ref that is also another note's title names that note; a path ref
   with no other match adds nothing.
 - [ ] **R28** — An unknown ref whose words match notes lists up to three paths;
@@ -317,7 +317,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
 - [x] **R19, R29** — `search` golden output with tags, no hits, empty query; 25
   hits with the default limit give the `showing the first 10` line and the
   last line; 3 hits give the plain first line.
-- [ ] **R22, R23** — `context` golden output at depth 1 and 2 with the new first
+- [x] **R22, R23** — `context` golden output at depth 1 and 2 with the new first
   line and an edge between two notes at depth 2, `rel_types`, truncation line;
   the description names the edge rule.
 - [x] **R25** — `list` log counts.

@@ -97,7 +97,7 @@ implement, `make verify`, commit (`feat(<pkg>): …` or `fix(<pkg>): …
   source, type and target at the first line, keep the start's dangling and
   ambiguous edges, order as before.
   *SPEC-0002 R17.*
-- [ ] **T4 — Resolution step.** `Step` and `Also` in `Resolve`; `note_read`
+- [x] **T4 — Resolution step.** `Step` and `Also` in `Resolve`; `note_read`
   metadata item and `context` line; `context` first line `plus the note
   itself`; description names the edge rule.
   *SPEC-0002 R23; SPEC-0004 R22, R27.*

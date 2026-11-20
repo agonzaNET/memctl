@@ -32,10 +32,11 @@ func (s *Server) registerRead() {
 func (s *Server) noteRead(in noteReadIn, log *callLog) (*mcp.CallToolResult, error) {
 	var res *mcp.CallToolResult
 	err := s.opts.Notes.Call(func(idx *index.Index, _ note.Stats) error {
-		p, err := resolveRef(idx, in.Ref)
+		ref, err := resolveRefFull(idx, in.Ref)
 		if err != nil {
 			return err
 		}
+		p := ref.Path
 		n, m, _ := idx.Get(p)
 		data, err := os.ReadFile(filepath.Join(s.opts.Notes.Root(), filepath.FromSlash(p)))
 		if err != nil {
@@ -66,6 +67,9 @@ func (s *Server) noteRead(in noteReadIn, log *callLog) (*mcp.CallToolResult, err
 		item("created", formatTime(n.Created))
 		item("updated", formatTime(n.Updated))
 		item("sha256", m.SHA256)
+		step, others := resolvedBy(in.Ref, ref)
+		item("resolved by", step)
+		item("other notes with this name", others)
 
 		links := linkLines(idx, n)
 		var body strings.Builder

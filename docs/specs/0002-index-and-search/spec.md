@@ -254,7 +254,7 @@ Resolution never errors: `ambiguous` and `dangling` are results (R4).
   edge at the first line, while a `links_to` and a relation to the same target
   give two; a self-link is hidden.
 - [x] **R20, R21** — Listing with each filter; link report ordering and kinds.
-- [ ] **R23** — Table test: path, title, alias and stem resolutions give their
+- [x] **R23** — Table test: path, title, alias and stem resolutions give their
   `Step`; a path ref whose text is also another note's title gives that note in
   `Also`; ambiguous and dangling results leave both empty.
 - [ ] **R26** — A listed note without `updated` carries the `ModTime` it was

@@ -49,10 +49,11 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 	log.set("depth", depth)
 	var res *mcp.CallToolResult
 	err := s.opts.Notes.Call(func(idx *index.Index, _ note.Stats) error {
-		p, err := resolveRef(idx, in.Ref)
+		ref, err := resolveRefFull(idx, in.Ref)
 		if err != nil {
 			return err
 		}
+		p := ref.Path
 		g, err := idx.Walk(p, depth, in.RelTypes)
 		if errors.Is(err, index.ErrBadDepth) {
 			return errorf(CodeInvalidArgument, "The depth must be 1, 2 or 3; fix it and call again.")
@@ -64,6 +65,16 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 		log.set("edges", len(g.Edges))
 
 		var b strings.Builder
+		step, others := resolvedBy(in.Ref, ref)
+		if step != "" {
+			fmt.Fprintf(&b, "Resolved by %s.\n", step)
+		}
+		if others != "" {
+			fmt.Fprintf(&b, "Other notes with this name: %s.\n", others)
+		}
+		if step != "" || others != "" {
+			b.WriteString("\n")
+		}
 		b.WriteString("Notes:\n")
 		for _, n := range g.Nodes {
 			fmt.Fprintf(&b, "- %d · %s — %s\n", n.Distance, n.Path, n.Title)
@@ -84,7 +95,7 @@ func (s *Server) context(in contextIn, log *callLog) (*mcp.CallToolResult, error
 		if found > 0 {
 			count = fmt.Sprintf("%d %s", found, plural(found, "note", "notes"))
 		}
-		res = success(fmt.Sprintf("Found %s within %d %s of %q.", count, depth, plural(depth, "hop", "hops"), start.Title), b.String())
+		res = success(fmt.Sprintf("Found %s within %d %s of %q, plus the note itself.", count, depth, plural(depth, "hop", "hops"), start.Title), b.String())
 		return nil
 	})
 	return res, err

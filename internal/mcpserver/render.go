@@ -37,18 +37,34 @@ func fenced(content string) string {
 	return f + "markdown\n" + content + f
 }
 
-// resolveRef resolves a tool ref, or returns not_found or ambiguous
-// (SPEC-0004 R14).
+// resolveRef resolves a tool ref to a path, or returns not_found or
+// ambiguous (SPEC-0004 R14).
 func resolveRef(idx *index.Index, ref string) (string, error) {
+	r, err := resolveRefFull(idx, ref)
+	return r.Path, err
+}
+
+// resolveRefFull is resolveRef with the whole resolution, for the tools
+// that say how a ref resolved (SPEC-0004 R27).
+func resolveRefFull(idx *index.Index, ref string) (index.Resolution, error) {
 	r := idx.Resolve(ref)
 	switch r.Status {
 	case index.Resolved:
-		return r.Path, nil
+		return r, nil
 	case index.Ambiguous:
-		return "", errorf(CodeAmbiguous, "%q matches several notes: %s; call again with one of these paths as ref.", ref, strings.Join(r.Candidates, ", "))
+		return r, errorf(CodeAmbiguous, "%q matches several notes: %s; call again with one of these paths as ref.", ref, strings.Join(r.Candidates, ", "))
 	default:
-		return "", errorf(CodeNotFound, "No note matches %q; use search to find the note, then pass its path.", ref)
+		return r, errorf(CodeNotFound, "No note matches %q; use search to find the note, then pass its path.", ref)
 	}
+}
+
+// resolvedBy returns how a ref resolved when not by path, and the other
+// notes with that name, or empty strings (SPEC-0004 R27).
+func resolvedBy(ref string, r index.Resolution) (step, others string) {
+	if r.Step != index.StepPath {
+		step = fmt.Sprintf("%s %q", r.Step, ref)
+	}
+	return step, strings.Join(r.Also, ", ")
 }
 
 // describe renders one resolved link target for a links list.

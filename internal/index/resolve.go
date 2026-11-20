@@ -11,6 +11,16 @@ const (
 	Dangling  Status = "dangling"
 )
 
+// Step names the resolution step that matched (SPEC-0002 R23).
+type Step string
+
+const (
+	StepPath  Step = "path"
+	StepTitle Step = "title"
+	StepAlias Step = "alias"
+	StepStem  Step = "stem"
+)
+
 // Resolution is the result of resolving a link target or a tool ref
 // (SPEC-0002 R3–R6, design D23).
 type Resolution struct {
@@ -21,6 +31,11 @@ type Resolution struct {
 	Candidates []string
 	// Stale is true when the note was found only through a path-like alias.
 	Stale bool
+	// Step is the step that resolved the target; empty unless Resolved.
+	Step Step
+	// Also holds, sorted, the other notes the target matches at a later
+	// step; empty unless Resolved (SPEC-0002 R23).
+	Also []string
 }
 
 // normName trims and case-folds a title, alias or stem (SPEC-0002 R3).
@@ -47,22 +62,43 @@ func isPathLike(a string) bool {
 }
 
 // Resolve resolves a link target or ref by path, title, alias and file stem.
-// The first step that matches any note decides (SPEC-0002 R4).
+// The first step that matches any note decides (SPEC-0002 R4); a resolved
+// result names that step and the notes the later steps match (R23).
 func (x *Index) Resolve(target string) Resolution {
 	name, asPath := normName(target), normPath(target)
 	if name == "" {
 		return Resolution{Status: Dangling}
 	}
-	if r, ok := decide(x.paths[asPath], nil); ok {
-		return r
+	steps := []struct {
+		step         Step
+		plain, stale map[string]struct{}
+	}{
+		{StepPath, x.paths[asPath], nil},
+		{StepTitle, x.titles[name], nil},
+		{StepAlias, x.aliases[name], x.pathAliases[asPath]},
+		{StepStem, x.stems[name], nil},
 	}
-	if r, ok := decide(x.titles[name], nil); ok {
-		return r
-	}
-	if r, ok := decide(x.aliases[name], x.pathAliases[asPath]); ok {
-		return r
-	}
-	if r, ok := decide(x.stems[name], nil); ok {
+	for i, st := range steps {
+		r, ok := decide(st.plain, st.stale)
+		if !ok {
+			continue
+		}
+		if r.Status == Resolved {
+			r.Step = st.step
+			also := map[string]struct{}{}
+			for _, later := range steps[i+1:] {
+				for _, set := range []map[string]struct{}{later.plain, later.stale} {
+					for p := range set {
+						if p != r.Path {
+							also[p] = struct{}{}
+						}
+					}
+				}
+			}
+			if len(also) > 0 {
+				r.Also = sortedSet(also)
+			}
+		}
 		return r
 	}
 	return Resolution{Status: Dangling}

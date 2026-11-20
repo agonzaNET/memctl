@@ -206,3 +206,17 @@ func TestContext_SPEC0004_R27_resolution(t *testing.T) {
 		t.Fatalf("path ref:\n%s", got)
 	}
 }
+
+func TestContext_SPEC0004_R22_edgeAtMaxDepth(t *testing.T) {
+	e := start(t, map[string]string{
+		"s.md": "---\ntitle: S\n---\n[[a]] [[b]]\n",
+		"a.md": "---\ntitle: A\n---\n[[c]]\n",
+		"b.md": "---\ntitle: B\n---\n[[d]]\n",
+		"c.md": "---\ntitle: C\n---\n[[d]]\nagain [[d]]\n",
+		"d.md": "---\ntitle: D\n---\n",
+	})
+	got := text(t, e.call(t, "context", map[string]any{"ref": "s", "depth": 2}))
+	if !strings.HasPrefix(got, `Found 4 notes within 2 hops of "S", plus the note itself.`) || strings.Count(got, "- c.md —links_to→ d.md") != 1 {
+		t.Fatalf("got:\n%s", got)
+	}
+}
