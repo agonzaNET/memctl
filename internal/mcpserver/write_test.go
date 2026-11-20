@@ -126,3 +126,34 @@ func TestWrite_SPEC0007_R27_logCounts(t *testing.T) {
 		t.Fatalf("log holds argument text: %s", l)
 	}
 }
+
+func TestWriteEdit_SPEC0007_R29_unresolvedLinks(t *testing.T) {
+	e := start(t, map[string]string{
+		"x/dup.md": "---\ntitle: X\n---\n",
+		"y/dup.md": "---\ntitle: Y\n---\n",
+		"ok.md":    "---\ntitle: OK\n---\n",
+	})
+	got := text(t, e.call(t, "note_write", map[string]any{"title": "New", "body": "See [[nowhere]] and [[ok]].\n\n## Relations\n- depends_on [[dup]]\n"}))
+	want := "\n\nUnresolved links:\n- links_to → nowhere: dangling\n- depends_on → dup: ambiguous (x/dup.md, y/dup.md)"
+	if !strings.Contains(got, want) || strings.Contains(got, "→ ok") {
+		t.Fatalf("write:\n%s", got)
+	}
+	l := e.logLines(t, "tool call")
+	if l[len(l)-1]["unresolved"] != 2.0 {
+		t.Fatalf("log %v", l[len(l)-1])
+	}
+
+	got = text(t, e.call(t, "note_write", map[string]any{"title": "Fine", "body": "See [[ok]].\n"}))
+	if strings.Contains(got, "Unresolved") {
+		t.Fatalf("resolved links listed:\n%s", got)
+	}
+	sha := e.readSha(t, "Fine.md")
+	got = text(t, e.call(t, "note_edit", map[string]any{"ref": "Fine.md", "expected_sha": sha, "op": "append", "text": "Also [[ghost]]."}))
+	if !strings.Contains(got, "\n\nUnresolved links:\n- links_to → ghost: dangling") {
+		t.Fatalf("edit:\n%s", got)
+	}
+	l = e.logLines(t, "tool call")
+	if l[len(l)-1]["unresolved"] != 1.0 {
+		t.Fatalf("log %v", l[len(l)-1])
+	}
+}

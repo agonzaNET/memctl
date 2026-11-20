@@ -53,8 +53,8 @@ func TestLog_SPEC0007_R27_countsOnly(t *testing.T) {
 	e.call(t, "note_delete", map[string]any{"ref": "qxnew/Qx2"})
 
 	want := map[string][]string{
-		"note_write":  {"bytes", "paths"},
-		"note_edit":   {"bytes", "paths"},
+		"note_write":  {"bytes", "paths", "unresolved"},
+		"note_edit":   {"bytes", "paths", "unresolved"},
 		"note_move":   {"bytes", "paths", "linkers"},
 		"note_delete": {"bytes", "paths", "linkers"},
 	}
