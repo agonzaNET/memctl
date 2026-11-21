@@ -39,7 +39,7 @@ func acquireOrForward(ctx context.Context, cfg mcpConfig, root string, stdin io.
 			log.Error("cannot take the instance lock", slog.String("err", err.Error()))
 			return nil, exitError, true
 		}
-		conn, ans, err := share.Dial(socketPath(root), hello)
+		conn, ans, err := share.Dial(socketPath(root), hello, deadline)
 		if err == nil {
 			if conn == nil {
 				// Refused by the owner: no retry (SPEC-0009 R7).
