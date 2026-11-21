@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -42,16 +41,10 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if err != nil {
 		var held *note.HeldError
 		if errors.As(err, &held) {
-			// The message once in a client's log; a person at a terminal
-			// also gets it as a plain line (SPEC-0006 R5).
-			held.Given = cfg.root
-			if isTerminal(stderr) {
-				fmt.Fprintln(stderr, held.Error())
-			}
-			log.Error(held.Error())
-		} else {
-			log.Error("cannot take the instance lock", slog.String("err", err.Error()))
+			// Another process owns the root: forward to it (SPEC-0009 R4).
+			return runForward(cfg, root, held, stdin, stdout, stderr, log)
 		}
+		log.Error("cannot take the instance lock", slog.String("err", err.Error()))
 		return exitError
 	}
 	defer lock.Close()
