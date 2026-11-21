@@ -78,6 +78,7 @@ ADR file it points to. When an ADR becomes `Superseded by ADR-NNNN` or
 | [ADR-0019](0019-go-yaml-in-module.md) | Take YAML support from go.yaml.in/yaml/v3, the maintained continuation of yaml.v3 (amends ADR-0011) | Accepted | Build |
 | [ADR-0020](0020-vulnerability-check-in-release-workflow.md) | Run govulncheck in the release workflow and stop the release on a reachable vulnerability (amends ADR-0012) | Accepted | Build |
 | [ADR-0021](0021-shared-instance-over-unix-socket.md) | Share one memctl process per notes root: the first process owns it, later ones forward over a Unix socket (amends ADR-0014) | Accepted | Lifecycle |
+| [ADR-0022](0022-macos-tests-before-release.md) | Run the test suite on macOS before a release is built (amends ADR-0012) | Proposed | Build |
 
 ### Superseded / Deprecated
 
