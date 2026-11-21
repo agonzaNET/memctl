@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"net"
 	"os"
-	"strconv"
 	"syscall"
 	"time"
 )
@@ -70,7 +69,7 @@ func Greet(conn net.Conn, o Owner) (Hello, error) {
 	}
 	if err != nil {
 		if errors.Is(tr.err, os.ErrDeadlineExceeded) {
-			err = errors.New("no handshake within " + strconv.Itoa(int(HelloTimeout/time.Second)) + " s")
+			err = errors.New("no handshake within " + HelloTimeout.String())
 		}
 		conn.SetWriteDeadline(time.Now().Add(time.Second))
 		WriteLine(conn, Answer{Error: err.Error()})

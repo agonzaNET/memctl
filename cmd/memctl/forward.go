@@ -25,6 +25,9 @@ func runForward(cfg mcpConfig, root string, held *note.HeldError, stdin io.Reade
 		return exitError
 	}
 	log.Info("forwarding", slog.Int("owner_pid", ans.PID), slog.String("owner_version", ans.Version))
+	if ans.Version != version {
+		log.Warn("version differs", slog.String("owner_version", ans.Version))
+	}
 	if share.Pipe(stdin, stdout, conn) {
 		log.Error(fmt.Sprintf("memctl (pid %d) serving the root stopped", ans.PID))
 		return exitError

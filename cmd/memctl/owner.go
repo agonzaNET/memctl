@@ -42,9 +42,13 @@ func acceptShared(ctx context.Context, ln *share.Listener, srv *mcpserver.Server
 			return
 		}
 		go func() {
-			if _, err := share.Greet(conn, owner); err != nil {
+			h, err := share.Greet(conn, owner)
+			if err != nil {
 				log.Warn("forwarded session refused", slog.String("reason", err.Error()))
 				return
+			}
+			if h.Version != owner.Version {
+				log.Warn("version differs", slog.String("forwarder_version", h.Version))
 			}
 			name, ok := sessions.add()
 			if !ok {
