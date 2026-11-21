@@ -203,7 +203,7 @@ by hand on the packages this stage touches (see Verification notes).
 
 ### Slice F — Close
 
-- [ ] **T14 — Release-audit fixes.** From `RELEASE-AUDIT.md` of 2026-11-21:
+- [x] **T14 — Release-audit fixes.** From `RELEASE-AUDIT.md` of 2026-11-21:
   W1 — `share.Dial` waits for the answer no later than the forwarder's
   deadline (test with an owner that accepts and never answers); W2 — checked,
   no code change: the Go runtime starts child processes with the default
