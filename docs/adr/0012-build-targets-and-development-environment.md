@@ -7,6 +7,10 @@ Accepted
 > **Amended by [ADR-0020](0020-vulnerability-check-in-release-workflow.md)**:
 > the release workflow also runs `govulncheck` and stops on a reachable
 > vulnerability.
+>
+> **Amended by [ADR-0022](0022-macos-tests-before-release.md)**: the tests
+> also run on macOS, by hand for any ref and for the tag before a release is
+> built.
 
 **Area:** Build
 

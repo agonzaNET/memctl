@@ -37,6 +37,9 @@ docs/agents/changelog.md.
   SPEC-0008, SPEC-0009).
 - The `tool call` log line names its session, `stdio` or `forward-<n>`; the
   `started` line says whether `sharing` is on (spec: SPEC-0004, SPEC-0009).
+- Releases run the test suite on macOS (Apple silicon) for the tag before
+  the binaries are built, and the macOS tests can be started by hand for any
+  branch (ADR-0022).
 
 ## [0.2.0] - 2026-11-20
 

@@ -1,7 +1,8 @@
 # Release workflow (ADR-0012, stage plan 0003).
 #
-# Started by hand for an existing vX.Y.Z tag. It checks out that tag, runs
-# make verify and govulncheck (ADR-0020), builds the three release archives
+# Started by hand for an existing vX.Y.Z tag. It runs the tests on macOS for
+# that tag (test-macos.yml, ADR-0022), then checks out the tag, runs make
+# verify and govulncheck (ADR-0020), builds the three release archives
 # and SHA256SUMS, and creates
 # the GitHub release with the tag's CHANGELOG section as notes. It never
 # pushes code, never creates or moves tags, and fails if the release exists.
@@ -24,7 +25,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The darwin binary is tested on its own platform first; no release is
+  # built when a test fails there (ADR-0022).
+  test-macos:
+    uses: ./.github/workflows/test-macos.yml
+    with:
+      ref: refs/tags/${{ inputs.tag }}
+    permissions:
+      contents: read
+
   release:
+    needs: test-macos
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

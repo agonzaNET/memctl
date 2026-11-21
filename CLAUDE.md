@@ -81,7 +81,7 @@ memctl/
 │   ├── share/                  # shared instance: owner socket, forwarder handshake, byte pipe
 │   └── arch/                   # module-wide tests: one importer per third-party module (ADR-0010)
 ├── scripts/                    # check-docs.sh, release-notes.sh, release-build.sh and their tests
-├── .github/workflows/          # release.yml: the manual release workflow (ADR-0012)
+├── .github/workflows/          # release.yml: the manual release workflow (ADR-0012); test-macos.yml (ADR-0022)
 ├── docs/
 │   ├── design/                 # the product design — source of truth
 │   ├── adr/                    # architecture decision records; README.md is the index

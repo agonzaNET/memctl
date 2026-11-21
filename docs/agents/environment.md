@@ -81,6 +81,9 @@ Releases for `linux/amd64`, `linux/arm64` and `darwin/arm64` are published by
 the GitHub Actions workflow `.github/workflows/release.yml` (ADR-0012, stage
 plan 0003). Nothing builds on push or tag; the maintainer releases:
 
+0. After pushing `main`, run the tests on macOS
+   (`gh workflow run test-macos.yml -f ref=main`, ADR-0022); a failure
+   there is fixed before tagging.
 1. In a commit on `main`, rename `## [Unreleased]` in `CHANGELOG.md` to
    `## [X.Y.Z] - YYYY-MM-DD`, open a new empty `## [Unreleased]` above it
    (move the HTML maintenance comment up with it), and update the link
@@ -88,7 +91,8 @@ plan 0003). Nothing builds on push or tag; the maintainer releases:
 2. Optionally, `make dist VERSION=X.Y.Z` builds the same archives locally.
 3. Tag the commit `vX.Y.Z` and push `main` and the tag.
 4. Start the workflow (Actions → release → Run workflow, or
-   `gh workflow run release.yml -f tag=vX.Y.Z`). It runs `make verify` and
+   `gh workflow run release.yml -f tag=vX.Y.Z`). It runs the macOS tests on
+   the tag (ADR-0022), then `make verify` and
    `govulncheck` (ADR-0020) on the tag, builds the archives and `SHA256SUMS`,
    and creates the release with the CHANGELOG section as notes. It fails without that section, and never
    replaces an existing release.
