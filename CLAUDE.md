@@ -75,6 +75,7 @@ memctl/
 │   ├── parse/                  # line-based Markdown parser + yaml.v3 frontmatter
 │   ├── index/                  # in-memory index: BM25F, names, backlinks, graph walk
 │   ├── gitlog/                 # git committer: queue, quiet window, external changes, final flush
+│   ├── share/                  # shared instance: owner socket, forwarder handshake, byte pipe
 │   └── arch/                   # module-wide tests: one importer per third-party module (ADR-0010)
 ├── scripts/                    # check-docs.sh, release-notes.sh, release-build.sh and their tests
 ├── .github/workflows/          # release.yml: the manual release workflow (ADR-0012)

@@ -45,6 +45,7 @@ nameable concern. The layout from the design (D20):
 | `internal/parse/` | The line-based Markdown parser and frontmatter (yaml.v3). The only importer of yaml.v3 |
 | `internal/index/` | The in-memory index: notes, names, backlinks, inverted index, BM25F, graph walk |
 | `internal/gitlog/` | The git committer: queue, quiet window, final flush, `git` CLI calls |
+| `internal/share/` | The shared instance: the owner's Unix socket, the forwarder handshake and the byte pipe between them (SPEC-0009, ADR-0021) |
 | `internal/arch/` | No code: module-wide tests, such as one importer per third-party module (ADR-0010) |
 
 A new concern gets a new package, not a new file in a package that already has
