@@ -129,25 +129,42 @@ func startServer(t *testing.T, root string) (*exec.Cmd, io.WriteCloser, *syncBuf
 	return cmd, stdin, errb
 }
 
-func TestCLI_SPEC0006_R1_lockHeldBeforeLoad(t *testing.T) {
+// heldSuffix ends the refusal message of SPEC-0006 R5.
+const heldSuffix = ", and it did not accept a shared session within 10 s"
+
+// TestCLI_SPEC0006_R1_SPEC0009_R5_lockHeldBeforeLoad: the lock is taken before
+// the load, and a second process started during the load forwards once the
+// first listens.
+func TestCLI_SPEC0006_R1_SPEC0009_R5_lockHeldBeforeLoad(t *testing.T) {
 	root := notesRoot(t)
-	var during result
 	var stderrAtLock string
-	var errb bytes.Buffer
+	var errb syncBuffer
+	var fwdErr *syncBuffer
+	var fwdIn io.WriteCloser
 	afterLock = func() {
 		stderrAtLock = errb.String()
-		during = runBin(t, binVersioned, nil, "mcp", "--root", root)
+		_, fwdIn, fwdErr = startForwarder(t, root)
+		time.Sleep(500 * time.Millisecond) // the forwarder retries meanwhile
 	}
 	t.Cleanup(func() { afterLock = nil })
 
-	code := run([]string{"mcp", "--root", root}, strings.NewReader(""), io.Discard, &errb)
-	if code != 0 {
-		t.Fatalf("first process: code %d, stderr %s", code, errb.String())
-	}
+	in, inW := io.Pipe()
+	code := make(chan int, 1)
+	go func() { code <- run([]string{"mcp", "--root", root}, in, io.Discard, &errb) }()
+	waitFor(t, &errb, `"msg":"started"`)
 	if strings.Contains(stderrAtLock, "notes loaded") || strings.Contains(stderrAtLock, `"started"`) {
 		t.Fatalf("lock taken after the load: %s", stderrAtLock)
 	}
-	assertRefused(t, during, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
+	waitFor(t, fwdErr, `"msg":"forwarding"`)
+	if strings.Contains(fwdErr.String(), "notes loaded") {
+		t.Fatalf("the second process loaded the notes: %s", fwdErr.String())
+	}
+	fwdIn.Close()
+	waitFor(t, fwdErr, `"msg":"stopped"`)
+	inW.Close()
+	if c := <-code; c != 0 {
+		t.Fatalf("first process: code %d, stderr %s", c, errb.String())
+	}
 }
 
 func TestCLI_SPEC0006_R3_R4_secondProcessTakesNoLock(t *testing.T) {
@@ -175,26 +192,81 @@ func holdLock(t *testing.T, root string) {
 	t.Cleanup(func() { l.Close() })
 }
 
-func TestCLI_SPEC0006_R5_refusedWithoutSharedSession(t *testing.T) {
+// runIn runs memctl in this process with a short forward timeout.
+func runIn(t *testing.T, timeout time.Duration, args ...string) result {
+	t.Helper()
+	old := forwardTimeout
+	forwardTimeout = timeout
+	t.Cleanup(func() { forwardTimeout = old })
+	var out, errb bytes.Buffer
+	code := run(args, strings.NewReader(""), &out, &errb)
+	return result{code, out.String(), errb.String()}
+}
+
+func TestCLI_SPEC0006_R5_SPEC0009_R5_refusedWithoutSharedSession(t *testing.T) {
 	root := notesRoot(t)
 	holdLock(t, root)
-	r := runBin(t, binVersioned, nil, "mcp", "--root", root)
-	assertRefused(t, r, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
+	start := time.Now()
+	r := runIn(t, time.Second, "mcp", "--root", root)
+	if d := time.Since(start); d < time.Second {
+		t.Fatalf("refused after %v, before the forward timeout", d)
+	}
+	assertRefused(t, r, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")"+heldSuffix)
 
 	// A root given through a symlink names the given path and the resolved one.
 	link := filepath.Join(t.TempDir(), "link")
 	if err := os.Symlink(root, link); err != nil {
 		t.Fatal(err)
 	}
-	r = runBin(t, binVersioned, nil, "mcp", "--root", link)
-	assertRefused(t, r, "root "+link+" ("+resolved(t, root)+") is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
+	r = runIn(t, 200*time.Millisecond, "mcp", "--root", link)
+	assertRefused(t, r, "root "+link+" ("+resolved(t, root)+") is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")"+heldSuffix)
 
 	// An empty lock file: the message names no PID.
 	if err := os.WriteFile(filepath.Join(root, ".memory", "memctl.lock"), nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	r = runBin(t, binVersioned, nil, "mcp", "--root", root)
-	assertRefused(t, r, "root "+label(t, root)+" is in use by another memctl process")
+	r = runIn(t, 200*time.Millisecond, "mcp", "--root", root)
+	assertRefused(t, r, "root "+label(t, root)+" is in use by another memctl process"+heldSuffix)
+}
+
+// TestCLI_SPEC0009_R5_realTimeout: a spawned process waits the full 10 s.
+func TestCLI_SPEC0009_R5_realTimeout(t *testing.T) {
+	t.Parallel()
+	root := notesRoot(t)
+	holdLock(t, root)
+	start := time.Now()
+	r := runBin(t, binVersioned, nil, "mcp", "--root", root)
+	if d := time.Since(start); d < 10*time.Second || d > 13*time.Second {
+		t.Fatalf("refused after %v, want about 10 s", d)
+	}
+	assertRefused(t, r, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")"+heldSuffix)
+}
+
+// TestCLI_SPEC0009_R5_takeOverFreedLock: a forwarder whose owner goes away
+// during the retry takes the lock and serves as the owner.
+func TestCLI_SPEC0009_R5_takeOverFreedLock(t *testing.T) {
+	root := notesRoot(t)
+	l, err := note.AcquireLock(resolved(t, root), slog.New(slog.DiscardHandler))
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := forwardTimeout
+	forwardTimeout = 5 * time.Second
+	t.Cleanup(func() { forwardTimeout = old })
+	var errb syncBuffer
+	in, inW := io.Pipe()
+	code := make(chan int, 1)
+	go func() { code <- run([]string{"mcp", "--root", root}, in, io.Discard, &errb) }()
+	time.Sleep(300 * time.Millisecond)
+	if strings.Contains(errb.String(), `"started"`) {
+		t.Fatalf("started while the lock was held: %s", errb.String())
+	}
+	l.Close()
+	waitFor(t, &errb, `"msg":"started"`)
+	inW.Close()
+	if c := <-code; c != 0 {
+		t.Fatalf("code %d: %s", c, errb.String())
+	}
 }
 
 func TestCLI_SPEC0006_R6_readOnlyRoot(t *testing.T) {

@@ -120,7 +120,7 @@ func TestLock_SPEC0006_R3_R5_heldByAnother(t *testing.T) {
 	if !errors.As(err, &held) {
 		t.Fatalf("second lock: %v, want HeldError", err)
 	}
-	want := "root " + root + " is in use by memctl (pid " + strconv.Itoa(os.Getpid()) + ")"
+	want := "root " + root + " is in use by memctl (pid " + strconv.Itoa(os.Getpid()) + "), and it did not accept a shared session within 10 s"
 	if held.PID != os.Getpid() || err.Error() != want {
 		t.Fatalf("got %q (pid %d), want %q", err.Error(), held.PID, want)
 	}
@@ -130,7 +130,7 @@ func TestLock_SPEC0006_R3_R5_heldByAnother(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = note.AcquireLock(root, logger(new(bytes.Buffer)))
-	if !errors.As(err, &held) || held.PID != 0 || err.Error() != "root "+root+" is in use by another memctl process" {
+	if !errors.As(err, &held) || held.PID != 0 || err.Error() != "root "+root+" is in use by another memctl process, and it did not accept a shared session within 10 s" {
 		t.Fatalf("empty lock file: %v", err)
 	}
 }
