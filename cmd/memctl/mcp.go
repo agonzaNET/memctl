@@ -93,6 +93,12 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	// Serve has returned after the call in progress finished: commit what is
 	// queued at once, and exit when that commit returns, or at once on
 	// another signal (ADR-0014, SPEC-0008 R12, R13).
+	// Stdin EOF ends only the own session: forwarded sessions go on, and the
+	// shutdown starts when the last of them has ended, or on a signal
+	// (SPEC-0009 R14, R15; SPEC-0004 R6).
+	if ctx.Err() == nil {
+		sessions.closeWhenIdle(ctx)
+	}
 	sd.begin()
 	if ln != nil {
 		ln.Close() // removes the socket file
