@@ -56,7 +56,8 @@ own ADR, with the reasoning and the alternatives.
 | Dependencies: go-sdk and yaml.v3 only (D1, D17) | [ADR-0011](../adr/0011-mcp-sdk-and-yaml-v3.md), [ADR-0019](../adr/0019-go-yaml-in-module.md) |
 | D18 — Build and dev environment | [ADR-0012](../adr/0012-build-targets-and-development-environment.md) |
 | D19 — Tool text | [ADR-0013](../adr/0013-agent-first-tool-text.md) |
-| D21 — Shutdown | [ADR-0014](../adr/0014-shutdown-flushes-pending-commits.md) |
+| D21 — Shutdown | [ADR-0014](../adr/0014-shutdown-flushes-pending-commits.md), [ADR-0021](../adr/0021-shared-instance-over-unix-socket.md) |
+| D12 — Instance lock, shared instance | [ADR-0021](../adr/0021-shared-instance-over-unix-socket.md) |
 | D22 — Tool results | [ADR-0015](../adr/0015-tool-result-shape.md) |
 | D23, D24 — Path identity, link resolution, moves | [ADR-0017](../adr/0017-path-identity-and-link-resolution.md) |
 | Tool-call log ("Deployment and config") | [ADR-0016](../adr/0016-tool-call-log-without-content.md) |

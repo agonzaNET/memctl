@@ -88,8 +88,9 @@ writes, M3 release) are delivered as one or more specs each.
 | SPEC-0001 | Note parser | Implemented | ADR-0002, ADR-0005, ADR-0010, ADR-0011 |
 | SPEC-0002 | In-memory index: link resolution, search, graph walk and listing | Implemented | ADR-0002, ADR-0005, ADR-0017 |
 | SPEC-0003 | Notes root, startup load and freshness check | Implemented | ADR-0002, ADR-0005, ADR-0016, ADR-0017 |
-| SPEC-0004 | `memctl mcp` and the read tools | Implemented | ADR-0002, ADR-0005, ADR-0010, ADR-0011, ADR-0013, ADR-0014, ADR-0015, ADR-0016, ADR-0017 |
+| SPEC-0004 | `memctl mcp` and the read tools | Accepted | ADR-0002, ADR-0005, ADR-0010, ADR-0011, ADR-0013, ADR-0014, ADR-0015, ADR-0016, ADR-0017, ADR-0021 |
 | SPEC-0005 | `memctl check` | Implemented | ADR-0002, ADR-0005, ADR-0017 |
-| SPEC-0006 | Instance lock | Implemented | ADR-0002, ADR-0005, ADR-0012, ADR-0014 |
+| SPEC-0006 | Instance lock | Accepted | ADR-0002, ADR-0005, ADR-0012, ADR-0014, ADR-0021 |
 | SPEC-0007 | Write tools and atomic writes | Implemented | ADR-0002, ADR-0005, ADR-0011, ADR-0013, ADR-0015, ADR-0016, ADR-0017 |
-| SPEC-0008 | Git committer | Implemented | ADR-0002, ADR-0005, ADR-0014, ADR-0016 |
+| SPEC-0008 | Git committer | Accepted | ADR-0002, ADR-0005, ADR-0014, ADR-0016, ADR-0021 |
+| SPEC-0009 | Shared instance: one owner per notes root, forwarders over a Unix socket | Draft | ADR-0002, ADR-0005, ADR-0014, ADR-0016, ADR-0021 |

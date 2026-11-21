@@ -4,6 +4,10 @@
 
 Accepted
 
+> **Amended by [ADR-0021](0021-shared-instance-over-unix-socket.md)**: stdin
+> EOF ends only the owner's own session; the shutdown starts when the last
+> session of the shared instance has ended, or on a signal.
+
 **Area:** Lifecycle
 
 ## Context

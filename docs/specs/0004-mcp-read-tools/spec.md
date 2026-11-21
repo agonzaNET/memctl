@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented
+Accepted
 
 > Amended on 2026-11-20 for the findings of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -20,6 +20,11 @@ Implemented
 > check ([`2026-11-20-v0.2.0-live-check.md`](../../design/2026-11-20-v0.2.0-live-check.md)):
 > R22 and R31 changed; R32 added. R31 amended again on 2026-11-20 after the
 > re-check (W2): the description says which note `via` names.
+>
+> Amended on 2026-11-21 for the shared instance
+> ([SPEC-0009](../0009-shared-instance/spec.md), ADR-0021), for v0.3.0: R6
+> changed: stdin EOF stops the process only when no forwarded session is
+> open; R12 changed: the `tool call` line carries `session`.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -29,7 +34,7 @@ open) → Implemented (shipped; code satisfies this spec and all acceptance
 criteria are ticked). Superseded by SPEC-NNNN and Deprecated are terminal.
 -->
 
-**Governing ADRs:** ADR-0002, ADR-0005, ADR-0010, ADR-0011, ADR-0013, ADR-0014, ADR-0015, ADR-0016, ADR-0017
+**Governing ADRs:** ADR-0002, ADR-0005, ADR-0010, ADR-0011, ADR-0013, ADR-0014, ADR-0015, ADR-0016, ADR-0017, ADR-0021
 
 ## Purpose
 
@@ -171,8 +176,9 @@ for a note without one, the file's modification date.
 
 ### Shutdown (ADR-0014, M1 part)
 
-- **R6** — On stdin EOF, SIGINT or SIGTERM, `memctl mcp` MUST cancel one shutdown
-  context, let a tool call in progress finish, start no new one, log one
+- **R6** — When the process's last MCP session ends (its own stdin EOF with no
+  forwarded session open, SPEC-0009 R14), or on SIGINT or SIGTERM,
+  `memctl mcp` MUST cancel one shutdown context, let a tool call in progress finish, start no new one, log one
   `INFO` `stopped` line, and exit with status 0. The final commit flush and the
   second-signal rule are added by the M2 git spec.
 
@@ -195,8 +201,8 @@ for a note without one, the file's modification date.
   sentence says what to do next. A test MUST fail when
   a tool emits any other code.
 - **R12** — After each call, `internal/mcpserver` MUST log one `INFO` `tool call`
-  line with `tool`, `duration_ms`, `error` (the code, only on an error) and the
-  counts named for each tool below; it MUST NOT log a `ref`, query, folder,
+  line with `tool`, `duration_ms`, `session` (SPEC-0009 R13), `error` (the
+  code, only on an error) and the counts named for each tool below; it MUST NOT log a `ref`, query, folder,
   tag, title, path or note text.
 - **R13** — Each tool description and the server instructions MUST sit between
   the agent-facing markers in `tools.go`, follow the order of `tools.md`
@@ -332,16 +338,17 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   SDK client: it initialises, sees the server name, version, instructions and
   four tools; every stdout byte parses as protocol; stderr lines are JSON and
   include `started`.
-- [x] **R6** — Closing stdin and sending SIGTERM each end the process with status
-  0 and a `stopped` line; a slow tool call in progress completes first.
+- [ ] **R6** — Closing stdin and sending SIGTERM each end the process with status
+  0 and a `stopped` line; a slow tool call in progress completes first; with a
+  forwarded session open, closing stdin does not end the process.
 - [x] **R7** — A note edited on disk between two `note_read` calls is returned
   with its new content and `sha256` on the second.
 - [x] **R8, R9** — The tool list shows the annotations and schemas; a call with an
   unknown property, `limit` 0 and `depth` 4 is refused by the SDK.
 - [x] **R10, R11** — Every tool's success and error results match the shape; a
   test scans the codes emitted by all tests against the table.
-- [x] **R12** — A captured log of one call per tool has the fields and counts,
-  and no argument value.
+- [ ] **R12** — A captured log of one call per tool has the fields and counts,
+  `session` included, and no argument value.
 - [x] **R13** — `check-docs.sh` passes with the markers present; a description
   naming a spec number fails it.
 - [x] **R14** — A ref by path, by title, by alias, ambiguous and unknown.

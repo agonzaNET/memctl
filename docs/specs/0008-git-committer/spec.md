@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented
+Accepted
 
 > Amended on 2026-11-20 for findings L10 and L11 of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
@@ -12,6 +12,11 @@ Implemented
 > (stage plan 0004 T17). R17 added on 2026-11-20 after the repeated live
 > check: a `WARN` at start names a missing git identity key (stage plan 0004
 > T20).
+>
+> Amended on 2026-11-21 for the shared instance
+> ([SPEC-0009](../0009-shared-instance/spec.md), ADR-0021), for v0.3.0: R12
+> changed: the shutdown starts when the last session ends, not on stdin EOF
+> alone.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -21,7 +26,7 @@ open) → Implemented (shipped; code satisfies this spec and all acceptance
 criteria are ticked). Superseded by SPEC-NNNN and Deprecated are terminal.
 -->
 
-**Governing ADRs:** ADR-0002, ADR-0005, ADR-0014, ADR-0016
+**Governing ADRs:** ADR-0002, ADR-0005, ADR-0014, ADR-0016, ADR-0021
 
 ## Purpose
 
@@ -149,7 +154,8 @@ anything a tool did not change, and never push.
 
 ### Shutdown (ADR-0014)
 
-- **R12** — On the shutdown context (stdin EOF, SIGINT, SIGTERM), after the tool
+- **R12** — On the shutdown context (the end of the last session, SIGINT or
+  SIGTERM; SPEC-0004 R6), after the tool
   call in progress finishes, the committer MUST commit the pending external
   changes and the pending batch at once,
   without waiting for the quiet window, and `memctl mcp` MUST exit only after
@@ -193,6 +199,9 @@ anything a tool did not change, and never push.
   commit exists when the process has exited.
 - [x] **R12 (again)** — An editor change found by a check, then stdin closed at
   once: the external commit exists when the process has exited.
+- [ ] **R12 (shared)** — A note written through a forwarded session, then the
+  owner's and the forwarder's stdin closed at once: the commit exists, with
+  the owner's author, when the owner has exited.
 - [x] **R14** — An editor change to a note, then a tool write to another note:
   two commits, the external one first, with the repository identity when
   `user.name` and `user.email` are set and `--git-author` when not; three

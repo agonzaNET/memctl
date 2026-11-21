@@ -2,11 +2,16 @@
 
 ## Status
 
-Implemented
+Accepted
 
 > Amended on 2026-11-20 for finding L15 of the live check
 > ([`2026-11-20-live-check.md`](../../design/2026-11-20-live-check.md)),
 > delivered by stage plan 0004: R5 changed.
+>
+> Amended on 2026-11-21 for the shared instance
+> ([SPEC-0009](../0009-shared-instance/spec.md), ADR-0021), for v0.3.0: the
+> purpose and scope changed; R5 changed: a process that finds the lock held
+> forwards to the holder, and stops with the message only when that fails.
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -16,13 +21,14 @@ open) → Implemented (shipped; code satisfies this spec and all acceptance
 criteria are ticked). Superseded by SPEC-NNNN and Deprecated are terminal.
 -->
 
-**Governing ADRs:** ADR-0002, ADR-0005, ADR-0012, ADR-0014
+**Governing ADRs:** ADR-0002, ADR-0005, ADR-0012, ADR-0014, ADR-0021
 
 ## Purpose
 
 Make sure that at most one `memctl mcp` process serves a notes root at a time,
-so there is one writer and one git committer per root (design D12). A second
-process on the same root stops at once and says which process holds it.
+so there is one writer and one git committer per root (design D12). A later
+process on the same root forwards to the holder (SPEC-0009); it stops and
+says which process holds the root only when that fails.
 
 ## Scope
 
@@ -35,7 +41,8 @@ process on the same root stops at once and says which process holds it.
 
 **Out of scope**
 
-- Sharing one root between several clients (design backlog: HTTP mode).
+- Sharing one root between several clients: the forwarder, the socket and the
+  owner's sessions (SPEC-0009).
 - Network file systems on which `flock` does not work, and Windows (ADR-0012).
 - `memctl check`, which takes no lock (SPEC-0005 R1).
 
@@ -49,8 +56,9 @@ process on the same root stops at once and says which process holds it.
   by a newline.
 - `<root>/.memory/.gitignore` with the single line `*`, so nothing in
   `.memory/` is ever committed.
-- On refusal: exit status 1 and one `ERROR` log line with the message
-  `root <path> is in use by memctl (pid <N>)`; the message is also printed as a
+- On refusal (no shared session within 10 s, SPEC-0009 R5): exit status 1 and
+  one `ERROR` log line with the message
+  `root <path> is in use by memctl (pid <N>), and it did not accept a shared session within 10 s`; the message is also printed as a
   plain line when stderr is a terminal.
 
 ## Behaviour & Requirements
@@ -64,11 +72,13 @@ process on the same root stops at once and says which process holds it.
   `.memory/memctl.lock`, opened with `O_CREATE`, mode 0600, and close-on-exec.
 - **R4** — After taking the lock, the process MUST truncate the file and write
   its PID and a newline.
-- **R5** — When the lock is held by another process, `memctl mcp` MUST read the
-  PID from the file, log one `ERROR` line with the message
-  `root <path> is in use by memctl (pid <N>)` (or
-  `root <path> is in use by another memctl process` when the PID cannot be
-  read), and exit with status 1 without loading the notes. `<path>` MUST be the
+- **R5** — When the lock is held by another process, `memctl mcp` MUST NOT load
+  the notes; it MUST continue as a forwarder (SPEC-0009 R4). When no shared
+  session starts within 10 s (SPEC-0009 R5), it MUST read the PID from the
+  file, log one `ERROR` line with the message
+  `root <path> is in use by memctl (pid <N>), and it did not accept a shared session within 10 s`
+  (or `root <path> is in use by another memctl process, and it did not accept a shared session within 10 s`
+  when the PID cannot be read), and exit with status 1. `<path>` MUST be the
   root as given; when the resolved root differs, it MUST follow in parentheses
   (`root /tmp/notes (/private/tmp/notes) is in use …`). The message MUST also
   be printed as a plain line to stderr only when stderr is a terminal
@@ -85,21 +95,23 @@ process on the same root stops at once and says which process holds it.
 
 | Failure | Result |
 |---|---|
-| Lock held by another process | Message with the holder's PID, status 1 (R5) |
+| Lock held by another process | Forward to it (SPEC-0009); when no shared session starts within 10 s, message with the holder's PID, status 1 (R5) |
 | `.memory/` or the lock file cannot be created or opened | `ERROR` naming the path, status 1 (R6) |
 | The PID cannot be written after the lock is taken | One `WARN` line; the process goes on, holding the lock |
 
 ## Acceptance criteria — "Done looks like"
 
-- [x] **R1** — An end-to-end test: the lock is held before the `started` line,
-  and a second process started during the load of the first is refused.
+- [ ] **R1** — An end-to-end test: the lock is held before the `started` line,
+  and a second process started during the load of the first loads no notes
+  and forwards once the first listens.
 - [x] **R2** — A root without `.memory/` gets the folder, its mode, and
   `.memory/.gitignore`; an existing `.memory/.gitignore` with other content is
   unchanged; `git status` in the root shows nothing from `.memory/`.
-- [x] **R3, R4** — Two processes on one root: the second exits with status 1;
-  the lock file holds the first one's PID.
-- [x] **R5** — The second process's stderr, captured through a pipe, holds the
-  message once, in the `ERROR` line, with the first one's PID; with an empty
+- [ ] **R3, R4** — Two processes on one root: the second does not take the lock
+  and loads no notes; the lock file holds the first one's PID.
+- [ ] **R5** — A second process that gets no shared session within 10 s (the
+  holder has no socket): its stderr, captured through a pipe, holds the
+  message once, in the `ERROR` line, with the holder's PID; with an empty
   lock file, the message without a PID; a root given through a symlink shows
   the given path and the resolved one in parentheses; a root given as resolved
   shows it once.
