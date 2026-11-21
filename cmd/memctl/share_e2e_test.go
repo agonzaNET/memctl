@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -180,4 +181,79 @@ func TestE2E_SPEC0009_R4_R9_R12_secondProcessForwards(t *testing.T) {
 			t.Fatalf("forwarder stdout line is not protocol: %q", l)
 		}
 	}
+}
+
+// startWith starts bin as memctl mcp on root with extra arguments and stdin
+// held open.
+func startWith(t *testing.T, bin, root string, args ...string) (*exec.Cmd, io.WriteCloser, *syncBuffer, chan int) {
+	t.Helper()
+	cmd := exec.Command(bin, append([]string{"mcp", "--root", root}, args...)...)
+	stdin, _ := cmd.StdinPipe()
+	errb := new(syncBuffer)
+	cmd.Stderr = errb
+	cmd.Stdout = io.Discard
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	exited := make(chan int, 1)
+	go func() {
+		err := cmd.Wait()
+		code := 0
+		if ee, ok := err.(*exec.ExitError); ok {
+			code = ee.ExitCode()
+		}
+		exited <- code
+	}()
+	t.Cleanup(func() { stdin.Close(); cmd.Process.Kill() })
+	return cmd, stdin, errb, exited
+}
+
+func countMsg(lines []map[string]any, msg string) int {
+	n := 0
+	for _, l := range lines {
+		if l["msg"] == msg {
+			n++
+		}
+	}
+	return n
+}
+
+func TestE2E_SPEC0009_R7_otherGitAuthorRefused(t *testing.T) {
+	root := notesRoot(t)
+	owner, _, ownerErr := startServer(t, root)
+	_, _, errb, exited := startWith(t, binVersioned, root, "--git-author", "Ann <ann@example.org>")
+	var code int
+	select {
+	case code = <-exited:
+	case <-time.After(10 * time.Second):
+		t.Fatal("refused forwarder did not exit")
+	}
+	want := "git author differs: this process has Ann <ann@example.org>; memctl (pid " +
+		strconv.Itoa(owner.Process.Pid) + ") serving the root has memctl <memctl@localhost>"
+	errs := errorLines(jsonLines(t, errb.String()))
+	if code != 1 || len(errs) != 1 || errs[0]["msg"] != want {
+		t.Fatalf("code %d, ERROR lines %v; want 1 and %q", code, errs, want)
+	}
+	// One attempt only: the owner refused one connection.
+	if n := countMsg(jsonLines(t, ownerErr.String()), "forwarded session refused"); n != 1 {
+		t.Fatalf("owner refused %d connections, want 1: %s", n, ownerErr.String())
+	}
+}
+
+func TestE2E_SPEC0009_R8_versionDiffersWarns(t *testing.T) {
+	root := gitRepo(t)
+	owner := connect(t, root) // version 9.8.7-test
+	waitFor(t, owner.stderr, `"msg":"started"`)
+	_, _, errb, _ := startWith(t, binPlain, root) // version dev
+	waitFor(t, errb, `"msg":"forwarding"`)
+	waitFor(t, owner.stderr, `"msg":"version differs"`)
+	fw := byMsg(jsonLines(t, errb.String()), "version differs")
+	if fw == nil || fw["level"] != "WARN" || fw["owner_version"] != "9.8.7-test" {
+		t.Fatalf("forwarder WARN %v", fw)
+	}
+	ow := byMsg(jsonLines(t, owner.stderr.String()), "version differs")
+	if ow["level"] != "WARN" || ow["forwarder_version"] != "dev" {
+		t.Fatalf("owner WARN %v", ow)
+	}
+	owner.write(t, "Still works")
 }
