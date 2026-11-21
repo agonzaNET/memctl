@@ -21,6 +21,7 @@ specs and the ADRs. List each record in this README.
 - [2026-11-20 — Live check repeated after stage plan 0004](2026-11-20-live-check-repeat.md)
 - [2026-11-20 — v0.1.0 released](2026-11-20-v0.1.0-release.md)
 - [2026-11-20 — Live check of the v0.2.0 changes](2026-11-20-v0.2.0-live-check.md)
+- [2026-11-21 — Release audit of the v0.3.0 candidate](2026-11-21-v0.3.0-release-audit.md)
 
 ## Where it sits in the doc hierarchy
 
