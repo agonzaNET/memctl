@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -256,4 +257,56 @@ func TestE2E_SPEC0009_R8_versionDiffersWarns(t *testing.T) {
 		t.Fatalf("owner WARN %v", ow)
 	}
 	owner.write(t, "Still works")
+}
+
+func waitExit(t *testing.T, exited chan int, within time.Duration, errb *syncBuffer) int {
+	t.Helper()
+	select {
+	case c := <-exited:
+		return c
+	case <-time.After(within):
+		t.Fatalf("did not exit within %v: %s", within, errb.String())
+		return -1
+	}
+}
+
+func TestE2E_SPEC0009_R10_forwarderStdinEOF(t *testing.T) {
+	root := notesRoot(t)
+	startServer(t, root)
+	_, stdin, errb, exited := startWith(t, binVersioned, root)
+	waitFor(t, errb, `"msg":"forwarding"`)
+	stdin.Close()
+	if c := waitExit(t, exited, 5*time.Second, errb); c != 0 || byMsg(jsonLines(t, errb.String()), "stopped") == nil {
+		t.Fatalf("code %d, stderr %s; want 0 and a stopped line", c, errb.String())
+	}
+}
+
+func TestE2E_SPEC0009_R10_forwarderSIGTERM(t *testing.T) {
+	root := notesRoot(t)
+	startServer(t, root)
+	cmd, _, errb, exited := startWith(t, binVersioned, root)
+	waitFor(t, errb, `"msg":"forwarding"`)
+	cmd.Process.Signal(syscall.SIGTERM)
+	if c := waitExit(t, exited, 5*time.Second, errb); c != 0 {
+		t.Fatalf("code %d after SIGTERM: %s", c, errb.String())
+	}
+}
+
+func TestE2E_SPEC0009_R11_ownerLost(t *testing.T) {
+	root := notesRoot(t)
+	owner, _, _ := startServer(t, root)
+	_, _, errb, exited := startWith(t, binVersioned, root)
+	waitFor(t, errb, `"msg":"forwarding"`)
+	owner.Process.Signal(syscall.SIGKILL)
+	c := waitExit(t, exited, 5*time.Second, errb)
+	want := "memctl (pid " + strconv.Itoa(owner.Process.Pid) + ") serving the root stopped"
+	errs := errorLines(jsonLines(t, errb.String()))
+	if c != 1 || len(errs) != 1 || errs[0]["msg"] != want {
+		t.Fatalf("code %d, ERROR lines %v; want 1 and %q", c, errs, want)
+	}
+	// The client starts it again: now it is the owner.
+	_, _, again := startServer(t, root)
+	if byMsg(jsonLines(t, again.String()), "started") == nil {
+		t.Fatalf("restarted process is not the owner: %s", again.String())
+	}
 }
