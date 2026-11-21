@@ -181,46 +181,46 @@ over a Unix socket (design D12, ADR-0021).
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1, R3** — An end-to-end test: the owner's socket exists with mode 0600
+- [x] **R1, R3** — An end-to-end test: the owner's socket exists with mode 0600
   after the `started` line, which carries `sharing` `true`; a stale socket file
   left before start is replaced; a connection attempted during a slow load is
   not answered before the load ends.
-- [ ] **R2** — A root whose socket path is longer than the platform limit gives
+- [x] **R2** — A root whose socket path is longer than the platform limit gives
   the `WARN` and `sharing` `false`; tools work over stdio; stdin EOF stops the
   process with status 0.
-- [ ] **R4, R9, R12** — Two processes on one root, each with an SDK client: both
+- [x] **R4, R9, R12** — Two processes on one root, each with an SDK client: both
   list the tools; a note written through the second is read through the
   first; the second process loads no notes (no `notes loaded` line) and its
   stdout carries only protocol bytes.
-- [ ] **R5** — A forwarder started while the owner is loading connects once the
+- [x] **R5** — A forwarder started while the owner is loading connects once the
   socket listens; a forwarder started while the owner exits becomes the owner;
   a lock held by a process without a socket gives the SPEC-0006 R5 message
   and status 1 after 10 s.
-- [ ] **R6, R7** — A raw connection that sends a malformed line, `protocol` 2,
+- [x] **R6, R7** — A raw connection that sends a malformed line, `protocol` 2,
   nothing for 5 s, or another git author gets `ok: false` with the expected
   message and is closed; the forwarder with another `--git-author` exits with
   status 1 after one `ERROR` line and does not retry.
-- [ ] **R8** — A forwarder reporting another version: one `WARN` on each side,
+- [x] **R8** — A forwarder reporting another version: one `WARN` on each side,
   and tool calls work.
-- [ ] **R10** — Closing the forwarder's stdin gives status 0 and a `stopped`
+- [x] **R10** — Closing the forwarder's stdin gives status 0 and a `stopped`
   line; the owner logs `session closed`; SIGTERM to the forwarder gives
   status 0.
-- [ ] **R11** — SIGKILL to the owner: the forwarder logs the `ERROR` and exits
+- [x] **R11** — SIGKILL to the owner: the forwarder logs the `ERROR` and exits
   with status 1; a new `memctl mcp` started then becomes the owner.
-- [ ] **R12** — Concurrent `note_edit` calls from two sessions on one note: one
+- [x] **R12** — Concurrent `note_edit` calls from two sessions on one note: one
   succeeds and the other gets the conflict error; every commit has the
   owner's author.
-- [ ] **R13** — A captured owner log of one call per session shows `session`
+- [x] **R13** — A captured owner log of one call per session shows `session`
   `stdio` and `forward-1`, and the `session opened` and `session closed`
   lines with the forwarder's PID; no line holds note content.
-- [ ] **R14** — The owner's stdin closed while a forwarder is connected: the
+- [x] **R14** — The owner's stdin closed while a forwarder is connected: the
   owner keeps serving the forwarder; after the forwarder's stdin closes, the
   owner makes the final commit, the socket file is gone, and it exits with
   status 0.
-- [ ] **R15** — SIGTERM to the owner during a slow tool call of a forwarded
+- [x] **R15** — SIGTERM to the owner during a slow tool call of a forwarded
   session: the call completes, the forwarder exits with status 1, the final
   commit exists, the owner exits with status 0.
-- [ ] **R16** — With the owner's stderr pipe closed by the reader, a later tool
+- [x] **R16** — With the owner's stderr pipe closed by the reader, a later tool
   call still succeeds and the process keeps running.
 - [ ] **Live check** — Claude Desktop with one `memctl` entry: a `search` works in
   a chat and in a Cowork session at the same time; the Desktop log shows no

@@ -87,20 +87,21 @@ Each task: write the tests named after the requirements (`…_SPEC0009_R4_…`),
 run them and see them fail for the expected reason, commit them
 (`test(<pkg>): failing test … (spec: SPEC-NNNN)`), implement, `make verify`,
 commit (`feat(<pkg>): …` or `fix(<pkg>): … (spec: SPEC-NNNN)`). Multi-process
-tests build the binary once per package run, use a root in `t.TempDir()`
-(short enough for the socket limit), and run with `-race` in `make verify`
-as the other tests do.
+tests build the binary once per package run and use a root under `/tmp`
+(`tempRoot`): the folder of `t.TempDir()` can make the socket path too long to
+share. `make verify` runs without the race detector; `go test -race` is run
+by hand on the packages this stage touches (see Verification notes).
 
 ### Slice A — First shared session
 
-- [ ] **T1 — Handshake lines.** `Hello` and `Answer` with the JSON names of
+- [x] **T1 — Handshake lines.** `Hello` and `Answer` with the JSON names of
   SPEC-0009 R6; encode as one line ending in `\n`; decode at most 4 KiB, one
   line; validate `memctl` `"forward"` and `protocol` `1`; the
   `git author differs: …` message; a version comparison that callers turn into
   the `WARN`. Table tests: valid hello, extra fields ignored, missing fields,
   other protocol, no newline within 4 KiB, other author, other version.
   *SPEC-0009 R6, R7, R8 (codec part).*
-- [ ] **T2 — Owner listens and serves sessions.** `share.Listen`: remove a file at
+- [x] **T2 — Owner listens and serves sessions.** `share.Listen`: remove a file at
   the path, listen, `chmod` 0600; a path longer than the platform limit
   (computed from `syscall.RawSockaddrUnix`) returns `ErrPathTooLong` without
   touching the file system. `Accept` sets a 5 s read deadline for the hello,
@@ -113,7 +114,7 @@ as the other tests do.
   load (the `afterLock` hook) gets no answer before the load ends; a long root
   path gives the `WARN` and `sharing` `false`, and tools work over stdio.
   *SPEC-0009 R1, R2, R3, R12 (owner part).*
-- [ ] **T3 — Forwarder.** `runMCP`: when `AcquireLock` returns `*HeldError`,
+- [x] **T3 — Forwarder.** `runMCP`: when `AcquireLock` returns `*HeldError`,
   run the forwarder instead of exiting: `share.Dial` with this process's
   version, PID and git author; on `ok`, log `forwarding` (`owner_pid`,
   `owner_version`) and `share.Pipe` stdin, stdout and the connection. The
@@ -128,7 +129,7 @@ as the other tests do.
 
 ### Slice B — Refusal and retry
 
-- [ ] **T4 — Refusals and version warning.** Owner: `Accept`'s check refuses
+- [x] **T4 — Refusals and version warning.** Owner: `Accept`'s check refuses
   another author with the R7 message; a malformed line, `protocol` 2 or
   silence for 5 s gets `ok: false` and the connection is closed (raw-socket
   tests). Forwarder: on `ok: false`, one `ERROR` with the owner's message,
@@ -137,7 +138,7 @@ as the other tests do.
   and tool calls work (the forwarder's version is set through a test hook
   in-process).
   *SPEC-0009 R7, R8.*
-- [ ] **T5 — Retry, take-over and timeout.** Forwarder loop every 100 ms for at
+- [x] **T5 — Retry, take-over and timeout.** Forwarder loop every 100 ms for at
   most `forwardTimeout` (10 s; a package variable that in-process tests set to
   1 s): try the lock — on success continue as owner from the load on; else
   dial. On timeout, `HeldError` with the new suffix (in `lock.go`) through the
@@ -152,14 +153,14 @@ as the other tests do.
 
 ### Slice C — Lifetime
 
-- [ ] **T6 — Forwarder exits.** `Pipe`: on stdin EOF `CloseWrite`, copy to
+- [x] **T6 — Forwarder exits.** `Pipe`: on stdin EOF `CloseWrite`, copy to
   stdout until the connection ends, then `stopped` and status 0; on SIGINT or
   SIGTERM close the connection and status 0; when the connection ends while
   stdin is open, `ERROR` `memctl (pid <N>) serving the root stopped` and
   status 1. Tests for the three cases, the last with SIGKILL to the owner,
   followed by a new `memctl mcp` on the root that becomes the owner.
   *SPEC-0009 R10, R11.*
-- [ ] **T7 — Owner lifetime.** `sessions.go`: the set of open sessions
+- [x] **T7 — Owner lifetime.** `sessions.go`: the set of open sessions
   (`stdio` plus forwarded), a channel closed when the set becomes empty after
   the own session ended. Stdin EOF ends only the own session; the shutdown
   context is cancelled when the set is empty; then the listener is closed (the
@@ -170,7 +171,7 @@ as the other tests do.
   the socket file is gone, status 0; with sharing off, stdin EOF stops the
   process as before.
   *SPEC-0009 R14; SPEC-0004 R6; SPEC-0008 R12 (shared).*
-- [ ] **T8 — Signals and closed pipes.** SIGINT or SIGTERM: stop accepting,
+- [x] **T8 — Signals and closed pipes.** SIGINT or SIGTERM: stop accepting,
   let the call in progress finish, close every forwarded connection, final
   commit, exit (second signal: SPEC-0008 R13, unchanged). `signal.Ignore`
   for SIGPIPE in `runMCP`, so a write to a closed stdout or stderr returns
@@ -183,7 +184,7 @@ as the other tests do.
 
 ### Slice D — Sessions in the log
 
-- [ ] **T9 — `session` field.** `handle` looks up the session name of the
+- [x] **T9 — `session` field.** `handle` looks up the session name of the
   call's `*mcp.ServerSession` and `callLog.write` adds `session`; `stdio` for
   the own session, `forward-<n>` by order of the `ok` answer. The owner logs
   `session opened` and `session closed` with `session` and `forwarder_pid`.
@@ -194,7 +195,7 @@ as the other tests do.
 
 ### Slice E — Concurrency
 
-- [ ] **T10 — Two sessions, one service.** Two SDK clients (stdio and
+- [x] **T10 — Two sessions, one service.** Two SDK clients (stdio and
   forwarded) call `note_edit` on one note with the same `expected_sha` at the
   same moment, twenty rounds: one success and one conflict per round; every
   commit has the owner's author; no data race (`-race`).
@@ -202,7 +203,7 @@ as the other tests do.
 
 ### Slice F — Close
 
-- [ ] **T11 — README and changelog.** README: a section "Several clients on one
+- [x] **T11 — README and changelog.** README: a section "Several clients on one
   root" (Claude Desktop chat and Cowork, Claude Code and Desktop; the owner
   and forwarders; the socket in `.memory/`; what happens when the owner
   stops; a root too long to share), and the new lock message.
@@ -276,3 +277,25 @@ as the other tests do.
 - The live check is recorded under `docs/design/` and listed in its README.
 - `CHANGELOG.md` holds the `[0.3.0]` section, and the release record is
   written.
+
+## Verification notes
+
+Recorded after T1–T11 on the development VM (linux/arm64, Go 1.26.11):
+
+- `make verify` passes; `govulncheck ./...`: no vulnerabilities found.
+- `CGO_ENABLED=1 go test -race` on `cmd/memctl`, `internal/mcpserver`,
+  `internal/share` and `internal/note`: clean.
+- T10's tests passed when first written: the behaviour comes from the note
+  service mutex, which every session shares; they stay as guards.
+- SPEC-0009 R15 ("SIGTERM during a slow call of a forwarded session") is shown
+  in two tests: `TestServer_SPEC0009_R15_forwardedCallFinishes`
+  (`internal/mcpserver`, a forwarded session returns only after its call in
+  progress) and `TestE2E_SPEC0009_R15_SIGTERMToOwner` (forwarder status 1,
+  final commit, owner status 0); the spawned binary has no hook to slow a
+  call.
+- SPEC-0009 R5's take-over is shown with a lock held by the test process and
+  released during the retry (`TestCLI_SPEC0009_R5_takeOverFreedLock`), which
+  is the state a forwarder sees while an owner exits.
+- The disk of the VM's session folder filled up during T8; `GOCACHE`,
+  `GOTMPDIR` and `TMPDIR` moved to `/tmp`. No effect on the code.
+

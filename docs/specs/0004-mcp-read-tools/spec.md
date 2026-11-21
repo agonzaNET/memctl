@@ -338,7 +338,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   SDK client: it initialises, sees the server name, version, instructions and
   four tools; every stdout byte parses as protocol; stderr lines are JSON and
   include `started`.
-- [ ] **R6** — Closing stdin and sending SIGTERM each end the process with status
+- [x] **R6** — Closing stdin and sending SIGTERM each end the process with status
   0 and a `stopped` line; a slow tool call in progress completes first; with a
   forwarded session open, closing stdin does not end the process.
 - [x] **R7** — A note edited on disk between two `note_read` calls is returned
@@ -347,7 +347,7 @@ The fixed list of tool error codes for M1. M2 specs add to it.
   unknown property, `limit` 0 and `depth` 4 is refused by the SDK.
 - [x] **R10, R11** — Every tool's success and error results match the shape; a
   test scans the codes emitted by all tests against the table.
-- [ ] **R12** — A captured log of one call per tool has the fields and counts,
+- [x] **R12** — A captured log of one call per tool has the fields and counts,
   `session` included, and no argument value.
 - [x] **R13** — `check-docs.sh` passes with the markers present; a description
   naming a spec number fails it.

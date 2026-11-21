@@ -101,15 +101,15 @@ says which process holds the root only when that fails.
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1** — An end-to-end test: the lock is held before the `started` line,
+- [x] **R1** — An end-to-end test: the lock is held before the `started` line,
   and a second process started during the load of the first loads no notes
   and forwards once the first listens.
 - [x] **R2** — A root without `.memory/` gets the folder, its mode, and
   `.memory/.gitignore`; an existing `.memory/.gitignore` with other content is
   unchanged; `git status` in the root shows nothing from `.memory/`.
-- [ ] **R3, R4** — Two processes on one root: the second does not take the lock
+- [x] **R3, R4** — Two processes on one root: the second does not take the lock
   and loads no notes; the lock file holds the first one's PID.
-- [ ] **R5** — A second process that gets no shared session within 10 s (the
+- [x] **R5** — A second process that gets no shared session within 10 s (the
   holder has no socket): its stderr, captured through a pipe, holds the
   message once, in the `ERROR` line, with the holder's PID; with an empty
   lock file, the message without a PID; a root given through a symlink shows

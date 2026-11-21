@@ -199,7 +199,7 @@ anything a tool did not change, and never push.
   commit exists when the process has exited.
 - [x] **R12 (again)** — An editor change found by a check, then stdin closed at
   once: the external commit exists when the process has exited.
-- [ ] **R12 (shared)** — A note written through a forwarded session, then the
+- [x] **R12 (shared)** — A note written through a forwarded session, then the
   owner's and the forwarder's stdin closed at once: the commit exists, with
   the owner's author, when the owner has exited.
 - [x] **R14** — An editor change to a note, then a tool write to another note:
