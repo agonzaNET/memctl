@@ -22,8 +22,11 @@ memory made of plain Markdown notes. It is one static binary, started by the MCP
 client as a stdio child process (`memctl mcp --root <notes>`), with an in-memory
 index (BM25F full-text search and a link graph) rebuilt from the files on every
 start, a per-call freshness check that picks up edits made in any editor, and a
-git commit after each tool write. `memctl check` reports problems in a notes
-root. There is no HTTP transport, no authentication, no database and no config
+git commit after each tool write. One process serves a notes root (the
+owner, holding `.memory/memctl.lock`); a later `memctl mcp` on the same root
+forwards its client to the owner over `.memory/memctl.sock`, so several
+clients on one machine share one index and committer (ADR-0021, SPEC-0009).
+`memctl check` reports problems in a notes root. There is no HTTP transport, no authentication, no database and no config
 file in v1.
 
 The tools, the note format, the decisions D1–D24 and the milestones are in the

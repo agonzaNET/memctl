@@ -39,3 +39,13 @@ _Scope: full-repo read-only sweep, with the 0.3.0 changes (shared instance, 40 f
 - Working tree was clean at the start of the audit; this report is the only new file (untracked).
 - The VM's session disk filled once during the stage; build caches live under `/tmp`. No effect on the code or results.
 - The darwin/arm64 live-check binary (`bin/memctl`, git-ignored) was built from `8107d55`; docs-only commits follow it, so it matches the audited code.
+
+## Follow-up (2026-11-21, after the audit)
+
+Fixed on `main` as stage plan 0006 T14, each with `make verify` green and staticcheck clean afterwards:
+
+- W1 — fixed: `share.Dial` takes the forwarder's deadline (`0f2c702` test, `55459be` fix, `e0a740f`).
+- W2 — not a defect: a guard test shows that `git` hooks start with SIGPIPE not ignored (the Go runtime resets it for child processes). Kept as SPEC-0009 R17 with its test (`301d0e9`).
+- W3, N1, N2 — fixed (`27f5831`).
+- W5 — fixed: `CLAUDE.md` describes the shared instance.
+- W4, W6 — open by design: they close with the live check (T12).
