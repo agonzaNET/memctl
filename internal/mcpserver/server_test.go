@@ -137,7 +137,7 @@ func TestLog_SPEC0004_R12_toolCallLine(t *testing.T) {
 		t.Fatalf("lines %v", lines)
 	}
 	ok, bad := lines[0], lines[1]
-	if ok["level"] != "INFO" || ok["tool"] != "note_read" || ok["duration_ms"] == nil || ok["bytes"] == nil || ok["links"] == nil || ok["error"] != nil {
+	if ok["level"] != "INFO" || ok["tool"] != "note_read" || ok["duration_ms"] == nil || ok["session"] != "stdio" || ok["bytes"] == nil || ok["links"] == nil || ok["error"] != nil {
 		t.Fatalf("success line %v", ok)
 	}
 	if bad["error"] != "not_found" {

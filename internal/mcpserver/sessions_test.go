@@ -105,3 +105,29 @@ func TestServer_SPEC0009_R15_forwardedCallFinishes(t *testing.T) {
 		t.Fatal("ServeConn did not return after the call finished")
 	}
 }
+
+// TestLog_SPEC0009_R13_sessionField: each tool call line names its session.
+func TestLog_SPEC0009_R13_sessionField(t *testing.T) {
+	e := start(t, map[string]string{"a.md": "a"})
+	srvSide, cliSide := net.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- e.srv.ServeConn(ctx, srvSide, "forward-7") }()
+	t.Cleanup(func() { cancel(); <-done })
+	cctx, ccancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer ccancel()
+	fwd, err := mcp.NewClient(&mcp.Implementation{Name: "fwd", Version: "0"}, nil).
+		Connect(cctx, &mcp.IOTransport{Reader: cliSide, Writer: cliSide}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fwd.Close()
+	e.call(t, "note_read", map[string]any{"ref": "a"})
+	if _, err := fwd.CallTool(context.Background(), &mcp.CallToolParams{Name: "note_read", Arguments: map[string]any{"ref": "a"}}); err != nil {
+		t.Fatal(err)
+	}
+	lines := e.logLines(t, "tool call")
+	if len(lines) != 2 || lines[0]["session"] != "stdio" || lines[1]["session"] != "forward-7" {
+		t.Fatalf("tool call lines %v, want sessions stdio and forward-7", lines)
+	}
+}

@@ -398,3 +398,37 @@ func TestE2E_SPEC0009_R16_closedStderrDoesNotStopTheOwner(t *testing.T) {
 	case <-time.After(300 * time.Millisecond):
 	}
 }
+
+func TestE2E_SPEC0009_R13_sessionsInTheOwnerLog(t *testing.T) {
+	root := gitRepo(t)
+	owner := connect(t, root)
+	waitFor(t, owner.stderr, `"msg":"started"`)
+	fwd := connect(t, root)
+	waitFor(t, fwd.stderr, `"msg":"forwarding"`)
+	owner.write(t, "Zebra from the owner")
+	fwd.write(t, "Zebra from the forwarder")
+	fwd.cs.Close()
+	fwd.exit(t, 5*time.Second)
+	waitFor(t, owner.stderr, `"msg":"session closed"`)
+
+	lines := jsonLines(t, owner.stderr.String())
+	var sessions []any
+	for _, l := range lines {
+		if l["msg"] == "tool call" {
+			sessions = append(sessions, l["session"])
+		}
+	}
+	if len(sessions) != 2 || sessions[0] != "stdio" || sessions[1] != "forward-1" {
+		t.Fatalf("tool call sessions %v, want stdio and forward-1", sessions)
+	}
+	pid := float64(fwd.cmd.Process.Pid)
+	for _, msg := range []string{"session opened", "session closed"} {
+		l := byMsg(lines, msg)
+		if l == nil || l["level"] != "INFO" || l["session"] != "forward-1" || l["forwarder_pid"] != pid {
+			t.Fatalf("%s line %v, want session forward-1 and forwarder_pid %v", msg, l, pid)
+		}
+	}
+	if strings.Contains(owner.stderr.String(), "Zebra") {
+		t.Fatalf("owner log holds note text: %s", owner.stderr.String())
+	}
+}
