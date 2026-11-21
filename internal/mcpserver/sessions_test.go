@@ -63,3 +63,45 @@ func TestServer_SPEC0009_R12_forwardedSessionEndsAlone(t *testing.T) {
 		t.Fatalf("stdio session after the forwarded one ended: %s", text(t, got))
 	}
 }
+
+// TestServer_SPEC0009_R15_forwardedCallFinishes: on shutdown, a forwarded
+// session returns only after its tool call in progress has finished.
+func TestServer_SPEC0009_R15_forwardedCallFinishes(t *testing.T) {
+	e := start(t, map[string]string{"a.md": "a"})
+	release := make(chan struct{})
+	entered := make(chan struct{})
+	var once bool
+	e.srv.SetBeforeCall(func() {
+		if !once {
+			once = true
+			close(entered)
+			<-release
+		}
+	})
+	srvSide, cliSide := net.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- e.srv.ServeConn(ctx, srvSide, "forward-1") }()
+	cctx, ccancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer ccancel()
+	fwd, err := mcp.NewClient(&mcp.Implementation{Name: "fwd", Version: "0"}, nil).
+		Connect(cctx, &mcp.IOTransport{Reader: cliSide, Writer: cliSide}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fwd.Close()
+	go fwd.CallTool(context.Background(), &mcp.CallToolParams{Name: "note_read", Arguments: map[string]any{"ref": "a"}})
+	<-entered
+	cancel()
+	select {
+	case <-done:
+		t.Fatal("ServeConn returned while its call was in progress")
+	case <-time.After(200 * time.Millisecond):
+	}
+	close(release)
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("ServeConn did not return after the call finished")
+	}
+}

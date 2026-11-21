@@ -345,3 +345,56 @@ func TestE2E_SPEC0009_R14_SPEC0004_R6_SPEC0008_R12_ownerOutlivesItsClient(t *tes
 		t.Fatalf("socket file after exit: %v", err)
 	}
 }
+
+func TestE2E_SPEC0009_R15_SIGTERMToOwner(t *testing.T) {
+	root := gitRepo(t)
+	owner := connect(t, root)
+	waitFor(t, owner.stderr, `"msg":"started"`)
+	fwd := connect(t, root)
+	waitFor(t, fwd.stderr, `"msg":"forwarding"`)
+	fwd.write(t, "Before SIGTERM")
+	owner.cmd.Process.Signal(syscall.SIGTERM)
+	if c := fwd.exit(t, 5*time.Second); c != 1 {
+		t.Fatalf("forwarder exit %d, want 1: %s", c, fwd.stderr.String())
+	}
+	if c := owner.exit(t, 10*time.Second); c != 0 {
+		t.Fatalf("owner exit %d: %s", c, owner.stderr.String())
+	}
+	if log := gitLog(t, root); !strings.Contains(log, "Before SIGTERM") {
+		t.Fatalf("final commit missing:\n%s", log)
+	}
+}
+
+func TestE2E_SPEC0009_R16_closedStderrDoesNotStopTheOwner(t *testing.T) {
+	root := notesRoot(t)
+	cmd := exec.Command(binVersioned, "mcp", "--root", root)
+	stdin, _ := cmd.StdinPipe()
+	stderr, _ := cmd.StderrPipe()
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	exited := make(chan error, 1)
+	go func() { exited <- cmd.Wait() }()
+	t.Cleanup(func() { stdin.Close(); cmd.Process.Kill() })
+	buf := make([]byte, 4096)
+	var seen string
+	for !strings.Contains(seen, `"msg":"started"`) {
+		n, err := stderr.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		seen += string(buf[:n])
+	}
+	stderr.Close() // the reader goes away
+
+	fwd := connect(t, root)
+	if got := fwd.call(t, "note_read", map[string]any{"ref": "A"}); !strings.Contains(got, "Read \"A\"") {
+		t.Fatalf("note_read: %s", got)
+	}
+	fwd.call(t, "search", map[string]any{"query": "body"})
+	select {
+	case err := <-exited:
+		t.Fatalf("owner stopped after its stderr closed: %v", err)
+	case <-time.After(300 * time.Millisecond):
+	}
+}
