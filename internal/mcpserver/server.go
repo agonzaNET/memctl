@@ -62,10 +62,17 @@ func (s *Server) Serve(ctx context.Context, in io.ReadCloser, out io.WriteCloser
 }
 
 // ServeConn runs one forwarded session over c until c ends or ctx is
-// cancelled, then waits for the tool call in progress (SPEC-0009 R12).
+// cancelled, then waits for the tool call in progress (SPEC-0009 R12). The
+// transport closes c once, through its reader: closing it a second time
+// through the writer would report the normal end of a session as an error.
 func (s *Server) ServeConn(ctx context.Context, c io.ReadWriteCloser, session string) error {
-	return s.serveTransport(ctx, &mcp.IOTransport{Reader: c, Writer: c}, session)
+	return s.serveTransport(ctx, &mcp.IOTransport{Reader: c, Writer: writeOnly{c}}, session)
 }
+
+// writeOnly writes to the connection and leaves closing it to the reader.
+type writeOnly struct{ io.Writer }
+
+func (writeOnly) Close() error { return nil }
 
 func (s *Server) serveTransport(ctx context.Context, t mcp.Transport, name string) error {
 	s.connectMu.Lock()
