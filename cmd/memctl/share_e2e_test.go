@@ -432,3 +432,56 @@ func TestE2E_SPEC0009_R13_sessionsInTheOwnerLog(t *testing.T) {
 		t.Fatalf("owner log holds note text: %s", owner.stderr.String())
 	}
 }
+
+// editResult calls note_edit and returns "ok" or the error code.
+func editResult(s *session, sha, text string) string {
+	res, err := s.cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "note_edit",
+		Arguments: map[string]any{"ref": "a.md", "expected_sha": sha, "op": "append", "text": text}})
+	if err != nil {
+		return "transport: " + err.Error()
+	}
+	if !res.IsError {
+		return "ok"
+	}
+	msg := res.Content[0].(*mcp.TextContent).Text
+	code, _, _ := strings.Cut(msg, ":")
+	return code
+}
+
+func TestE2E_SPEC0009_R12_concurrentEditsFromTwoSessions(t *testing.T) {
+	root := gitRepo(t)
+	if err := os.WriteFile(filepath.Join(root, "a.md"), []byte("---\ntitle: A\n---\nfirst\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gitIn(t, root, "add", "a.md")
+	gitIn(t, root, "-c", "user.name=Base", "-c", "user.email=base@example.org", "commit", "-q", "-m", "baseline")
+	owner := connect(t, root)
+	waitFor(t, owner.stderr, `"msg":"started"`)
+	fwd := connect(t, root)
+	waitFor(t, fwd.stderr, `"msg":"forwarding"`)
+
+	for round := 0; round < 20; round++ {
+		got := owner.call(t, "note_read", map[string]any{"ref": "a.md"})
+		sha := got[strings.Index(got, "- sha256: ")+10:][:64]
+		results := make(chan string, 2)
+		go func() { results <- editResult(owner, sha, "owner "+strconv.Itoa(round)) }()
+		go func() { results <- editResult(fwd, sha, "forwarder "+strconv.Itoa(round)) }()
+		a, b := <-results, <-results
+		if !((a == "ok" && b == "conflict") || (a == "conflict" && b == "ok")) {
+			t.Fatalf("round %d: results %q and %q, want one ok and one conflict", round, a, b)
+		}
+	}
+	fwd.cs.Close()
+	fwd.exit(t, 5*time.Second)
+	owner.cs.Close()
+	owner.exit(t, 20*time.Second)
+	authors := gitIn(t, root, "log", "--format=%an <%ae>|%s")
+	for _, l := range strings.Split(strings.TrimSpace(authors), "\n") {
+		if strings.HasSuffix(l, "|baseline") {
+			continue
+		}
+		if !strings.HasPrefix(l, "memctl <memctl@localhost>|") {
+			t.Fatalf("commit by another author: %q\n%s", l, authors)
+		}
+	}
+}

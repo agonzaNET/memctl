@@ -131,3 +131,34 @@ func TestLog_SPEC0009_R13_sessionField(t *testing.T) {
 		t.Fatalf("tool call lines %v, want sessions stdio and forward-7", lines)
 	}
 }
+
+// TestServer_SPEC0009_R12_concurrentSessions runs calls from two sessions at
+// once, for the race detector.
+func TestServer_SPEC0009_R12_concurrentSessions(t *testing.T) {
+	e := start(t, map[string]string{"a.md": "---\ntitle: A\n---\nfirst\n"})
+	srvSide, cliSide := net.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- e.srv.ServeConn(ctx, srvSide, "forward-1") }()
+	t.Cleanup(func() { cancel(); <-done })
+	cctx, ccancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer ccancel()
+	fwd, err := mcp.NewClient(&mcp.Implementation{Name: "fwd", Version: "0"}, nil).
+		Connect(cctx, &mcp.IOTransport{Reader: cliSide, Writer: cliSide}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fwd.Close()
+	finished := make(chan struct{}, 2)
+	for _, cs := range []*mcp.ClientSession{e.cs, fwd} {
+		go func() {
+			for i := 0; i < 20; i++ {
+				cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "search", Arguments: map[string]any{"query": "first"}})
+				cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "note_write", Arguments: map[string]any{"title": "N", "body": "x", "overwrite": true}})
+			}
+			finished <- struct{}{}
+		}()
+	}
+	<-finished
+	<-finished
+}
