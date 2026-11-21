@@ -19,7 +19,12 @@ type shutdown struct {
 // that arrives after shutdown began (a signal or stdin EOF) closes second,
 // so the process exits without waiting for the final commit (SPEC-0004 R6,
 // SPEC-0008 R13).
+//
+// SIGPIPE is ignored, so a write to a stdout or stderr that its reader closed
+// fails with an error instead of ending the process; a log line that cannot
+// be written is dropped (SPEC-0009 R16).
 func newShutdown() *shutdown {
+	signal.Ignore(syscall.SIGPIPE)
 	ctx, cancel := context.WithCancel(context.Background())
 	sigs := make(chan os.Signal, 4)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
