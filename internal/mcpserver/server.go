@@ -19,12 +19,19 @@ type Options struct {
 	Log     *slog.Logger
 }
 
-// Server is the memctl MCP server.
+// Server is the memctl MCP server. It serves several sessions at once, the
+// owner's stdio and every forwarded connection, over one note service
+// (SPEC-0009 R12).
 type Server struct {
 	opts       Options
 	sdk        *mcp.Server
 	inFlight   sync.WaitGroup
 	beforeCall func()
+
+	// connectMu is held while a session connects and gets its name, so a
+	// call that cannot find its session's name waits for it.
+	connectMu sync.Mutex
+	names     sync.Map // *mcp.ServerSession → session name
 }
 
 // New returns a server with every tool registered (SPEC-0004 R5, SPEC-0007).
@@ -47,19 +54,57 @@ func New(o Options) *Server {
 	return s
 }
 
-// Serve runs the server over in and out until in ends or ctx is cancelled,
-// then waits for the tool call in progress (SPEC-0004 R6).
+// Serve runs the stdio session, named "stdio", over in and out until in ends
+// or ctx is cancelled, then waits for the tool call in progress (SPEC-0004
+// R6).
 func (s *Server) Serve(ctx context.Context, in io.ReadCloser, out io.WriteCloser) error {
-	return s.serveTransport(ctx, &mcp.IOTransport{Reader: in, Writer: out})
+	return s.serveTransport(ctx, &mcp.IOTransport{Reader: in, Writer: out}, "stdio")
 }
 
-func (s *Server) serveTransport(ctx context.Context, t mcp.Transport) error {
-	err := s.sdk.Run(ctx, t)
+// ServeConn runs one forwarded session over c until c ends or ctx is
+// cancelled, then waits for the tool call in progress (SPEC-0009 R12).
+func (s *Server) ServeConn(ctx context.Context, c io.ReadWriteCloser, session string) error {
+	return s.serveTransport(ctx, &mcp.IOTransport{Reader: c, Writer: c}, session)
+}
+
+func (s *Server) serveTransport(ctx context.Context, t mcp.Transport, name string) error {
+	s.connectMu.Lock()
+	ss, err := s.sdk.Connect(ctx, t, nil)
+	if err == nil {
+		s.names.Store(ss, name)
+	}
+	s.connectMu.Unlock()
+	if err != nil {
+		return err
+	}
+	defer s.names.Delete(ss)
+	ended := make(chan error, 1)
+	go func() { ended <- ss.Wait() }()
+	select {
+	case <-ctx.Done():
+		ss.Close()
+		<-ended
+		err = ctx.Err()
+	case err = <-ended:
+	}
 	s.inFlight.Wait()
-	if errors.Is(err, context.Canceled) || errors.Is(err, io.EOF) {
+	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, io.EOF) {
 		return nil
 	}
 	return err
+}
+
+// sessionName returns the name of the session of a call.
+func (s *Server) sessionName(ss *mcp.ServerSession) string {
+	if v, ok := s.names.Load(ss); ok {
+		return v.(string)
+	}
+	s.connectMu.Lock() // the session is still connecting
+	s.connectMu.Unlock()
+	if v, ok := s.names.Load(ss); ok {
+		return v.(string)
+	}
+	return "unknown"
 }
 
 func readOnly() *mcp.ToolAnnotations {

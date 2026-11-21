@@ -75,7 +75,7 @@ func gitRepo(t *testing.T) string {
 	if _, err := exec.LookPath("git"); err != nil {
 		t.Skip("git is not installed")
 	}
-	root := t.TempDir()
+	root := tempRoot(t)
 	if out, err := exec.Command("git", "init", "-q", root).CombinedOutput(); err != nil {
 		t.Fatalf("git init: %v %s", err, out)
 	}

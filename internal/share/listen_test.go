@@ -8,8 +8,20 @@ import (
 	"testing"
 )
 
+// shortDir returns a new folder under /tmp: the folder of t.TempDir can be too
+// long for a socket path.
+func shortDir(t *testing.T) string {
+	t.Helper()
+	d, err := os.MkdirTemp("/tmp", "msh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(d) })
+	return d
+}
+
 func TestListen_SPEC0009_R1_replacesStaleFileAndSetsMode(t *testing.T) {
-	path := filepath.Join(t.TempDir(), SocketName)
+	path := filepath.Join(shortDir(t), SocketName)
 	if err := os.WriteFile(path, []byte("stale"), 0o644); err != nil {
 		t.Fatal(err)
 	}

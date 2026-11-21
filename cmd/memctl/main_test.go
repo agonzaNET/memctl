@@ -68,9 +68,21 @@ func runBin(t *testing.T, bin string, env []string, args ...string) result {
 	return result{code, out.String(), errb.String()}
 }
 
+// tempRoot returns a new folder under /tmp, removed after the test. The folder
+// of t.TempDir can make the socket path of a notes root too long to share.
+func tempRoot(t *testing.T) string {
+	t.Helper()
+	d, err := os.MkdirTemp("/tmp", "mct")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(d) })
+	return d
+}
+
 func notesRoot(t *testing.T) string {
 	t.Helper()
-	root := t.TempDir()
+	root := tempRoot(t)
 	if err := os.WriteFile(filepath.Join(root, "a.md"), []byte("---\ntitle: A\n---\nbody\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}

@@ -84,13 +84,21 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	}); err != nil {
 		log.Warn("cannot list the uncommitted notes; they are committed when they next change")
 	}
+	// The socket listens only after the load, so no session gets a tool call
+	// before it is complete (SPEC-0009 R1, R2).
+	ln := listenShared(root, log)
 	log.Info("started",
 		slog.String("version", version),
 		slog.String("log_level", cfg.logLevel),
 		slog.String("git_author", cfg.gitAuthor.String()),
-		slog.Int("notes", svc.Index().Len()))
+		slog.Int("notes", svc.Index().Len()),
+		slog.Bool("sharing", ln != nil))
 
 	srv := mcpserver.New(mcpserver.Options{Version: version, Notes: svc, Log: log})
+	var sessions sessionSet
+	if ln != nil {
+		go acceptShared(ctx, ln, srv, ownerInfo(cfg), &sessions, log)
+	}
 	if err := srv.Serve(ctx, io.NopCloser(stdin), nopWriteCloser{stdout}); err != nil {
 		log.Warn("session ended with an error", slog.String("class", "transport"))
 	}
@@ -99,6 +107,10 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	// queued at once, and exit when that commit returns, or at once on
 	// another signal (ADR-0014, SPEC-0008 R12, R13).
 	sd.begin()
+	if ln != nil {
+		ln.Close() // removes the socket file
+	}
+	sessions.closeAndWait()
 	stopCommitter()
 	select {
 	case <-committed:
