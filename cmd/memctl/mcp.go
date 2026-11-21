@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"io"
 	"log/slog"
 	"os"
@@ -35,17 +34,12 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return exitError
 	}
 	// One process per root (SPEC-0006 R1): the lock is taken before the load
-	// and held until the process exits. The deferred Close also keeps the
-	// Lock reachable, so its file is never closed by a finalizer early.
-	lock, err := note.AcquireLock(root, log)
-	if err != nil {
-		var held *note.HeldError
-		if errors.As(err, &held) {
-			// Another process owns the root: forward to it (SPEC-0009 R4).
-			return runForward(cfg, root, held, stdin, stdout, stderr, log)
-		}
-		log.Error("cannot take the instance lock", slog.String("err", err.Error()))
-		return exitError
+	// and held until the process exits; when another process holds it, this
+	// one forwards to it (SPEC-0009 R4, R5). The deferred Close also keeps
+	// the Lock reachable, so its file is never closed by a finalizer early.
+	lock, code, done := acquireOrForward(ctx, cfg, root, stdin, stdout, stderr, log)
+	if done {
+		return code
 	}
 	defer lock.Close()
 	if afterLock != nil {

@@ -16,7 +16,8 @@ import (
 // process ends; the file is never deleted (R7).
 type Lock struct{ f *os.File }
 
-// HeldError reports that another process holds the lock of Root. PID is 0
+// HeldError reports that another process holds the lock of Root and that no
+// shared session with it started (SPEC-0006 R5, SPEC-0009 R5). PID is 0
 // when the holder's PID cannot be read. Given is the root as the user gave
 // it; when set and different from Root, the message names both
 // (SPEC-0006 R5).
@@ -31,10 +32,11 @@ func (e *HeldError) Error() string {
 	if e.Given != "" && e.Given != e.Root {
 		root = e.Given + " (" + e.Root + ")"
 	}
+	const suffix = ", and it did not accept a shared session within 10 s"
 	if e.PID <= 0 {
-		return "root " + root + " is in use by another memctl process"
+		return "root " + root + " is in use by another memctl process" + suffix
 	}
-	return "root " + root + " is in use by memctl (pid " + strconv.Itoa(e.PID) + ")"
+	return "root " + root + " is in use by memctl (pid " + strconv.Itoa(e.PID) + ")" + suffix
 }
 
 // MemoryDir is the folder of memctl's own files in a notes root.

@@ -1,29 +1,69 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
+	"time"
 
 	"github.com/agonzaNET/memctl/internal/note"
 	"github.com/agonzaNET/memctl/internal/share"
 )
 
-// runForward runs memctl mcp as a forwarder: the lock of root is held by
-// another process, so this one passes its client's bytes to that owner over
-// the root's socket and loads nothing itself (SPEC-0009 R4, R9–R11).
-func runForward(cfg mcpConfig, root string, held *note.HeldError, stdin io.Reader, stdout, stderr io.Writer, log *slog.Logger) int {
+// forwardTimeout is how long a process that finds the lock held tries to get
+// a shared session before it stops (SPEC-0009 R5). Tests shorten it.
+var forwardTimeout = 10 * time.Second
+
+// retryEvery is the pause between two attempts (SPEC-0009 R5).
+const retryEvery = 100 * time.Millisecond
+
+// acquireOrForward takes the instance lock, or forwards this process's client
+// to the owner of root (SPEC-0009 R4, R5). It returns the lock when this
+// process is the owner; otherwise done is true and code is the exit status.
+// Each attempt tries the lock first, so a process whose owner went away takes
+// over as owner.
+func acquireOrForward(ctx context.Context, cfg mcpConfig, root string, stdin io.Reader, stdout, stderr io.Writer, log *slog.Logger) (lock *note.Lock, code int, done bool) {
+	deadline := time.Now().Add(forwardTimeout)
 	hello := share.NewHello(version, os.Getpid(), cfg.gitAuthor.String())
-	conn, ans, err := share.Dial(socketPath(root), hello)
-	if err != nil {
-		reportHeld(held, cfg, stderr, log)
-		return exitError
+	for {
+		lock, err := note.AcquireLock(root, log)
+		if err == nil {
+			return lock, exitOK, false
+		}
+		var held *note.HeldError
+		if !errors.As(err, &held) {
+			log.Error("cannot take the instance lock", slog.String("err", err.Error()))
+			return nil, exitError, true
+		}
+		conn, ans, err := share.Dial(socketPath(root), hello)
+		if err == nil {
+			if conn == nil {
+				// Refused by the owner: no retry (SPEC-0009 R7).
+				log.Error(ans.Error)
+				return nil, exitError, true
+			}
+			return nil, forward(conn, ans, stdin, stdout, log), true
+		}
+		if !time.Now().Before(deadline) {
+			reportHeld(held, cfg, stderr, log)
+			return nil, exitError, true
+		}
+		select {
+		case <-ctx.Done():
+			log.Info("stopped")
+			return nil, exitOK, true
+		case <-time.After(retryEvery):
+		}
 	}
-	if conn == nil {
-		log.Error(ans.Error)
-		return exitError
-	}
+}
+
+// forward passes the client's bytes to the owner and back until either side
+// ends (SPEC-0009 R8–R11).
+func forward(conn *net.UnixConn, ans share.Answer, stdin io.Reader, stdout io.Writer, log *slog.Logger) int {
 	log.Info("forwarding", slog.Int("owner_pid", ans.PID), slog.String("owner_version", ans.Version))
 	if ans.Version != version {
 		log.Warn("version differs", slog.String("owner_version", ans.Version))
