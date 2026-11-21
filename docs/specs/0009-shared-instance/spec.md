@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft
+Accepted
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
