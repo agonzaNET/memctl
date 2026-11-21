@@ -99,8 +99,9 @@ func (s *Server) sessionName(ss *mcp.ServerSession) string {
 	if v, ok := s.names.Load(ss); ok {
 		return v.(string)
 	}
-	s.connectMu.Lock() // the session is still connecting
-	s.connectMu.Unlock()
+	// The session is still connecting: its name is stored under connectMu.
+	s.connectMu.Lock()
+	defer s.connectMu.Unlock()
 	if v, ok := s.names.Load(ss); ok {
 		return v.(string)
 	}
