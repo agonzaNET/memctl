@@ -310,3 +310,38 @@ func TestE2E_SPEC0009_R11_ownerLost(t *testing.T) {
 		t.Fatalf("restarted process is not the owner: %s", again.String())
 	}
 }
+
+// TestE2E_SPEC0009_R14_SPEC0004_R6_SPEC0008_R12_ownerOutlivesItsClient: the
+// owner's stdin closed while a forwarder is connected leaves the forwarder
+// served; when the forwarder ends, the owner commits, removes the socket and
+// exits with status 0.
+func TestE2E_SPEC0009_R14_SPEC0004_R6_SPEC0008_R12_ownerOutlivesItsClient(t *testing.T) {
+	root := gitRepo(t)
+	owner := connect(t, root)
+	waitFor(t, owner.stderr, `"msg":"started"`)
+	fwd := connect(t, root)
+	waitFor(t, fwd.stderr, `"msg":"forwarding"`)
+
+	owner.cs.Close()
+	select {
+	case <-owner.done:
+		t.Fatalf("owner exited while a forwarded session was open: %s", owner.stderr.String())
+	case <-time.After(300 * time.Millisecond):
+	}
+	fwd.write(t, "After the owner's client left")
+
+	fwd.cs.Close()
+	if c := fwd.exit(t, 5*time.Second); c != 0 {
+		t.Fatalf("forwarder exit %d", c)
+	}
+	if c := owner.exit(t, 10*time.Second); c != 0 {
+		t.Fatalf("owner exit %d: %s", c, owner.stderr.String())
+	}
+	log := gitIn(t, root, "log", "--format=%an <%ae>|%s")
+	if !strings.Contains(log, "memctl <memctl@localhost>|memory: note_write After the owner's client left.md") {
+		t.Fatalf("final commit missing or with another author:\n%s", log)
+	}
+	if _, err := os.Lstat(socketOf(root)); !os.IsNotExist(err) {
+		t.Fatalf("socket file after exit: %v", err)
+	}
+}
