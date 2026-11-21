@@ -19,11 +19,13 @@ func (c *callLog) set(name string, n int) {
 	c.counts[name] = n
 }
 
-// write logs the one "tool call" line (SPEC-0004 R12).
-func (c *callLog) write(log *slog.Logger, tool string, start time.Time, code Code) {
+// write logs the one "tool call" line, with the name of the call's session
+// (SPEC-0004 R12, SPEC-0009 R13).
+func (c *callLog) write(log *slog.Logger, tool, session string, start time.Time, code Code) {
 	attrs := []any{
 		slog.String("tool", tool),
 		slog.Int64("duration_ms", time.Since(start).Milliseconds()),
+		slog.String("session", session),
 	}
 	if code != "" {
 		attrs = append(attrs, slog.String("error", string(code)))

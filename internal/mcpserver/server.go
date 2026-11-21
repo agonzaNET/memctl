@@ -116,7 +116,7 @@ func readOnly() *mcp.ToolAnnotations {
 // test hook, turns a toolError into an error result, maps any other error to
 // internal_error, and writes the tool-call log line (SPEC-0004 R10–R12).
 func handle[In any](s *Server, tool string, fn func(in In, log *callLog) (*mcp.CallToolResult, error)) mcp.ToolHandlerFor[In, any] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, in In) (*mcp.CallToolResult, any, error) {
+	return func(ctx context.Context, req *mcp.CallToolRequest, in In) (*mcp.CallToolResult, any, error) {
 		s.inFlight.Add(1)
 		defer s.inFlight.Done()
 		start := time.Now()
@@ -139,7 +139,7 @@ func handle[In any](s *Server, tool string, fn func(in In, log *callLog) (*mcp.C
 			code = te.code
 			res = failure(te)
 		}
-		cl.write(s.opts.Log, tool, start, code)
+		cl.write(s.opts.Log, tool, s.sessionName(req.Session), start, code)
 		return res, nil, nil
 	}
 }

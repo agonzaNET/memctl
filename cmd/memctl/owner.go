@@ -56,10 +56,12 @@ func acceptShared(ctx context.Context, ln *share.Listener, srv *mcpserver.Server
 				return
 			}
 			defer sessions.done()
+			log.Info("session opened", slog.String("session", name), slog.Int("forwarder_pid", h.PID))
 			if err := srv.ServeConn(ctx, conn, name); err != nil {
 				log.Warn("session ended with an error", slog.String("session", name), slog.String("class", "transport"))
 			}
 			conn.Close()
+			log.Info("session closed", slog.String("session", name), slog.Int("forwarder_pid", h.PID))
 		}()
 	}
 }
