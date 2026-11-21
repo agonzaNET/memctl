@@ -80,7 +80,8 @@ between `// agent-facing text: begin` and `// agent-facing text: end` in
 ## Tool-call log (ADR-0016)
 
 After each call, `internal/mcpserver` logs one `INFO` line `tool call` with
-`tool`, `duration_ms`, `error` (the code, on an error only) and fixed-name
+`tool`, `duration_ms`, `session` (`stdio` or `forward-<n>`, SPEC-0009 R13),
+`error` (the code, on an error only) and fixed-name
 counts the tool sets (`results`, `notes`, `depth`, …). Never content,
 queries, titles, aliases or paths.
 
