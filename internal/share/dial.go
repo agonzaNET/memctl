@@ -11,7 +11,7 @@ import (
 // that no answer came: no socket, a connection refused or closed before the
 // answer (R5).
 func Dial(path string, h Hello, deadline time.Time) (*net.UnixConn, Answer, error) {
-	c, err := net.DialTimeout("unix", path, time.Until(deadline))
+	c, err := (&net.Dialer{Deadline: deadline}).Dial("unix", path)
 	if err != nil {
 		return nil, Answer{}, err
 	}
