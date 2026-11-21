@@ -19,7 +19,7 @@ Cowork session at the same time; then v0.3.0 is released.
 | C — Lifetime | T6–T8 | The owner outlives its own client while forwarders remain; signals, a lost owner and a closed stderr behave as specified |
 | D — Sessions in the log | T9 | Every `tool call` line names its session; forwarded sessions are logged when they open and close |
 | E — Concurrency | T10 | Concurrent edits from two sessions give one success and one conflict, under the race detector |
-| F — Close | T11–T12 | README and CHANGELOG; live check in Claude Desktop; specs `Implemented` |
+| F — Close | T11, T14, T12 | README and CHANGELOG; live check in Claude Desktop; specs `Implemented` |
 | G — Release | T13 | v0.3.0 tagged and released |
 
 ## File map
@@ -203,6 +203,17 @@ by hand on the packages this stage touches (see Verification notes).
 
 ### Slice F — Close
 
+- [ ] **T14 — Release-audit fixes.** From `RELEASE-AUDIT.md` of 2026-11-21:
+  W1 — `share.Dial` waits for the answer no later than the forwarder's
+  deadline (test with an owner that accepts and never answers); W2 — checked,
+  no code change: the Go runtime starts child processes with the default
+  action for a signal the program ignores, so `git` and its hooks already
+  get default SIGPIPE; R17 and a guard test (a `pre-commit` hook reports its
+  `SigIgn` mask) keep it so; W3 — the second
+  session-name lookup under the mutex (staticcheck SA2001); W5 — `CLAUDE.md`
+  describes the shared instance; N1 — comment order in `runMCP`; N2 — the
+  test helper returns its error last (ST1008).
+  *SPEC-0009 R5, R16, R17.*
 - [x] **T11 — README and changelog.** README: a section "Several clients on one
   root" (Claude Desktop chat and Cowork, Claude Code and Desktop; the owner
   and forwarders; the socket in `.memory/`; what happens when the owner
@@ -257,6 +268,7 @@ by hand on the packages this stage touches (see Verification notes).
 | SPEC-0009 | R13 | T9 |
 | SPEC-0009 | R14 | T7 |
 | SPEC-0009 | R15, R16 | T8 |
+| SPEC-0009 | R5 (answer wait), R16, R17 | T14 |
 | SPEC-0009 | Live check | T12 |
 | SPEC-0006 | R1, R3, R4 (acceptance) | T3 |
 | SPEC-0006 | R5 | T5 |

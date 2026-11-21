@@ -485,3 +485,33 @@ func TestE2E_SPEC0009_R12_concurrentEditsFromTwoSessions(t *testing.T) {
 		}
 	}
 }
+
+// TestE2E_SPEC0009_R17_childrenKeepDefaultSIGPIPE: git hooks run for a tool
+// write start with SIGPIPE not ignored.
+func TestE2E_SPEC0009_R17_childrenKeepDefaultSIGPIPE(t *testing.T) {
+	if _, err := os.Stat("/proc/self/status"); err != nil {
+		t.Skip("needs /proc (Linux)")
+	}
+	root := gitRepo(t)
+	out := filepath.Join(t.TempDir(), "sigign")
+	hook := filepath.Join(root, ".git", "hooks", "pre-commit")
+	if err := os.WriteFile(hook, []byte("#!/bin/sh\ngrep '^SigIgn:' /proc/$$/status > \"$MEMCTL_TEST_HOOK_OUT\"\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("MEMCTL_TEST_HOOK_OUT", out)
+	s := connect(t, root)
+	s.write(t, "Hook check")
+	s.cs.Close()
+	s.exit(t, 20*time.Second)
+	b, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatalf("the hook did not run: %v; %s", err, s.stderr.String())
+	}
+	mask, err := strconv.ParseUint(strings.TrimSpace(strings.TrimPrefix(string(b), "SigIgn:")), 16, 64)
+	if err != nil {
+		t.Fatalf("SigIgn line %q: %v", b, err)
+	}
+	if mask&(1<<(uint(syscall.SIGPIPE)-1)) != 0 {
+		t.Fatalf("SIGPIPE is ignored in the hook (SigIgn %s)", strings.TrimSpace(string(b)))
+	}
+}
