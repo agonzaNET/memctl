@@ -223,7 +223,7 @@ by hand on the packages this stage touches (see Verification notes).
   when its last client session ends, the `tool call` log line carries
   `session`.
   *No requirement; ADR-0007.*
-- [ ] **T12 — Live check and close.** `make build GOOS=darwin GOARCH=arm64`.
+- [x] **T12 — Live check and close.** `make build GOOS=darwin GOARCH=arm64`.
   The maintainer installs the binary as `~/.local/bin/memctl` and restarts
   Claude Desktop with the existing `infradocs` entry, then:
   1. `search` in a chat and in a Cowork session, at the same time: both

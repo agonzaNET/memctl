@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -228,9 +228,9 @@ over a Unix socket (design D12, ADR-0021).
   commit exists, the owner exits with status 0.
 - [x] **R16** — With the owner's stderr pipe closed by the reader, a later tool
   call still succeeds and the process keeps running.
-- [ ] **R17** — A `pre-commit` hook run for a tool write reports SIGPIPE as not
+- [x] **R17** — A `pre-commit` hook run for a tool write reports SIGPIPE as not
   ignored (on Linux, bit 13 of `SigIgn` in `/proc/self/status` is clear).
-- [ ] **Live check** — Claude Desktop with one `memctl` entry: a `search` works in
+- [x] **Live check** — Claude Desktop with one `memctl` entry: a `search` works in
   a chat and in a Cowork session at the same time; the Desktop log shows no
   `Couldn't start for Cowork and Code sessions`; after quitting and reopening
   Desktop, both work again.
