@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -121,5 +123,61 @@ func TestE2E_SPEC0009_R12_ownerServesForwardedConnection(t *testing.T) {
 	res, err := cs.ListTools(context.Background(), nil)
 	if err != nil || len(res.Tools) == 0 {
 		t.Fatalf("tools through the socket: %v %+v", err, res)
+	}
+}
+
+// connectTee starts memctl mcp on root like connect, and also records its
+// stdout.
+func connectTee(t *testing.T, root string) (*session, *tee) {
+	t.Helper()
+	cmd := exec.Command(binVersioned, "mcp", "--root", root)
+	stdin, _ := cmd.StdinPipe()
+	stdout, _ := cmd.StdoutPipe()
+	s := &session{cmd: cmd, stderr: new(syncBuffer), done: make(chan error, 1)}
+	cmd.Stderr = s.stderr
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	go func() { s.done <- cmd.Wait() }()
+	t.Cleanup(func() { cmd.Process.Kill() })
+	out := &tee{r: stdout}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cs, err := mcp.NewClient(&mcp.Implementation{Name: "e2e", Version: "0"}, nil).
+		Connect(ctx, &mcp.IOTransport{Reader: out, Writer: stdin}, nil)
+	if err != nil {
+		t.Fatalf("connect: %v; stderr %s", err, s.stderr.String())
+	}
+	s.cs = cs
+	return s, out
+}
+
+func TestE2E_SPEC0009_R4_R9_R12_secondProcessForwards(t *testing.T) {
+	root := gitRepo(t)
+	owner := connect(t, root)
+	waitFor(t, owner.stderr, `"msg":"started"`)
+	fwd, out := connectTee(t, root)
+
+	tools, err := fwd.cs.ListTools(context.Background(), nil)
+	if err != nil || len(tools.Tools) == 0 {
+		t.Fatalf("tools through the forwarder: %v", err)
+	}
+	fwd.write(t, "Written by the forwarder")
+	if got := owner.call(t, "note_read", map[string]any{"ref": "Written by the forwarder"}); !strings.Contains(got, "Read \"Written by the forwarder\"") {
+		t.Fatalf("note_read through the owner: %s", got)
+	}
+
+	logs := jsonLines(t, fwd.stderr.String())
+	if byMsg(logs, "notes loaded") != nil || byMsg(logs, "started") != nil {
+		t.Fatalf("the forwarder loaded the notes: %s", fwd.stderr.String())
+	}
+	f := byMsg(logs, "forwarding")
+	if f == nil || f["owner_pid"] != float64(owner.cmd.Process.Pid) || f["owner_version"] != "9.8.7-test" {
+		t.Fatalf("forwarding line %v, want the owner's PID and version", f)
+	}
+	for _, l := range strings.Split(strings.TrimSpace(out.String()), "\n") {
+		if !json.Valid([]byte(l)) {
+			t.Fatalf("forwarder stdout line is not protocol: %q", l)
+		}
 	}
 }

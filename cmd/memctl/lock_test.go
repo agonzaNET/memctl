@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,6 +12,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/agonzaNET/memctl/internal/note"
 )
 
 // splitStderr separates the plain message lines of stderr from the JSON log
@@ -81,6 +84,28 @@ func resolved(t *testing.T, p string) string {
 	return r
 }
 
+// startForwarder starts memctl mcp on a root another process owns, with stdin
+// held open.
+func startForwarder(t *testing.T, root string) (*exec.Cmd, io.WriteCloser, *syncBuffer) {
+	t.Helper()
+	cmd := exec.Command(binVersioned, "mcp", "--root", root)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	errb := new(syncBuffer)
+	cmd.Stderr = errb
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		stdin.Close()
+		cmd.Process.Kill()
+		cmd.Wait()
+	})
+	return cmd, stdin, errb
+}
+
 // startServer starts memctl mcp on root with stdin held open and waits for
 // the started line.
 func startServer(t *testing.T, root string) (*exec.Cmd, io.WriteCloser, *syncBuffer) {
@@ -125,11 +150,36 @@ func TestCLI_SPEC0006_R1_lockHeldBeforeLoad(t *testing.T) {
 	assertRefused(t, during, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
 }
 
-func TestCLI_SPEC0006_R3_R4_R5_secondProcessRefused(t *testing.T) {
+func TestCLI_SPEC0006_R3_R4_secondProcessTakesNoLock(t *testing.T) {
 	root := notesRoot(t)
 	first, _, _ := startServer(t, root)
+	second, _, errb := startForwarder(t, root)
+	waitFor(t, errb, `"msg":"forwarding"`)
+	b, _ := os.ReadFile(filepath.Join(root, ".memory", "memctl.lock"))
+	if string(b) != strconv.Itoa(first.Process.Pid)+"\n" {
+		t.Fatalf("lock file %q, want the first PID", b)
+	}
+	if strings.Contains(errb.String(), "notes loaded") {
+		t.Fatalf("second process (pid %d) loaded the notes: %s", second.Process.Pid, errb.String())
+	}
+}
+
+// holdLock takes the instance lock of root from the test process, so a
+// memctl started on root finds it held by a process without a socket.
+func holdLock(t *testing.T, root string) {
+	t.Helper()
+	l, err := note.AcquireLock(resolved(t, root), slog.New(slog.DiscardHandler))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { l.Close() })
+}
+
+func TestCLI_SPEC0006_R5_refusedWithoutSharedSession(t *testing.T) {
+	root := notesRoot(t)
+	holdLock(t, root)
 	r := runBin(t, binVersioned, nil, "mcp", "--root", root)
-	assertRefused(t, r, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(first.Process.Pid)+")")
+	assertRefused(t, r, "root "+label(t, root)+" is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
 
 	// A root given through a symlink names the given path and the resolved one.
 	link := filepath.Join(t.TempDir(), "link")
@@ -137,7 +187,7 @@ func TestCLI_SPEC0006_R3_R4_R5_secondProcessRefused(t *testing.T) {
 		t.Fatal(err)
 	}
 	r = runBin(t, binVersioned, nil, "mcp", "--root", link)
-	assertRefused(t, r, "root "+link+" ("+resolved(t, root)+") is in use by memctl (pid "+strconv.Itoa(first.Process.Pid)+")")
+	assertRefused(t, r, "root "+link+" ("+resolved(t, root)+") is in use by memctl (pid "+strconv.Itoa(os.Getpid())+")")
 
 	// An empty lock file: the message names no PID.
 	if err := os.WriteFile(filepath.Join(root, ".memory", "memctl.lock"), nil, 0o600); err != nil {
