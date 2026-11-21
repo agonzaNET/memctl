@@ -18,6 +18,26 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+### Added
+
+- Several MCP clients on one machine can use the same notes folder at the
+  same time, such as Claude Desktop's chats and its Cowork and Code
+  sessions: the first `memctl mcp` serves the folder, and every later one
+  passes its client's messages to it over a socket in `.memory/`. A later
+  process with a different `--git-author` is refused (spec: SPEC-0009).
+
+### Changed
+
+- A second `memctl mcp` on a folder no longer stops at once: it stops only
+  when no shared session starts within 10 s, with
+  `root <path> is in use by memctl (pid N), and it did not accept a shared session within 10 s`
+  (spec: SPEC-0006, SPEC-0009).
+- The first process stops when its own client and every other client have
+  ended, or on a signal, and commits what is queued first (spec: SPEC-0004,
+  SPEC-0008, SPEC-0009).
+- The `tool call` log line names its session, `stdio` or `forward-<n>`; the
+  `started` line says whether `sharing` is on (spec: SPEC-0004, SPEC-0009).
+
 ## [0.2.0] - 2026-11-20
 
 ### Added

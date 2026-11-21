@@ -58,9 +58,29 @@ expanded there):
 }
 ```
 
-Only one `memctl mcp` can serve a notes folder at a time. A second client
-configured on the same folder fails to start with
-`root <path> is in use by memctl (pid N)`; give each client its own folder.
+### Several clients on one notes folder
+
+Several clients on one machine can use the same notes folder at the same
+time: Claude Desktop's chats and its Cowork and Code sessions (which start
+one `memctl mcp` each from a single entry), or Claude Code and Claude
+Desktop. The first `memctl mcp` on a folder serves it; every later one passes
+its client's messages to the first over a socket in the folder's `.memory/`
+(`memctl.sock`, readable by your user only). All clients share one index and
+one git history, and every commit carries the first process's
+`--git-author`.
+
+- A later process with a different `--git-author` is refused, so a commit
+  never carries an author you did not configure for that client.
+- When the first process is stopped, the others end too; a client that
+  restarts its server, as Claude Desktop does, gets one again, and the first
+  to start serves the folder.
+- If no shared session starts within 10 s, the process stops with
+  `root <path> is in use by memctl (pid N), and it did not accept a shared session within 10 s`.
+  An older `memctl` (before 0.3.0) on the folder gives this message, and so
+  does a folder whose socket path is longer than your system allows (about
+  100 characters); the first process then logs `sharing is off`.
+- Each `tool call` log line names its session: `stdio` for the first
+  process's own client, `forward-1`, `forward-2`, … for the others.
 
 ### Flags
 
