@@ -3,6 +3,8 @@ package mcpserver_test
 import (
 	"context"
 	"net"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -161,4 +163,40 @@ func TestServer_SPEC0009_R12_concurrentSessions(t *testing.T) {
 	}
 	<-finished
 	<-finished
+}
+
+// TestServer_SPEC0009_R13_forwardedSessionEndsCleanly: a forwarded session
+// whose client closes the connection ends without an error, so the owner
+// logs no warning for a normal end.
+func TestServer_SPEC0009_R13_forwardedSessionEndsCleanly(t *testing.T) {
+	e := start(t, map[string]string{"a.md": "a"})
+	dir, err := os.MkdirTemp("/tmp", "mss")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(dir) })
+	ln, err := net.Listen("unix", filepath.Join(dir, "s"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	cli, err := net.Dial("unix", filepath.Join(dir, "s"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv, err := ln.Accept()
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- e.srv.ServeConn(context.Background(), srv, "forward-1") }()
+	cli.Close()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("ServeConn after the client closed: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("ServeConn did not return")
+	}
 }

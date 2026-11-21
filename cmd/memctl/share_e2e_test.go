@@ -272,12 +272,17 @@ func waitExit(t *testing.T, exited chan int, within time.Duration, errb *syncBuf
 
 func TestE2E_SPEC0009_R10_forwarderStdinEOF(t *testing.T) {
 	root := notesRoot(t)
-	startServer(t, root)
+	_, _, ownerErr := startServer(t, root)
 	_, stdin, errb, exited := startWith(t, binVersioned, root)
 	waitFor(t, errb, `"msg":"forwarding"`)
 	stdin.Close()
 	if c := waitExit(t, exited, 5*time.Second, errb); c != 0 || byMsg(jsonLines(t, errb.String()), "stopped") == nil {
 		t.Fatalf("code %d, stderr %s; want 0 and a stopped line", c, errb.String())
+	}
+	// A normal end is no error for the owner (SPEC-0009 R13).
+	waitFor(t, ownerErr, `"msg":"session closed"`)
+	if strings.Contains(ownerErr.String(), "session ended with an error") {
+		t.Fatalf("owner warned about a normal end: %s", ownerErr.String())
 	}
 }
 
