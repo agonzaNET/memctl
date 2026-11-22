@@ -23,6 +23,9 @@ docs/agents/changelog.md.
 - The `git` processes that `memctl mcp` starts no longer run with SIGPIPE
   ignored, and with git before 2.54 neither do the repository's hooks
   (spec: SPEC-0009).
+- A second `memctl mcp` whose client ends normally no longer, at times, logs
+  `memctl (pid N) serving the root stopped` and exits with status 1
+  (spec: SPEC-0009).
 
 ## [0.3.0] - 2026-11-21
 

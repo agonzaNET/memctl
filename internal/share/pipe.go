@@ -13,8 +13,10 @@ func Pipe(stdin io.Reader, stdout io.Writer, conn *net.UnixConn) (ownerLost bool
 	stdinDone := make(chan struct{})
 	go func() {
 		io.Copy(conn, stdin)
-		conn.CloseWrite()
+		// Marked before CloseWrite: the owner may close conn as soon as it
+		// sees EOF, and that must not read as a lost owner (R11).
 		close(stdinDone)
+		conn.CloseWrite()
 	}()
 	io.Copy(stdout, conn)
 	select {
