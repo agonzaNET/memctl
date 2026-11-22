@@ -4,6 +4,11 @@
 
 Draft
 
+> **Deferred (2026-11-22).** This spec stays `Draft`, like ADR-0023, and its
+> implementation is deferred until further notice: agentgateway can run
+> `memctl mcp` as a stdio child process, which may make an HTTP transport in
+> memctl unnecessary. That path is tested first.
+
 **Governing ADRs:** ADR-0002, ADR-0005, ADR-0010, ADR-0011, ADR-0014, ADR-0016, ADR-0021, ADR-0023
 
 ## Purpose

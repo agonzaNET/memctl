@@ -4,6 +4,14 @@
 
 Proposed
 
+> **Deferred (2026-11-22).** This ADR stays `Proposed`, and its implementation
+> is deferred until further notice. After it was written, agentgateway was
+> found to run stdio MCP servers itself as child processes (an `mcp` backend
+> with a `stdio` target). The Raspberry Pi deployment can then reach
+> `memctl mcp` through agentgateway with no HTTP transport in memctl. That
+> path is tested first; this decision is taken up again only if it fails or
+> another client needs HTTP.
+
 **Area:** Lifecycle
 
 ## Context
