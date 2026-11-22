@@ -12,6 +12,23 @@ your machine: there is no server, no account and no network access.
 **Status:** pre-1.0 (`0.x`). The tools and the note format may still change
 between minor versions; see [`CHANGELOG.md`](CHANGELOG.md).
 
+## Why memctl
+
+`memctl` is for knowledge you keep as documents: runbooks, decisions and
+reference notes that you and your agents read, edit and link over time.
+
+- **Not Claude's built-in memory.** Claude's memory holds short facts about one
+  user, curated by Claude for its own conversations. `memctl` notes are plain
+  files you own: you review every change in git, share the folder like any
+  repository, and any MCP client can search and follow their links.
+- **Not Claude Project knowledge.** Project files are uploads tied to
+  claude.ai. `memctl` notes live on your machine, stay editable in any editor,
+  and form a link graph an agent can walk.
+- **Not Basic Memory.** `memctl` keeps Basic Memory's idea, Markdown notes
+  with observations and relations, in one static Go binary with no Python
+  runtime, no database and no cloud code. The design explains the trade-offs
+  in [Context and goals](docs/design/solution-design.md#context-and-goals).
+
 ## Install
 
 Download the archive for your machine from the
