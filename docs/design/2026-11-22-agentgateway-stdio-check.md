@@ -49,9 +49,39 @@ HTTP transport in memctl (ADR-0023, SPEC-0010, both deferred)?
 | G2 | A session that a client abandons without `DELETE`: how long agentgateway keeps its child was not tested. | Open: to check on the Pi. |
 | G3 | agentgateway generated a session key and wrote it to `config.session.key` next to the config, and recommends setting `SESSION_KEY`. | Observation for the deployment. |
 
+## Follow-up: agentgateway settings
+
+The agentgateway v1.7.0 config reference (`schema/config.md`) has two settings
+that bear on G1 and G2:
+
+- `config.mcp.sessionTtl`: "Time to live for MCP sessions before they are
+  closed automatically. Defaults to 30 minutes." This answers G2: an abandoned
+  session, and its child process, ends after the TTL. In stateful mode it is
+  also a second cause of G1: an owner whose session reaches the TTL is ended
+  while other sessions may still use it.
+- `statefulMode` on the MCP backend (`stateful`, the default, or
+  `stateless`): "Whether to keep a persistent session across requests
+  (Stateful) or create one per request (Stateless)."
+
+Checked with `statefulMode: stateless` (and `config.session.key: disabled`):
+
+| # | Check | Result |
+|---|---|---|
+| 6 | `initialize`, `tools/list`, `note_write`, `note_read` | Pass. No `Mcp-Session-Id` header. One memctl process per request: each loaded the notes, served one call, made its final commit and logged `stopped`. The write was committed at once (`11d313f`); the tree stayed clean. |
+| 7 | Six `search` calls sent in parallel | Pass. All six answered in 0.55 s in total; no errors; no process left. |
+
+In stateless mode no memctl process outlives its request, so G1 cannot occur
+unless a request runs longer than the 2–3 s agentgateway waits after a
+session ends. The cost is a process start and a full load of the notes for
+every request (milliseconds for 58 notes; it grows with the root), and a
+commit per write instead of per batch.
+
 ## Verdict
 
 agentgateway's stdio backend works with memctl for tools, writes, commits,
 forwarding and shutdown. It is not yet usable for several concurrent
-sessions, because of G1: memctl's owner is tied to the first session's
-process, and agentgateway ends that process with the session.
+sessions in its default stateful mode, because of G1: memctl's owner is tied
+to the first session's process, and agentgateway ends that process with the
+session. With `statefulMode: stateless`, every check passed: G1 does not occur,
+at the cost of one memctl start per request. Whether claude.ai works with a
+server that returns no session ID is to be checked on the Pi.
