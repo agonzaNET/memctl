@@ -491,32 +491,43 @@ func TestE2E_SPEC0009_R12_concurrentEditsFromTwoSessions(t *testing.T) {
 	}
 }
 
-// TestE2E_SPEC0009_R17_childrenKeepDefaultSIGPIPE: git hooks run for a tool
-// write start with SIGPIPE not ignored.
+// TestE2E_SPEC0009_R17_childrenKeepDefaultSIGPIPE: every git process that
+// memctl starts for a tool write starts with SIGPIPE not ignored. A git
+// wrapper first on PATH records its own SigIgn and runs the real git. The
+// repository's hooks are not checked: git 2.54 and later ignores SIGPIPE
+// while it runs hooks, so they inherit that from git, not from memctl.
 func TestE2E_SPEC0009_R17_childrenKeepDefaultSIGPIPE(t *testing.T) {
 	if _, err := os.Stat("/proc/self/status"); err != nil {
 		t.Skip("needs /proc (Linux)")
 	}
-	root := gitRepo(t)
-	out := filepath.Join(t.TempDir(), "sigign")
-	hook := filepath.Join(root, ".git", "hooks", "pre-commit")
-	if err := os.WriteFile(hook, []byte("#!/bin/sh\ngrep '^SigIgn:' /proc/$$/status > \"$MEMCTL_TEST_HOOK_OUT\"\n"), 0o755); err != nil {
+	realGit, err := exec.LookPath("git")
+	if err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("MEMCTL_TEST_HOOK_OUT", out)
+	root := gitRepo(t)
+	bin := t.TempDir()
+	out := filepath.Join(t.TempDir(), "sigign")
+	wrapper := "#!/bin/sh\ngrep '^SigIgn:' /proc/$$/status >> \"$MEMCTL_TEST_GIT_OUT\"\nexec " + strconv.Quote(realGit) + " \"$@\"\n"
+	if err := os.WriteFile(filepath.Join(bin, "git"), []byte(wrapper), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("MEMCTL_TEST_GIT_OUT", out)
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	s := connect(t, root)
-	s.write(t, "Hook check")
+	s.write(t, "Git check")
 	s.cs.Close()
 	s.exit(t, 20*time.Second)
 	b, err := os.ReadFile(out)
 	if err != nil {
-		t.Fatalf("the hook did not run: %v; %s", err, s.stderr.String())
+		t.Fatalf("memctl ran no git: %v; %s", err, s.stderr.String())
 	}
-	mask, err := strconv.ParseUint(strings.TrimSpace(strings.TrimPrefix(string(b), "SigIgn:")), 16, 64)
-	if err != nil {
-		t.Fatalf("SigIgn line %q: %v", b, err)
-	}
-	if mask&(1<<(uint(syscall.SIGPIPE)-1)) != 0 {
-		t.Fatalf("SIGPIPE is ignored in the hook (SigIgn %s)", strings.TrimSpace(string(b)))
+	for _, l := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		mask, err := strconv.ParseUint(strings.TrimSpace(strings.TrimPrefix(l, "SigIgn:")), 16, 64)
+		if err != nil {
+			t.Fatalf("SigIgn line %q: %v", l, err)
+		}
+		if mask&(1<<(uint(syscall.SIGPIPE)-1)) != 0 {
+			t.Fatalf("SIGPIPE is ignored in a git that memctl started (SigIgn %s)", strings.TrimSpace(l))
+		}
 	}
 }
