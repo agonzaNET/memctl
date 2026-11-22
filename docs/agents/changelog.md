@@ -85,12 +85,14 @@ When cutting a release:
    add one for the new tag).
 5. Update the version in the status note at the top of `README.md`, if it
    has one.
-6. Run `make verify`, commit, then tag that commit `vX.Y.Z`. The Makefile
-   strips the `v`, so a build from the tag reports `X.Y.Z` as the version
-   in the MCP server info. The maintainer pushes the
-   commit and the tag, then starts the release workflow by hand in GitHub
-   Actions with that tag as input; it builds the binaries and attaches them to
-   the release (ADR-0012).
+6. Run `make verify`, commit, push `main`, and run the macOS tests on it
+   (`gh workflow run test-macos.yml -f ref=main`, ADR-0022). Tag that commit
+   `vX.Y.Z` only when both pass: a failure after the tag is pushed costs a
+   version number (v0.3.0 and v0.3.1 were tagged but not released). The
+   Makefile strips the `v`, so a build from the tag reports `X.Y.Z` as the
+   version in the MCP server info. The maintainer pushes the tag, then starts
+   the release workflow by hand in GitHub Actions with that tag as input; it
+   builds the binaries and attaches them to the release (ADR-0012).
 
 Example shape:
 
