@@ -79,6 +79,7 @@ ADR file it points to. When an ADR becomes `Superseded by ADR-NNNN` or
 | [ADR-0020](0020-vulnerability-check-in-release-workflow.md) | Run govulncheck in the release workflow and stop the release on a reachable vulnerability (amends ADR-0012) | Accepted | Build |
 | [ADR-0021](0021-shared-instance-over-unix-socket.md) | Share one memctl process per notes root: the first process owns it, later ones forward over a Unix socket (amends ADR-0014) | Accepted | Lifecycle |
 | [ADR-0022](0022-macos-tests-before-release.md) | Run the test suite on macOS before a release is built (amends ADR-0012) | Accepted | Build |
+| [ADR-0023](0023-http-transport-memctl-serve.md) | Serve MCP over streamable HTTP from a long-running `memctl serve`, on loopback only and without authentication (amends ADR-0014, ADR-0021) | Proposed | Lifecycle |
 
 ### Superseded / Deprecated
 
