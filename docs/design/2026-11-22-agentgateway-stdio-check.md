@@ -70,6 +70,17 @@ Checked with `statefulMode: stateless` (and `config.session.key: disabled`):
 | 6 | `initialize`, `tools/list`, `note_write`, `note_read` | Pass. No `Mcp-Session-Id` header. One memctl process per request: each loaded the notes, served one call, made its final commit and logged `stopped`. The write was committed at once (`11d313f`); the tree stayed clean. |
 | 7 | Six `search` calls sent in parallel | Pass. All six answered in 0.55 s in total; no errors; no process left. |
 
+Checked with the configuration planned for the Pi: a route on `/mcp`,
+`statefulMode: stateless`, and `mcpAuthentication` in `strict` mode with a
+local test issuer (an RSA key, its JWKS in a file, tokens signed by hand):
+
+| # | Check | Result |
+|---|---|---|
+| 8 | Request without a token | Pass. `401` with `WWW-Authenticate: Bearer resource_metadata="…/.well-known/oauth-protected-resource/mcp"`; the metadata names the resource and the issuer. |
+| 9 | Token with a wrong `aud` | Pass. `401`. |
+| 10 | Valid token: `initialize`, `tools/list`, `search` | Pass. memctl answered through agentgateway. |
+| 11 | `/.well-known/oauth-authorization-server/mcp` | `500`: the test issuer is not reachable. How agentgateway serves this for Pocket ID, and whether `clientId` answers client registration for an issuer without a `provider` adapter, can only be checked on the Pi. |
+
 In stateless mode no memctl process outlives its request, so G1 cannot occur
 unless a request runs longer than the 2–3 s agentgateway waits after a
 session ends. The cost is a process start and a full load of the notes for
