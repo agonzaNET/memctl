@@ -3,6 +3,7 @@ package share
 import (
 	"io"
 	"net"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -10,7 +11,7 @@ import (
 // unixPair is a connected pair of Unix stream sockets.
 func unixPair(t *testing.T) (*net.UnixConn, *net.UnixConn) {
 	t.Helper()
-	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: t.TempDir() + "/s", Net: "unix"})
+	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: filepath.Join(shortDir(t), "s"), Net: "unix"})
 	if err != nil {
 		t.Fatal(err)
 	}
