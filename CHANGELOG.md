@@ -18,6 +18,13 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+## [0.3.1] - 2026-11-22
+
+The first release with the changes of 0.3.0, which was tagged but not
+released. Coming from 0.2.0, read
+[0.3.0 in CHANGELOG.md](https://github.com/agonzaNET/memctl/blob/v0.3.1/CHANGELOG.md#030---2026-11-21)
+too.
+
 ### Fixed
 
 - The `git` processes that `memctl mcp` starts no longer run with SIGPIPE
@@ -28,6 +35,9 @@ docs/agents/changelog.md.
   (spec: SPEC-0009).
 
 ## [0.3.0] - 2026-11-21
+
+Tagged but not released: the release workflow failed. Its changes ship in
+0.3.1.
 
 ### Added
 
@@ -151,7 +161,8 @@ docs/agents/changelog.md.
   author of those commits; the default is `memctl <memctl@localhost>`
   (spec: SPEC-0008).
 
-[Unreleased]: https://github.com/agonzaNET/memctl/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/agonzaNET/memctl/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/agonzaNET/memctl/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/agonzaNET/memctl/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/agonzaNET/memctl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/agonzaNET/memctl/releases/tag/v0.1.0
