@@ -18,6 +18,12 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+### Fixed
+
+- The `git` processes that `memctl mcp` starts no longer run with SIGPIPE
+  ignored, and with git before 2.54 neither do the repository's hooks
+  (spec: SPEC-0009).
+
 ## [0.3.0] - 2026-11-21
 
 ### Added

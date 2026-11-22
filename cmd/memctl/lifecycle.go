@@ -20,11 +20,13 @@ type shutdown struct {
 // so the process exits without waiting for the final commit (SPEC-0004 R6,
 // SPEC-0008 R13).
 //
-// SIGPIPE is ignored, so a write to a stdout or stderr that its reader closed
-// fails with an error instead of ending the process; a log line that cannot
-// be written is dropped (SPEC-0009 R16).
+// SIGPIPE goes to a channel nobody reads, so a write to a stdout or stderr
+// that its reader closed fails with EPIPE instead of ending the process; a
+// log line that cannot be written is dropped (SPEC-0009 R16). It is caught,
+// not ignored: an ignored SIGPIPE would stay ignored in every git that
+// memctl starts (SPEC-0009 R17). The channel is never stopped.
 func newShutdown() *shutdown {
-	signal.Ignore(syscall.SIGPIPE)
+	signal.Notify(make(chan os.Signal, 1), syscall.SIGPIPE)
 	ctx, cancel := context.WithCancel(context.Background())
 	sigs := make(chan os.Signal, 4)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)

@@ -14,6 +14,12 @@ criteria are ticked). Superseded by SPEC-NNNN and Deprecated are terminal.
 
 > Amended on 2026-11-21 after the release audit (W2): R17 added; child
 > processes keep the default SIGPIPE action.
+>
+> Amended on 2026-11-22 after the v0.3.0 release workflow failed: R17 covers
+> the `git` processes memctl starts, not the hooks. git 2.54 and later runs
+> hooks with SIGPIPE ignored, so a hook's setting comes from git, not from
+> memctl. The old test checked a hook and passed only because git before 2.54
+> resets SIGPIPE at start; it hid that memctl ignored SIGPIPE for itself.
 
 **Governing ADRs:** ADR-0002, ADR-0005, ADR-0014, ADR-0016, ADR-0021
 
@@ -169,9 +175,9 @@ over a Unix socket (design D12, ADR-0021).
 - **R16** — The owner MUST NOT be stopped by a closed stdout or stderr: a write
   to a closed pipe MUST fail with an error instead of ending the process, and
   a log line that cannot be written is dropped.
-- **R17** — Processes that memctl starts (`git` and the repository's git
-  hooks) MUST start with the default SIGPIPE action: R16 MUST NOT be met by
-  ignoring SIGPIPE for the whole process.
+- **R17** — The `git` processes that memctl starts MUST start with the default
+  SIGPIPE action: R16 MUST NOT be met by ignoring SIGPIPE for the whole
+  process. The repository's hooks get their SIGPIPE action from `git`.
 
 ## Error handling
 
@@ -228,8 +234,9 @@ over a Unix socket (design D12, ADR-0021).
   commit exists, the owner exits with status 0.
 - [x] **R16** — With the owner's stderr pipe closed by the reader, a later tool
   call still succeeds and the process keeps running.
-- [x] **R17** — A `pre-commit` hook run for a tool write reports SIGPIPE as not
-  ignored (on Linux, bit 13 of `SigIgn` in `/proc/self/status` is clear).
+- [x] **R17** — Every `git` that memctl starts for a tool write reports SIGPIPE
+  as not ignored (on Linux, bit 13 of `SigIgn` in `/proc/<pid>/status` is
+  clear), also when memctl itself was started with SIGPIPE ignored.
 - [x] **Live check** — Claude Desktop with one `memctl` entry: a `search` works in
   a chat and in a Cowork session at the same time; the Desktop log shows no
   `Couldn't start for Cowork and Code sessions`; after quitting and reopening
