@@ -26,7 +26,7 @@ func TestDial_SPEC0009_R5_answerWaitEndsAtTheDeadline(t *testing.T) {
 		}
 	}()
 	start := time.Now()
-	conn, _, err := Dial(path, NewHello("v", 1, "a <a@b>"), start.Add(300*time.Millisecond))
+	conn, _, err := Dial(path, NewHello("v", 1, "a <a@b>", ""), start.Add(300*time.Millisecond))
 	if err == nil || conn != nil {
 		t.Fatalf("got a connection from an owner that never answered")
 	}

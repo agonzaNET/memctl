@@ -8,7 +8,7 @@ import (
 
 func TestHello_SPEC0009_R6_oneLineEachWay(t *testing.T) {
 	var buf bytes.Buffer
-	h := NewHello("0.3.0", 4711, "memctl <memctl@localhost>")
+	h := NewHello("0.3.0", 4711, "memctl <memctl@localhost>", "")
 	if err := WriteLine(&buf, h); err != nil {
 		t.Fatal(err)
 	}

@@ -64,7 +64,7 @@ func TestGreet_SPEC0009_R6_okAnswer(t *testing.T) {
 		}
 		got <- h
 	}()
-	go WriteLine(cli, NewHello("0.2.9", 7, "memctl <memctl@localhost>"))
+	go WriteLine(cli, NewHello("0.2.9", 7, "memctl <memctl@localhost>", ""))
 	a, err := ReadAnswer(cli)
 	if err != nil || a != (Answer{OK: true, PID: 4242, Version: "0.3.0"}) {
 		t.Fatalf("answer %+v %v", a, err)

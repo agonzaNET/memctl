@@ -35,7 +35,7 @@ func rawSession(t *testing.T, root, author string) *mcp.ClientSession {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { conn.Close() })
-	if err := share.WriteLine(conn, share.NewHello("9.8.7-test", os.Getpid(), author)); err != nil {
+	if err := share.WriteLine(conn, share.NewHello("9.8.7-test", os.Getpid(), author, "")); err != nil {
 		t.Fatal(err)
 	}
 	a, err := share.ReadAnswer(conn)
