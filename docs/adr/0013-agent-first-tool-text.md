@@ -4,6 +4,11 @@
 
 Accepted
 
+> **Amended by [ADR-0025](0025-instance-scope-line.md)**: an instance
+> started with `--scope` appends one line, the fixed text between the markers
+> plus the configured scope, to the server instructions and every tool
+> description; the configured part is checked by the flag rules, not by check 5.
+
 **Area:** Tools
 
 ## Context

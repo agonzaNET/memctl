@@ -4,6 +4,9 @@
 
 Accepted
 
+> **Amended by [ADR-0025](0025-instance-scope-line.md)**: the manifest gains
+> an optional `scope` field, passed to the server as `MEMCTL_SCOPE`.
+
 **Area:** Build
 
 ## Context
