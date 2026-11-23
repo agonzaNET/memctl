@@ -9,6 +9,7 @@
 #   staged manifest         name, display_name and version set           → 0
 #   default name            NAME memctl gives display_name "memctl"      → 0
 #   arguments               command and --root ${user_config.root} kept  → 0
+#   scope                   optional string, default "", as MEMCTL_SCOPE → 0
 #   binary                  server/memctl present and executable         → 0
 #   output                  OUTDIR/NAME_X.Y.Z_darwin_arm64.mcpb written  → 0
 #
@@ -60,6 +61,8 @@ check "version set" "[ \"\$(jq -r .version '$m')\" = 1.2.3 ]"
 check "command kept" "[ \"\$(jq -r .server.mcp_config.command '$m')\" = '\${__dirname}/server/memctl' ]"
 check "args kept" "[ \"\$(jq -c .server.mcp_config.args '$m')\" = '[\"mcp\",\"--root\",\"\${user_config.root}\"]' ]"
 check "root is a required directory" "[ \"\$(jq -c '.user_config.root | [.type, .required]' '$m')\" = '[\"directory\",true]' ]"
+check "scope is an optional string with default empty" "[ \"\$(jq -c '.user_config.scope | [.type, .required, .default]' '$m')\" = '[\"string\",false,\"\"]' ]"
+check "scope passed as MEMCTL_SCOPE" "[ \"\$(jq -r .server.mcp_config.env.MEMCTL_SCOPE '$m')\" = '\${user_config.scope}' ]"
 check "binary executable" "[ -x '$tmp/seen/server/memctl' ]"
 check "LICENSE and README.md staged" "[ -f '$tmp/seen/LICENSE' ] && [ -f '$tmp/seen/README.md' ]"
 check "output written" "[ -f '$tmp/out/infradocs_1.2.3_darwin_arm64.mcpb' ]"
