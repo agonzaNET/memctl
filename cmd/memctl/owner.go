@@ -50,6 +50,9 @@ func acceptShared(ctx context.Context, ln *share.Listener, srv *mcpserver.Server
 			if h.Version != owner.Version {
 				log.Warn("version differs", slog.String("forwarder_version", h.Version))
 			}
+			if h.Scope != owner.Scope { // SPEC-0011 R12
+				log.Warn("scope differs", slog.Int("forwarder_pid", h.PID), slog.String("forwarder_scope", h.Scope))
+			}
 			name, ok := sessions.add()
 			if !ok {
 				conn.Close()

@@ -46,7 +46,7 @@ func acquireOrForward(ctx context.Context, cfg mcpConfig, root string, stdin io.
 				log.Error(ans.Error)
 				return nil, exitError, true
 			}
-			return nil, forward(ctx, conn, ans, stdin, stdout, log), true
+			return nil, forward(ctx, conn, ans, cfg.scope, stdin, stdout, log), true
 		}
 		if !time.Now().Before(deadline) {
 			reportHeld(held, cfg, stderr, log)
@@ -62,11 +62,15 @@ func acquireOrForward(ctx context.Context, cfg mcpConfig, root string, stdin io.
 }
 
 // forward passes the client's bytes to the owner and back until either side
-// ends, or a signal arrives (SPEC-0009 R8–R11).
-func forward(ctx context.Context, conn *net.UnixConn, ans share.Answer, stdin io.Reader, stdout io.Writer, log *slog.Logger) int {
+// ends, or a signal arrives (SPEC-0009 R8–R11). scope is this process's own
+// scope, compared with the owner's (SPEC-0011 R12).
+func forward(ctx context.Context, conn *net.UnixConn, ans share.Answer, scope string, stdin io.Reader, stdout io.Writer, log *slog.Logger) int {
 	log.Info("forwarding", slog.Int("owner_pid", ans.PID), slog.String("owner_version", ans.Version))
 	if ans.Version != version {
 		log.Warn("version differs", slog.String("owner_version", ans.Version))
+	}
+	if ans.Scope != scope {
+		log.Warn("scope differs", slog.String("owner_scope", ans.Scope))
 	}
 	stop := context.AfterFunc(ctx, func() { conn.Close() }) // SIGINT or SIGTERM (R10)
 	defer stop()
