@@ -6,8 +6,9 @@
 # network) and checks what it MUST do:
 #
 #   bad arguments           missing or malformed version or name        → 2
-#   staged manifest         name, display_name and version set           → 0
+#   staged manifest         name, display_name (= name) and version set  → 0
 #   default name            NAME memctl gives display_name "memctl"      → 0
+#   icon                    icon.png staged and named in the manifest     → 0
 #   arguments               command and --root ${user_config.root} kept  → 0
 #   scope                   optional string, default "", as MEMCTL_SCOPE → 0
 #   binary                  server/memctl present and executable         → 0
@@ -56,7 +57,7 @@ MCPB="$stub" bash "$target" 1.2.3 infradocs "$tmp/out" >"$tmp/log" 2>&1
 check "named build exits 0" "[ $? -eq 0 ]"
 m="$tmp/seen/manifest.json"
 check "name set" "[ \"\$(jq -r .name '$m')\" = infradocs ]"
-check "display_name set" "[ \"\$(jq -r .display_name '$m')\" = 'memctl (infradocs)' ]"
+check "display_name is the name" "[ \"\$(jq -r .display_name '$m')\" = infradocs ]"
 check "version set" "[ \"\$(jq -r .version '$m')\" = 1.2.3 ]"
 check "command kept" "[ \"\$(jq -r .server.mcp_config.command '$m')\" = '\${__dirname}/server/memctl' ]"
 check "args kept" "[ \"\$(jq -c .server.mcp_config.args '$m')\" = '[\"mcp\",\"--root\",\"\${user_config.root}\"]' ]"
@@ -64,6 +65,7 @@ check "root is a required directory" "[ \"\$(jq -c '.user_config.root | [.type, 
 check "scope is an optional string with default empty" "[ \"\$(jq -c '.user_config.scope | [.type, .required, .default]' '$m')\" = '[\"string\",false,\"\"]' ]"
 check "scope passed as MEMCTL_SCOPE" "[ \"\$(jq -r .server.mcp_config.env.MEMCTL_SCOPE '$m')\" = '\${user_config.scope}' ]"
 check "binary executable" "[ -x '$tmp/seen/server/memctl' ]"
+check "icon staged and named" "[ -f '$tmp/seen/icon.png' ] && [ \"\$(jq -r .icon '$m')\" = icon.png ]"
 check "LICENSE and README.md staged" "[ -f '$tmp/seen/LICENSE' ] && [ -f '$tmp/seen/README.md' ]"
 check "output written" "[ -f '$tmp/out/infradocs_1.2.3_darwin_arm64.mcpb' ]"
 
