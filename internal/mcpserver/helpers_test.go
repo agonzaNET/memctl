@@ -59,6 +59,12 @@ func writeFiles(t *testing.T, root string, files map[string]string) {
 // start loads a notes root with files and connects an in-memory client.
 func start(t *testing.T, files map[string]string) *env {
 	t.Helper()
+	return startScoped(t, files, "")
+}
+
+// startScoped is start for a server with a scope ("" for none).
+func startScoped(t *testing.T, files map[string]string, scope string) *env {
+	t.Helper()
 	root := t.TempDir()
 	writeFiles(t, root, files)
 	var buf lockedBuffer
@@ -67,7 +73,7 @@ func start(t *testing.T, files map[string]string) *env {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv := mcpserver.New(mcpserver.Options{Version: "1.2.3", Notes: svc, Log: log})
+	srv := mcpserver.New(mcpserver.Options{Version: "1.2.3", Notes: svc, Log: log, Scope: scope})
 	st, ct := mcp.NewInMemoryTransports()
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
