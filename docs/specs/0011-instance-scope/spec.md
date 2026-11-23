@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Implemented
 
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
@@ -191,14 +191,22 @@ Without a scope, they are exactly the fixed text of today.
   without `scope` and an answer without `scope` are accepted; protocol is `1`.
 - [x] **R12** — Different scopes: one `WARN` `scope differs` on each side with
   the fields above, the session works; equal scopes: no such line.
-- [ ] **R13** — `make mcpb` builds a bundle whose manifest has the optional
+- [x] **R13** — `make mcpb` builds a bundle whose manifest has the optional
   `scope` field mapped to `MEMCTL_SCOPE`; live: the extension installed in
   Claude Desktop with and without a scope starts, and with a scope the line
   shows in the tool descriptions.
-- [ ] **Live** — In Claude Desktop with `infradocs` and `albdocs` each given a
+- [x] **Live** — In Claude Desktop with `infradocs` and `albdocs` each given a
   scope, an agent session that is linked to the desktop through the
   remote-devices bridge sees each instance's scope line when it loads that
   instance's tools.
+
+Live check, 2026-11-23, by the maintainer on `albdocs` only (his call; it
+stands for `infradocs`, which runs the same binary): with the `--scope`
+config entry, and then as the extension built with `make mcpb
+MCPB_NAME=albdocs`, a Claude session linked through the remote-devices bridge
+saw the scope line at the end of all eight tool descriptions (the server
+instructions did not reach that session, as ADR-0025 expected). With the
+extension's Scope cleared, the `started` line had no `scope` field.
 
 ## References
 

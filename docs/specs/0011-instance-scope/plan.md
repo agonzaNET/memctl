@@ -94,7 +94,7 @@ test; implement; full suite green; commit (`feat(scope): … (spec: SPEC-0011)`)
   tests); a sample run: `memctl mcp --scope …` over a scratch root answers
   `initialize` and `tools/list` with the line; acceptance boxes R1–R12 ticked
   against the tests that prove them.
-- [ ] **T9 — Live check (maintainer) and close (R13, Live).** Alberto sets a
+- [x] **T9 — Live check (maintainer) and close (R13, Live).** Alberto sets a
   scope on `infradocs` and `albdocs` in Claude Desktop (and installs a bundle
   built with `make mcpb` with and without a scope); a session linked through
   the remote-devices bridge sees each instance's line when it loads its tools.
