@@ -45,7 +45,8 @@ Scope of this memory, set by the person who runs it: Alberto's personal notes: f
 
 The fixed part of that line is agent-facing text and sits between the markers
 in `tools.go` (ADR-0013); the scope itself is configuration, so it is checked
-by the flag rules (one line, at most 200 characters, no control characters),
+by the flag rules (one line, at most 200 characters, no control, separator or
+invisible format characters),
 not by `scripts/check-docs.sh`. Without a scope, the instructions and
 descriptions stay byte for byte as they are.
 
