@@ -69,8 +69,12 @@ func TestOpen_SPEC0003_R1_unreadableRoot(t *testing.T) {
 
 func TestOpen_SPEC0003_R2_R3_R4_whichFilesAreNotes(t *testing.T) {
 	root := tree(t, map[string]string{
-		"a.md":            "a",
-		"A.MD":            "upper",
+		"a.md": "a",
+		// An upper-case extension is not a note. The name differs from a.md
+		// in more than letter case: on a case-insensitive file system (the
+		// macOS default) A.MD and a.md are one file, named by whichever the
+		// map wrote first.
+		"B.MD":            "upper",
 		".hidden.md":      "hidden",
 		"x.txt":           "text",
 		".git/x.md":       "git",
