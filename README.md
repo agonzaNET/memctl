@@ -261,3 +261,8 @@ See [`docs/agents/environment.md`](docs/agents/environment.md).
 ## License
 
 [MIT](LICENSE)
+
+The Claude Desktop extension's icon (`mcpb/icon.png`) is from the Online
+Education pack by Flat Icons on [Flaticon](https://www.flaticon.com/), used
+under Flaticon's free license, which requires this credit. It is not covered
+by the MIT license.
