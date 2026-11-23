@@ -68,5 +68,5 @@ func acceptShared(ctx context.Context, ln *share.Listener, srv *mcpserver.Server
 
 // ownerInfo is this process as an owner in the handshake.
 func ownerInfo(cfg mcpConfig) share.Owner {
-	return share.Owner{PID: os.Getpid(), Version: version, GitAuthor: cfg.gitAuthor.String()}
+	return share.Owner{PID: os.Getpid(), Version: version, GitAuthor: cfg.gitAuthor.String(), Scope: cfg.scope}
 }

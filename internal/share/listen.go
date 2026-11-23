@@ -54,6 +54,7 @@ type Owner struct {
 	PID       int
 	Version   string
 	GitAuthor string
+	Scope     string // "" when none (SPEC-0011 R11)
 }
 
 // Greet runs the owner's side of the handshake on a new connection
@@ -77,7 +78,7 @@ func Greet(conn net.Conn, o Owner) (Hello, error) {
 		return Hello{}, err
 	}
 	conn.SetReadDeadline(time.Time{})
-	if err := WriteLine(conn, Answer{OK: true, PID: o.PID, Version: o.Version}); err != nil {
+	if err := WriteLine(conn, Answer{OK: true, PID: o.PID, Version: o.Version, Scope: o.Scope}); err != nil {
 		conn.Close()
 		return Hello{}, err
 	}

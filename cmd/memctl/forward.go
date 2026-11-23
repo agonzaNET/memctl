@@ -28,7 +28,7 @@ const retryEvery = 100 * time.Millisecond
 // over as owner.
 func acquireOrForward(ctx context.Context, cfg mcpConfig, root string, stdin io.Reader, stdout, stderr io.Writer, log *slog.Logger) (lock *note.Lock, code int, done bool) {
 	deadline := time.Now().Add(forwardTimeout)
-	hello := share.NewHello(version, os.Getpid(), cfg.gitAuthor.String())
+	hello := share.NewHello(version, os.Getpid(), cfg.gitAuthor.String(), cfg.scope)
 	for {
 		lock, err := note.AcquireLock(root, log)
 		if err == nil {

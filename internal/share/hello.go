@@ -23,6 +23,7 @@ type Hello struct {
 	Version   string `json:"version"`
 	PID       int    `json:"pid"`
 	GitAuthor string `json:"git_author"`
+	Scope     string `json:"scope,omitempty"` // "" when none (SPEC-0011 R11)
 }
 
 // Answer is the owner's one-line answer to a Hello (SPEC-0009 R6).
@@ -31,12 +32,13 @@ type Answer struct {
 	PID     int    `json:"pid,omitempty"`
 	Version string `json:"version,omitempty"`
 	Error   string `json:"error,omitempty"`
+	Scope   string `json:"scope,omitempty"` // "" when none (SPEC-0011 R11)
 }
 
-// NewHello returns the hello of a forwarder with the given version, PID and
-// git author.
-func NewHello(version string, pid int, gitAuthor string) Hello {
-	return Hello{Memctl: magic, Protocol: Protocol, Version: version, PID: pid, GitAuthor: gitAuthor}
+// NewHello returns the hello of a forwarder with the given version, PID, git
+// author and scope ("" for none).
+func NewHello(version string, pid int, gitAuthor, scope string) Hello {
+	return Hello{Memctl: magic, Protocol: Protocol, Version: version, PID: pid, GitAuthor: gitAuthor, Scope: scope}
 }
 
 // errNotHandshake is the refusal of a first line that is not a hello.
