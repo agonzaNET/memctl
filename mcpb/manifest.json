@@ -19,7 +19,10 @@
     "entry_point": "server/memctl",
     "mcp_config": {
       "command": "${__dirname}/server/memctl",
-      "args": ["mcp", "--root", "${user_config.root}"]
+      "args": ["mcp", "--root", "${user_config.root}"],
+      "env": {
+        "MEMCTL_SCOPE": "${user_config.scope}"
+      }
     }
   },
   "user_config": {
@@ -28,6 +31,13 @@
       "title": "Notes folder",
       "description": "The folder of Markdown notes memctl serves. Make it a git repository (git init) so every change is recorded.",
       "required": true
+    },
+    "scope": {
+      "type": "string",
+      "title": "Scope",
+      "description": "One line, up to 200 characters, that tells Claude what this notes folder holds, for example \"Work documents of the IT team; no personal notes.\" Leave empty for none.",
+      "required": false,
+      "default": ""
     }
   },
   "compatibility": {
