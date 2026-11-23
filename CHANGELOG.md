@@ -18,6 +18,15 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+### Added
+
+- `make mcpb MCPB_NAME=<name>` builds a Claude Desktop extension
+  (`dist/<name>_<version>_darwin_arm64.mcpb`) holding the memctl binary.
+  Opening it installs memctl in Claude Desktop and asks for the notes folder,
+  which can be changed later in the extension's settings. Build one bundle
+  per notes folder; the name is the server name Desktop shows. Needs Node.js
+  (ADR-0024).
+
 ## [0.3.2] - 2026-11-22
 
 The first release with the changes of 0.3.0, which was tagged but not

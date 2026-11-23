@@ -61,8 +61,15 @@ Claude Code:
 claude mcp add --scope user memory -- memctl mcp --root ~/notes
 ```
 
-Claude Desktop (`claude_desktop_config.json`; use absolute paths, `~` is not
-expanded there):
+Claude Desktop, as an extension: build a bundle (see
+[Building from source](#building-from-source)) and open the `.mcpb` file;
+Claude Desktop asks for the notes folder and installs memctl with its own
+binary. The bundle's name is the server name Desktop shows; for two notes
+folders, build two bundles with different names. The extension starts
+`memctl mcp` with the default log level and git author.
+
+Claude Desktop, by hand (`claude_desktop_config.json`; use absolute paths,
+`~` is not expanded there):
 
 ```json
 {
@@ -194,6 +201,7 @@ mise install    # the pinned Go toolchain
 make build      # bin/memctl for this machine
 make verify     # tests, vet, gofmt, the docs checks and the script tests
 make dist VERSION=0.1.0   # the release archives in dist/
+make mcpb MCPB_NAME=notes # a Claude Desktop extension (macOS, Apple silicon) in dist/; needs Node.js
 ```
 
 See [`docs/agents/environment.md`](docs/agents/environment.md).

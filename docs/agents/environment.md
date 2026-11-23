@@ -68,9 +68,17 @@ make verify     # test + vet + fmt-check + check-docs + script tests — the gat
 ```
 
 `make verify` runs the regression tests of the scripts
-([`check-docs.test.sh`](../../scripts/check-docs.test.sh) and
-[`release-notes.test.sh`](../../scripts/release-notes.test.sh)) too; add a
+([`check-docs.test.sh`](../../scripts/check-docs.test.sh),
+[`release-notes.test.sh`](../../scripts/release-notes.test.sh) and
+[`mcpb-build.test.sh`](../../scripts/mcpb-build.test.sh)) too; add a
 case when you change one of those scripts.
+
+For a one-off Claude Desktop extension (ADR-0024):
+`make mcpb MCPB_NAME=<server name>` writes
+`dist/<name>_<version>_darwin_arm64.mcpb`. It runs the pinned MCPB CLI through
+`npx`, so it needs Node.js and network access to the npm registry; `make
+verify` does not (its test stubs the CLI). Set `MCPB` to use another CLI
+command.
 
 For a one-off binary for another platform:
 `make build GOOS=linux GOARCH=amd64`.

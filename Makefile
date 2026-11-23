@@ -3,6 +3,7 @@
 #   make build    # bin/memctl for this machine (ADR-0012)
 #   make verify   # test + vet + fmt-check + check-docs + script tests (workflow Phase 4)
 #   make dist VERSION=X.Y.Z   # the release archives in dist/, as the release workflow builds them
+#   make mcpb MCPB_NAME=NAME  # a Claude Desktop extension (.mcpb) in dist/ (ADR-0024)
 #
 # Releases for linux/amd64, linux/arm64 and darwin/arm64 are published by the
 # GitHub Actions release workflow, started by hand for an existing vX.Y.Z
@@ -11,6 +12,10 @@
 BINARY  := memctl
 MAIN    := ./cmd/memctl
 BIN_DIR := bin
+
+# Extension name of the Claude Desktop bundle, and so the server name Desktop
+# shows; build one bundle per notes root (ADR-0024).
+MCPB_NAME ?= memctl
 
 # Version injected into main.version via -ldflags. Only vX.Y.Z tags count; the
 # leading "v" is stripped so the MCP server info reports "X.Y.Z", the same
@@ -58,6 +63,7 @@ check-docs: ## Check the spec and ADR indexes and the agent-facing tool text
 script-tests: ## Run the regression tests of the scripts
 	bash scripts/check-docs.test.sh >/dev/null
 	bash scripts/release-notes.test.sh >/dev/null
+	bash scripts/mcpb-build.test.sh >/dev/null
 
 .PHONY: verify
 verify: test vet fmt-check check-docs script-tests ## Full verification gate (workflow Phase 4)
@@ -65,6 +71,10 @@ verify: test vet fmt-check check-docs script-tests ## Full verification gate (wo
 .PHONY: dist
 dist: ## Build the release archives into dist/ (VERSION=X.Y.Z; stage plan 0003)
 	bash scripts/release-build.sh $(VERSION) dist
+
+.PHONY: mcpb
+mcpb: ## Build the Claude Desktop extension into dist/ (MCPB_NAME=memctl; needs Node.js; ADR-0024)
+	bash scripts/mcpb-build.sh $(VERSION) $(MCPB_NAME) dist
 
 .PHONY: clean
 clean: ## Remove build artifacts

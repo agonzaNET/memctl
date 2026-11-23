@@ -1,0 +1,36 @@
+{
+  "manifest_version": "0.3",
+  "name": "memctl",
+  "display_name": "memctl",
+  "version": "0.0.0",
+  "description": "Local Markdown memory for AI agents: full-text search, a link graph and git-backed history.",
+  "author": {
+    "name": "agonzaNET",
+    "url": "https://github.com/agonzaNET"
+  },
+  "homepage": "https://github.com/agonzaNET/memctl",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agonzaNET/memctl.git"
+  },
+  "license": "MIT",
+  "server": {
+    "type": "binary",
+    "entry_point": "server/memctl",
+    "mcp_config": {
+      "command": "${__dirname}/server/memctl",
+      "args": ["mcp", "--root", "${user_config.root}"]
+    }
+  },
+  "user_config": {
+    "root": {
+      "type": "directory",
+      "title": "Notes folder",
+      "description": "The folder of Markdown notes memctl serves. Make it a git repository (git init) so every change is recorded.",
+      "required": true
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin"]
+  }
+}
