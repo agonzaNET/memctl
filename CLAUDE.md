@@ -80,7 +80,8 @@ memctl/
 │   ├── gitlog/                 # git committer: queue, quiet window, external changes, final flush
 │   ├── share/                  # shared instance: owner socket, forwarder handshake, byte pipe
 │   └── arch/                   # module-wide tests: one importer per third-party module (ADR-0010)
-├── scripts/                    # check-docs.sh, release-notes.sh, release-build.sh and their tests
+├── scripts/                    # check-docs.sh, release-notes.sh, release-build.sh, mcpb-build.sh and their tests
+├── mcpb/                       # Claude Desktop extension: manifest.json and icon.png (ADR-0024)
 ├── .github/workflows/          # release.yml: the manual release workflow (ADR-0012); test-macos.yml (ADR-0022)
 ├── docs/
 │   ├── design/                 # the product design — source of truth

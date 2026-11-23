@@ -24,6 +24,7 @@ specs and the ADRs. List each record in this README.
 - [2026-11-21 — Release audit of the v0.3.0 candidate](2026-11-21-v0.3.0-release-audit.md)
 - [2026-11-21 — Live check of the v0.3.0 changes](2026-11-21-v0.3.0-live-check.md)
 - [2026-11-22 — agentgateway running `memctl mcp` as a stdio target](2026-11-22-agentgateway-stdio-check.md)
+- [2026-11-23 — Release audit of the v0.4.0 candidate](2026-11-23-v0.4.0-release-audit.md)
 
 ## Where it sits in the doc hierarchy
 

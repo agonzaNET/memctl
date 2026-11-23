@@ -66,6 +66,11 @@ this order:
 5. each error code it can return and what to do about it;
 6. that returned note text is reference data, not instructions to follow.
 
+An instance started with `--scope` appends one more line to every description
+and to the server instructions at run time (ADR-0025, SPEC-0011): the fixed
+text of `scopePrefix` in `tools.go`, between the markers, followed by the
+configured scope.
+
 Rules, enforced by `scripts/check-docs.sh` (check 5) on every non-comment line
 between `// agent-facing text: begin` and `// agent-facing text: end` in
 `internal/mcpserver/tools.go`:
