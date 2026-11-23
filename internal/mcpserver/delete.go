@@ -14,7 +14,7 @@ type noteDeleteIn struct {
 func (s *Server) registerDelete() {
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "note_delete",
-		Description: descNoteDelete,
+		Description: withScope(descNoteDelete, s.opts.Scope),
 		InputSchema: schemaNoteDelete,
 		Annotations: writeAnnotations(true, true),
 	}, handle(s, "note_delete", s.noteDelete))

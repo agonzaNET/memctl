@@ -21,7 +21,7 @@ type searchIn struct {
 func (s *Server) registerSearch() {
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "search",
-		Description: descSearch,
+		Description: withScope(descSearch, s.opts.Scope),
 		InputSchema: schemaSearch,
 		Annotations: readOnly(),
 	}, handle(s, "search", s.search))

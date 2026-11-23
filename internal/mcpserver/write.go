@@ -88,7 +88,7 @@ type noteWriteIn struct {
 func (s *Server) registerWrite() {
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "note_write",
-		Description: descNoteWrite,
+		Description: withScope(descNoteWrite, s.opts.Scope),
 		InputSchema: schemaNoteWrite,
 		Annotations: writeAnnotations(false, false),
 	}, handle(s, "note_write", s.noteWrite))

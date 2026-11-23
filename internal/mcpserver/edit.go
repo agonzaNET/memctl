@@ -21,7 +21,7 @@ type noteEditIn struct {
 func (s *Server) registerEdit() {
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "note_edit",
-		Description: descNoteEdit,
+		Description: withScope(descNoteEdit, s.opts.Scope),
 		InputSchema: schemaNoteEdit,
 		Annotations: writeAnnotations(false, false),
 	}, handle(s, "note_edit", s.noteEdit))

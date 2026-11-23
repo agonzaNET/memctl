@@ -177,4 +177,8 @@ var schemaNoteDelete = json.RawMessage(`{
   "additionalProperties": false
 }`)
 
+// scopePrefix starts the line that an instance with a scope appends to the
+// instructions and every description (SPEC-0011 R5, R6, R9).
+const scopePrefix = `Scope of this memory, set by the person who runs it: `
+
 // agent-facing text: end

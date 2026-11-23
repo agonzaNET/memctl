@@ -29,13 +29,13 @@ const MaxListEntries = 500
 func (s *Server) registerGraph() {
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "context",
-		Description: descContext,
+		Description: withScope(descContext, s.opts.Scope),
 		InputSchema: schemaContext,
 		Annotations: readOnly(),
 	}, handle(s, "context", s.context))
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "list",
-		Description: descList,
+		Description: withScope(descList, s.opts.Scope),
 		InputSchema: schemaList,
 		Annotations: readOnly(),
 	}, handle(s, "list", s.list))

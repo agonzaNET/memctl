@@ -17,6 +17,7 @@ type Options struct {
 	Version string
 	Notes   *note.Service
 	Log     *slog.Logger
+	Scope   string // what the notes root holds, "" for none (SPEC-0011)
 }
 
 // Server is the memctl MCP server. It serves several sessions at once, the
@@ -40,7 +41,7 @@ func New(o Options) *Server {
 	s.sdk = mcp.NewServer(
 		&mcp.Implementation{Name: "memctl", Version: o.Version},
 		&mcp.ServerOptions{
-			Instructions: instructions,
+			Instructions: withScope(instructions, o.Scope),
 			Capabilities: &mcp.ServerCapabilities{Tools: &mcp.ToolCapabilities{}},
 			Logger:       slog.New(slog.DiscardHandler),
 		})

@@ -18,7 +18,7 @@ type noteMoveIn struct {
 func (s *Server) registerMove() {
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "note_move",
-		Description: descNoteMove,
+		Description: withScope(descNoteMove, s.opts.Scope),
 		InputSchema: schemaNoteMove,
 		Annotations: writeAnnotations(false, false),
 	}, handle(s, "note_move", s.noteMove))

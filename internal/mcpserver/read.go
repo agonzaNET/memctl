@@ -22,7 +22,7 @@ type noteReadIn struct {
 func (s *Server) registerRead() {
 	mcp.AddTool(s.sdk, &mcp.Tool{
 		Name:        "note_read",
-		Description: descNoteRead,
+		Description: withScope(descNoteRead, s.opts.Scope),
 		InputSchema: schemaNoteRead,
 		Annotations: readOnly(),
 	}, handle(s, "note_read", s.noteRead))
