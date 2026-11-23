@@ -5,10 +5,11 @@
 #   scripts/mcpb-build.sh X.Y.Z NAME OUTDIR
 #
 # Builds the darwin/arm64 binary with `make build` and VERSION=X.Y.Z, stages
-# it as server/memctl with LICENSE, README.md and mcpb/manifest.json (name,
-# display_name and version set from NAME and X.Y.Z), and packs
-# OUTDIR/NAME_X.Y.Z_darwin_arm64.mcpb. NAME is the server name Claude Desktop
-# shows; build one bundle per notes root. See ADR-0024.
+# it as server/memctl with LICENSE, README.md, mcpb/icon.png and
+# mcpb/manifest.json (name and display_name set to NAME, version to X.Y.Z),
+# and packs OUTDIR/NAME_X.Y.Z_darwin_arm64.mcpb. Claude Desktop names the
+# server after display_name, so NAME is the server name and the tool prefix;
+# build one bundle per notes root. See ADR-0024.
 #
 # The MCPB CLI command comes from $MCPB (default: the pinned CLI through npx).
 # It is called as: $MCPB pack STAGEDIR OUTFILE
@@ -37,10 +38,10 @@ mkdir -p "$bundle/server"
 
 make -C "$repo" --no-print-directory build GOOS=darwin GOARCH=arm64 VERSION="$version" BIN_DIR="$bundle/server"
 chmod 0755 "$bundle/server/memctl"
-cp "$repo/LICENSE" "$repo/README.md" "$bundle/"
-chmod 0644 "$bundle/LICENSE" "$bundle/README.md"
+cp "$repo/LICENSE" "$repo/README.md" "$repo/mcpb/icon.png" "$bundle/"
+chmod 0644 "$bundle/LICENSE" "$bundle/README.md" "$bundle/icon.png"
 jq --arg name "$name" --arg version "$version" \
-	'.name = $name | .display_name = (if $name == "memctl" then "memctl" else "memctl (" + $name + ")" end) | .version = $version' \
+	'.name = $name | .display_name = $name | .version = $version' \
 	"$repo/mcpb/manifest.json" > "$bundle/manifest.json"
 
 file="$out/${name}_${version}_darwin_arm64.mcpb"

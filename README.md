@@ -65,7 +65,8 @@ Claude Desktop, as an extension: build a bundle (see
 [Building from source](#building-from-source)) and open the `.mcpb` file;
 Claude Desktop asks for the notes folder and an optional scope (see
 [Several notes folders](#several-notes-folders)) and installs memctl with its
-own binary. The bundle's name is the server name Desktop shows; for two notes
+own binary. The bundle's name is the server name Desktop shows and the
+prefix of its tools; for two notes
 folders, build two bundles with different names. The extension starts
 `memctl mcp` with the default log level and git author.
 

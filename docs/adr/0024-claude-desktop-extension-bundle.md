@@ -7,6 +7,11 @@ Accepted
 > **Amended by [ADR-0025](0025-instance-scope-line.md)**: the manifest gains
 > an optional `scope` field, passed to the server as `MEMCTL_SCOPE`.
 
+> Revised on 2026-11-23, before the bundle was released, after the live
+> check and the v0.4.0 release audit (W3): `display_name` is `NAME`, not
+> `memctl (NAME)`, because Desktop names the server after it; the bundle
+> carries an icon.
+
 **Area:** Build
 
 ## Context
@@ -44,10 +49,11 @@ it is governed by an ADR, not a spec. The maintainer approved the approach on
 - `scripts/mcpb-build.sh X.Y.Z NAME OUTDIR` builds the darwin/arm64 binary
   with `make build` (same flags and version injection as the release
   archives), stages it as `server/memctl` with `LICENSE` and `README.md`,
-  sets `name`, `display_name` and `version` in the manifest with `jq`, and
-  packs `OUTDIR/<NAME>_<X.Y.Z>_darwin_arm64.mcpb` with the MCPB CLI.
-- `NAME` is the extension name and so the server name Claude Desktop shows
-  (default `memctl`). Two notes roots need two bundles with different names,
+  sets `name` and `display_name` to `NAME` and `version` in the manifest
+  with `jq`, adds `mcpb/icon.png` as the bundle's icon, and packs `OUTDIR/<NAME>_<X.Y.Z>_darwin_arm64.mcpb` with the MCPB CLI.
+- `NAME` is the extension name and its display name. Claude Desktop names
+  the server, and so the tool prefix, after the display name (default
+  `memctl`). Two notes roots need two bundles with different names,
   for example `make mcpb MCPB_NAME=infradocs` and `MCPB_NAME=albdocs`:
   Desktop installs one copy of an extension per name.
 - The MCPB CLI is run with `npx` and pinned (`@anthropic-ai/mcpb@2.1.2`);

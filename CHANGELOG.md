@@ -24,8 +24,8 @@ docs/agents/changelog.md.
   (`dist/<name>_<version>_darwin_arm64.mcpb`) holding the memctl binary.
   Opening it installs memctl in Claude Desktop and asks for the notes folder,
   which can be changed later in the extension's settings. Build one bundle
-  per notes folder; the name is the server name Desktop shows. Needs Node.js
-  (ADR-0024).
+  per notes folder; the name is the server name Desktop shows, and so the
+  prefix of its tools. The extension has an icon. Needs Node.js (ADR-0024).
 - `--scope TEXT` (or `MEMCTL_SCOPE`): one line of up to 200 characters that
   tells the agent what a notes folder holds. memctl appends it to its server
   instructions and to every tool description, so an agent with several

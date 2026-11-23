@@ -3,6 +3,7 @@
   "name": "memctl",
   "display_name": "memctl",
   "version": "0.0.0",
+  "icon": "icon.png",
   "description": "Local Markdown memory for AI agents: full-text search, a link graph and git-backed history.",
   "author": {
     "name": "agonzaNET",
