@@ -15,6 +15,7 @@ type mcpConfig struct {
 	root      string
 	logLevel  string
 	gitAuthor gitlog.Author
+	scope     string // "" when none (SPEC-0011)
 }
 
 // authorRule is the rule of --git-author, named in its usage error
@@ -36,6 +37,7 @@ func parseMCP(args []string, getenv func(string) string) (mcpConfig, error) {
 	root := fs.String("root", "", "")
 	level := fs.String("log-level", "", "")
 	author := fs.String("git-author", "", "")
+	scope := fs.String("scope", "", "")
 	if err := fs.Parse(args); err != nil {
 		return mcpConfig{}, err
 	}
@@ -80,6 +82,11 @@ func parseMCP(args []string, getenv func(string) string) (mcpConfig, error) {
 		}
 		cfg.gitAuthor = a
 	}
+	sc, err := parseScope(*scope, set["scope"], getenv)
+	if err != nil {
+		return mcpConfig{}, err
+	}
+	cfg.scope = sc
 	return cfg, nil
 }
 

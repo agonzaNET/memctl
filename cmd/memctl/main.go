@@ -12,12 +12,14 @@ import (
 var version = "dev"
 
 const usageText = `usage:
-  memctl mcp [--root DIR] [--log-level LEVEL] [--git-author "NAME <EMAIL>"]
+  memctl mcp [--root DIR] [--log-level LEVEL] [--git-author "NAME <EMAIL>"] [--scope TEXT]
         Serve the notes under DIR to an MCP client over stdio.
         --root        notes root (or MEMCTL_ROOT); required
         --log-level   debug, info, warn or error (or MEMCTL_LOG_LEVEL); default info
         --git-author  author of the git commits of tool writes (or MEMCTL_GIT_AUTHOR);
                       default "memctl <memctl@localhost>"
+        --scope       one line, up to 200 characters, telling the agent what these
+                      notes hold (or MEMCTL_SCOPE); default none
   memctl check [--root DIR]
         Report problems in the notes under DIR; exits 1 when there are errors.
         --root        notes root (or MEMCTL_ROOT); required
