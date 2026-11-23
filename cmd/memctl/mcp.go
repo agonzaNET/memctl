@@ -74,14 +74,19 @@ func runMCP(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	// The socket listens only after the load, so no session gets a tool call
 	// before it is complete (SPEC-0009 R1, R2).
 	ln := listenShared(root, log)
-	log.Info("started",
+	started := []any{
 		slog.String("version", version),
 		slog.String("log_level", cfg.logLevel),
 		slog.String("git_author", cfg.gitAuthor.String()),
 		slog.Int("notes", svc.Index().Len()),
-		slog.Bool("sharing", ln != nil))
+		slog.Bool("sharing", ln != nil),
+	}
+	if cfg.scope != "" {
+		started = append(started, slog.String("scope", cfg.scope)) // SPEC-0011 R4
+	}
+	log.Info("started", started...)
 
-	srv := mcpserver.New(mcpserver.Options{Version: version, Notes: svc, Log: log})
+	srv := mcpserver.New(mcpserver.Options{Version: version, Notes: svc, Log: log, Scope: cfg.scope})
 	var sessions sessionSet
 	if ln != nil {
 		go acceptShared(ctx, ln, srv, ownerInfo(cfg), &sessions, log)
