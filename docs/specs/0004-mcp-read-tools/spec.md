@@ -26,6 +26,11 @@ Implemented
 > changed: stdin EOF stops the process only when no forwarded session is
 > open; R12 changed: the `tool call` line carries `session`.
 
+> Amended on 2026-11-23 by [SPEC-0011](../0011-instance-scope/spec.md)
+> (ADR-0025): `memctl mcp` takes `--scope` / `MEMCTL_SCOPE`; with a scope,
+> the server instructions (R5) and every tool description (R13) end with one
+> scope line, and `started` (R3) carries `scope`.
+
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
 Lifecycle: Draft (under review) → Accepted (approved; the code may be built,

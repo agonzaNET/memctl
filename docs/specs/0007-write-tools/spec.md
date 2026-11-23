@@ -9,6 +9,10 @@ Implemented
 > delivered by stage plan 0004: R16, R17, R23 and R24 changed; R29 added; the
 > code `section_not_found` used by `note_edit`.
 
+> Amended on 2026-11-23 by [SPEC-0011](../0011-instance-scope/spec.md)
+> (ADR-0025): with a scope, each write tool's description ends with the
+> scope line.
+
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
 Lifecycle: Draft (under review) → Accepted (approved; the code may be built,

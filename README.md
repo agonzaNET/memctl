@@ -63,8 +63,9 @@ claude mcp add --scope user memory -- memctl mcp --root ~/notes
 
 Claude Desktop, as an extension: build a bundle (see
 [Building from source](#building-from-source)) and open the `.mcpb` file;
-Claude Desktop asks for the notes folder and installs memctl with its own
-binary. The bundle's name is the server name Desktop shows; for two notes
+Claude Desktop asks for the notes folder and an optional scope (see
+[Several notes folders](#several-notes-folders)) and installs memctl with its
+own binary. The bundle's name is the server name Desktop shows; for two notes
 folders, build two bundles with different names. The extension starts
 `memctl mcp` with the default log level and git author.
 
@@ -82,6 +83,46 @@ Claude Desktop, by hand (`claude_desktop_config.json`; use absolute paths,
 }
 ```
 
+### Several notes folders
+
+Each notes folder is served by its own `memctl mcp`, under its own server
+name. To the agent, two instances look the same apart from that name. Give
+each one a scope, one line of up to 200 characters that says what the folder
+holds and what does not belong there:
+
+```json
+{
+  "mcpServers": {
+    "infradocs": {
+      "command": "/Users/you/.local/bin/memctl",
+      "args": ["mcp", "--root", "/Users/you/work-notes",
+               "--scope", "Work documents of the IT infrastructure team. No personal notes."]
+    },
+    "albdocs": {
+      "command": "/Users/you/.local/bin/memctl",
+      "args": ["mcp", "--root", "/Users/you/personal-notes",
+               "--scope", "My personal notes: family, home lab, hobbies. No work documents."]
+    }
+  }
+}
+```
+
+memctl appends the scope as one line to its server instructions and to every
+tool description, so the agent reads it whichever of the two its client
+passes on:
+
+```text
+Scope of this memory, set by the person who runs it: My personal notes: family, home lab, hobbies. No work documents.
+```
+
+The scope guides the agent; it does not stop a note from being written to
+the wrong folder. With Claude Code, memctl's flag goes after `--`; the
+`--scope user` before it is Claude Code's own:
+
+```sh
+claude mcp add --scope user notes -- memctl mcp --root ~/notes --scope "My personal notes."
+```
+
 ### Several clients on one notes folder
 
 Several clients on one machine can use the same notes folder at the same
@@ -95,6 +136,8 @@ one git history, and every commit carries the first process's
 
 - A later process with a different `--git-author` is refused, so a commit
   never carries an author you did not configure for that client.
+- Every client gets the first process's `--scope`. A later process with a
+  different scope is still served; both processes log `scope differs`.
 - When the first process is stopped, the others end too; a client that
   restarts its server, as Claude Desktop does, gets one again, and the first
   to start serves the folder.
@@ -113,6 +156,7 @@ one git history, and every commit carries the first process's
 | `--root DIR` | `MEMCTL_ROOT` | (required) | The notes folder |
 | `--log-level LEVEL` | `MEMCTL_LOG_LEVEL` | `info` | `debug`, `info`, `warn` or `error`; JSON logs on stderr |
 | `--git-author "Name <email>"` | `MEMCTL_GIT_AUTHOR` | `memctl <memctl@localhost>` | Author and committer of the tool commits |
+| `--scope TEXT` | `MEMCTL_SCOPE` | none | One line of up to 200 characters telling the agent what the folder holds ([Several notes folders](#several-notes-folders)) |
 
 A flag wins over its environment variable.
 

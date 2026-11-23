@@ -4,6 +4,11 @@
 
 Implemented
 
+> Amended on 2026-11-23 by [SPEC-0011](../0011-instance-scope/spec.md)
+> (ADR-0025): the hello and the `ok` answer (R6) carry an optional `scope`;
+> owner and forwarder each log `WARN` `scope differs` when the scopes differ,
+> beside `version differs` (R8); every session gets the owner's scope.
+
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
 Lifecycle: Draft (under review) → Accepted (approved; the code may be built,
