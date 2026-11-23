@@ -23,7 +23,13 @@ type session struct {
 // connect starts memctl mcp on root and connects an MCP client over pipes.
 func connect(t *testing.T, root string) *session {
 	t.Helper()
-	cmd := exec.Command(binVersioned, "mcp", "--root", root)
+	return connectArgs(t, root)
+}
+
+// connectArgs is connect with extra arguments to memctl mcp.
+func connectArgs(t *testing.T, root string, args ...string) *session {
+	t.Helper()
+	cmd := exec.Command(binVersioned, append([]string{"mcp", "--root", root}, args...)...)
 	stdin, _ := cmd.StdinPipe()
 	stdout, _ := cmd.StdoutPipe()
 	s := &session{cmd: cmd, stderr: new(syncBuffer), done: make(chan error, 1)}
