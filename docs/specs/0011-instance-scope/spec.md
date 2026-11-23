@@ -165,31 +165,31 @@ Without a scope, they are exactly the fixed text of today.
 
 ## Acceptance criteria — "Done looks like"
 
-- [ ] **R1** — Table-driven test: flag only, variable only, both (flag wins),
+- [x] **R1** — Table-driven test: flag only, variable only, both (flag wins),
   empty flag with a variable set (no scope).
-- [ ] **R2** — `--scope "  personal notes  "` gives `personal notes`;
+- [x] **R2** — `--scope "  personal notes  "` gives `personal notes`;
   `--scope "   "` gives no scope.
-- [ ] **R3** — 200 characters (with multi-byte characters) accepted; 201
+- [x] **R3** — 200 characters (with multi-byte characters) accepted; 201
   refused; a line break, a tab and invalid UTF-8 refused; each error names the
   flag or variable and the rule, not the value; exit status 2 from the binary.
-- [ ] **R4** — `started` of a run with a scope has `scope` equal to the text;
+- [x] **R4** — `started` of a run with a scope has `scope` equal to the text;
   of a run without one has no `scope` key.
-- [ ] **R5** — An SDK client session against a server with a scope sees the
+- [x] **R5** — An SDK client session against a server with a scope sees the
   instructions as fixed text + line break + scope line.
-- [ ] **R6** — The same session's `tools/list` shows all eight descriptions
+- [x] **R6** — The same session's `tools/list` shows all eight descriptions
   ending with the scope line, each with its fixed text unchanged before it.
-- [ ] **R7** — Without a scope, `tools/list` and the instructions equal the
+- [x] **R7** — Without a scope, `tools/list` and the instructions equal the
   fixed constants.
-- [ ] **R8** — Schemas, annotations and the results and log line of one read
+- [x] **R8** — Schemas, annotations and the results and log line of one read
   and one write call are equal with and without a scope.
-- [ ] **R9** — `scripts/check-docs.sh` passes with the fixed part of the line
+- [x] **R9** — `scripts/check-docs.sh` passes with the fixed part of the line
   between the markers.
-- [ ] **R10** — A forwarded session (forwarder started with no scope) against
+- [x] **R10** — A forwarded session (forwarder started with no scope) against
   an owner with a scope sees the owner's scope line in instructions and
   descriptions.
-- [ ] **R11** — Hello and answer JSON carry `scope` only when set; a hello
+- [x] **R11** — Hello and answer JSON carry `scope` only when set; a hello
   without `scope` and an answer without `scope` are accepted; protocol is `1`.
-- [ ] **R12** — Different scopes: one `WARN` `scope differs` on each side with
+- [x] **R12** — Different scopes: one `WARN` `scope differs` on each side with
   the fields above, the session works; equal scopes: no such line.
 - [ ] **R13** — `make mcpb` builds a bundle whose manifest has the optional
   `scope` field mapped to `MEMCTL_SCOPE`; live: the extension installed in

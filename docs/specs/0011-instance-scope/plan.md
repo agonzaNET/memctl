@@ -58,39 +58,39 @@ T3, T5, T6 → T7 → T8 → T9
 Each task: test first, named `SPEC0011_Rn`; see it fail; commit the failing
 test; implement; full suite green; commit (`feat(scope): … (spec: SPEC-0011)`).
 
-- [ ] **T1 — Parse the scope (R1, R2, R3).** `parseScope` and the `--scope`
+- [x] **T1 — Parse the scope (R1, R2, R3).** `parseScope` and the `--scope`
   flag. Table: flag only, variable only, both, empty flag over a set
   variable, surrounding white space, only white space; 200 code points with
   multi-byte characters accepted, 201 refused; `\n`, `\t`, invalid UTF-8
   refused; the error names `--scope` or `MEMCTL_SCOPE` and the rule, not the
   value. Usage text names the flag.
-- [ ] **T2 — Scope line in the agent-facing text (R5, R6, R7, R8, R9).**
+- [x] **T2 — Scope line in the agent-facing text (R5, R6, R7, R8, R9).**
   `scopePrefix` between the markers; `withScope`; `Options.Scope` applied to
   the instructions and the eight descriptions. Tests with an in-memory client:
   with a scope, instructions and every description are fixed text + `\n` +
   line; without, they equal the constants; schemas, annotations, a `note_read`
   and a `note_write` result and the `tool call` line equal with and without.
   `scripts/check-docs.sh` passes.
-- [ ] **T3 — Wire it through `memctl mcp` (R3, R4, R5, R6).** Binary tests: a
+- [x] **T3 — Wire it through `memctl mcp` (R3, R4, R5, R6).** Binary tests: a
   bad `--scope` and a bad `MEMCTL_SCOPE` exit 2 with the rule on stderr;
   `started` has `scope` only when set; an SDK client of the binary started
   with `--scope` sees the line in the instructions and in `tools/list`.
-- [ ] **T4 — Scope in the handshake (R11).** `Hello.Scope`, `Answer.Scope`
+- [x] **T4 — Scope in the handshake (R11).** `Hello.Scope`, `Answer.Scope`
   with `omitempty`; `NewHello(version, pid, author, scope)`; `Owner.Scope` in
   the `ok` answer. Tests: JSON has `scope` only when set; a hello and an answer
   without it, and with an unknown field, are accepted; `protocol` stays 1.
-- [ ] **T5 — Shared sessions and the warning (R10, R12).** Owner and
+- [x] **T5 — Shared sessions and the warning (R10, R12).** Owner and
   forwarder compare scopes after an `ok` and log `WARN` `scope differs`.
   Multi-process tests: owner with a scope, forwarder without; the forwarded
   session sees the owner's line; one `WARN` on each side with
   `forwarder_pid` / `forwarder_scope` and `owner_scope`; the session works;
   equal scopes log no `scope differs`.
-- [ ] **T6 — Extension field (R13).** Manifest `user_config.scope` and
+- [x] **T6 — Extension field (R13).** Manifest `user_config.scope` and
   `mcp_config.env.MEMCTL_SCOPE`; `scripts/mcpb-build.test.sh` cases; `make
   mcpb` builds.
-- [ ] **T7 — Docs.** README, CHANGELOG `[Unreleased]`, amendment notes in
+- [x] **T7 — Docs.** README, CHANGELOG `[Unreleased]`, amendment notes in
   SPEC-0004, SPEC-0007 and SPEC-0009. `scripts/check-docs.sh` passes.
-- [ ] **T8 — Verify.** `make verify` (tests, vet, gofmt, check-docs, script
+- [x] **T8 — Verify.** `make verify` (tests, vet, gofmt, check-docs, script
   tests); a sample run: `memctl mcp --scope …` over a scratch root answers
   `initialize` and `tools/list` with the line; acceptance boxes R1–R12 ticked
   against the tests that prove them.
