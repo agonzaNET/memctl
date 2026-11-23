@@ -52,6 +52,11 @@ func TestParseScope_SPEC0011_R3_rules(t *testing.T) {
 		{"tab", "personal\tnotes"},
 		{"other control character", "personal\x07notes"},
 		{"invalid UTF-8", "personal \xff notes"},
+		{"line separator", "personal\u2028notes"},
+		{"paragraph separator", "personal\u2029notes"},
+		{"zero-width space", "personal\u200bnotes"},
+		{"right-to-left override", "personal\u202enotes"},
+		{"byte order mark", "personal\ufeffnotes"},
 	}
 	for _, c := range cases {
 		t.Run(c.name+" flag", func(t *testing.T) {

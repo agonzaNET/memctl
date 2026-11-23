@@ -4,6 +4,10 @@
 
 Implemented
 
+> Amended on 2026-11-23 after the v0.4.0 release audit (W6): R3 also
+> refuses line and paragraph separators (Zl, Zp) and invisible format
+> characters (Cf), so a scope is one visible line.
+
 <!--
 Status values: Draft | Accepted | Implemented | Superseded by SPEC-NNNN | Deprecated
 Lifecycle: Draft (under review) → Accepted (approved; the code may be built,
@@ -53,7 +57,7 @@ SPEC-0004 and SPEC-0008:
 
 | Flag | Environment variable | Default | Rule |
 |---|---|---|---|
-| `--scope` | `MEMCTL_SCOPE` | none (no scope) | One line: at most 200 characters (Unicode code points) after leading and trailing white space is removed, valid UTF-8, no control character (line break, tab, …). Empty or only white space means no scope. |
+| `--scope` | `MEMCTL_SCOPE` | none (no scope) | One line: at most 200 characters (Unicode code points) after leading and trailing white space is removed, valid UTF-8, no control character (line break, tab, …), no line or paragraph separator, no invisible format character. Empty or only white space means no scope. |
 
 A flag wins over its environment variable, also when the flag is empty
 (`--scope ""` turns off a scope set in `MEMCTL_SCOPE`).
@@ -106,7 +110,9 @@ Without a scope, they are exactly the fixed text of today.
   removed. An empty result MUST mean no scope.
 - **R3** — A scope longer than 200 characters (Unicode code points), one that
   is not valid UTF-8, or one that contains a control character (Unicode
-  category Cc, which includes line breaks and tabs) MUST be refused as a usage
+  category Cc, which includes line breaks and tabs), a line or paragraph
+  separator (Zl, Zp: U+2028, U+2029) or an invisible format character (Cf,
+  such as U+200B or U+202E) MUST be refused as a usage
   error with status 2 (SPEC-0004 R1). The error MUST name the flag or the
   variable that gave the value and the rule, and MUST NOT echo the value.
 - **R4** — The `started` line MUST carry `scope` with the scope text when a
@@ -170,7 +176,8 @@ Without a scope, they are exactly the fixed text of today.
 - [x] **R2** — `--scope "  personal notes  "` gives `personal notes`;
   `--scope "   "` gives no scope.
 - [x] **R3** — 200 characters (with multi-byte characters) accepted; 201
-  refused; a line break, a tab and invalid UTF-8 refused; each error names the
+  refused; a line break, a tab, invalid UTF-8, U+2028, U+2029, U+200B,
+  U+202E and U+FEFF refused; each error names the
   flag or variable and the rule, not the value; exit status 2 from the binary.
 - [x] **R4** — `started` of a run with a scope has `scope` equal to the text;
   of a run without one has no `scope` key.
