@@ -95,3 +95,4 @@ writes, M3 release) are delivered as one or more specs each.
 | SPEC-0008 | Git committer | Implemented | ADR-0002, ADR-0005, ADR-0014, ADR-0016, ADR-0021 |
 | SPEC-0009 | Shared instance: one owner per notes root, forwarders over a Unix socket | Implemented | ADR-0002, ADR-0005, ADR-0014, ADR-0016, ADR-0021 |
 | SPEC-0010 | `memctl serve`: MCP over stateless streamable HTTP on loopback | Draft | ADR-0002, ADR-0005, ADR-0010, ADR-0011, ADR-0014, ADR-0016, ADR-0021, ADR-0023 |
+| SPEC-0011 | Instance scope: one line that tells the agent what a notes root holds | Draft | ADR-0002, ADR-0005, ADR-0013, ADR-0016, ADR-0021, ADR-0024, ADR-0025 |

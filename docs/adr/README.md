@@ -81,6 +81,7 @@ ADR file it points to. When an ADR becomes `Superseded by ADR-NNNN` or
 | [ADR-0022](0022-macos-tests-before-release.md) | Run the test suite on macOS before a release is built (amends ADR-0012) | Accepted | Build |
 | [ADR-0023](0023-http-transport-memctl-serve.md) | Serve MCP over streamable HTTP from a long-running `memctl serve`, on loopback only and without authentication (amends ADR-0014, ADR-0021) | Proposed | Lifecycle |
 | [ADR-0024](0024-claude-desktop-extension-bundle.md) | Package memctl as a Claude Desktop extension (MCPB) with `make mcpb` | Accepted | Build |
+| [ADR-0025](0025-instance-scope-line.md) | Tell the agent what each instance holds with a scope line in the server instructions and every tool description (amends ADR-0013, ADR-0024) | Proposed | Tools |
 
 ### Superseded / Deprecated
 
