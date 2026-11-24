@@ -18,6 +18,10 @@ At a release, rename this section to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
 docs/agents/changelog.md.
 -->
 
+## [0.4.1] - 2026-11-24
+
+The first release with these changes; 0.4.0 was tagged but not released.
+
 ### Added
 
 - `make mcpb MCPB_NAME=<name>` builds a Claude Desktop extension
@@ -35,6 +39,11 @@ docs/agents/changelog.md.
   `scope differs` when a later one has another (ADR-0025, SPEC-0011).
 - The Claude Desktop extension asks for an optional Scope, passed as
   `MEMCTL_SCOPE`.
+
+## [0.4.0] - 2026-11-24
+
+Tagged but not released: CHANGELOG.md had no section for it, so the release
+workflow found no release notes. Its changes ship in 0.4.1.
 
 ## [0.3.2] - 2026-11-22
 
@@ -183,7 +192,9 @@ Tagged but not released: the release workflow failed. Its changes ship in
   author of those commits; the default is `memctl <memctl@localhost>`
   (spec: SPEC-0008).
 
-[Unreleased]: https://github.com/agonzaNET/memctl/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/agonzaNET/memctl/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/agonzaNET/memctl/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/agonzaNET/memctl/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/agonzaNET/memctl/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/agonzaNET/memctl/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/agonzaNET/memctl/compare/v0.2.0...v0.3.0
